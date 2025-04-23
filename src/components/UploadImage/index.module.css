@@ -1,0 +1,9 @@
+.ant-upload-wrapper.css-dev-only-do-not-override-1d4w9r2.ant-upload-picture-card-wrapper .ant-upload-list{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+.ant-upload-list-item-container{
+    width: var(--box-color);
+    height: var(--box-color);
+}
