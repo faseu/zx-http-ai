@@ -1,3 +1,4 @@
+import { BulbOutlined, SmileOutlined, UserOutlined } from '@ant-design/icons';
 import {
   Bubble,
   Prompts,
@@ -6,11 +7,11 @@ import {
   ThoughtChain,
   XProvider,
 } from '@ant-design/x';
+import { useModel } from '@umijs/max';
+import type { ConfigProviderProps, GetProp, TableColumnsType } from 'antd';
 import { Card, Divider, Flex, List, Table } from 'antd';
 import React from 'react';
-
-import { BulbOutlined, SmileOutlined, UserOutlined } from '@ant-design/icons';
-import type { ConfigProviderProps, GetProp, TableColumnsType } from 'antd';
+import styles from './index.less';
 
 interface DataType {
   key: React.Key;
@@ -20,12 +21,14 @@ interface DataType {
 }
 
 export default () => {
+  const { initialState } = useModel('@@initialState');
+  const isDark = initialState?.settings?.navTheme === 'realDark';
   const [value, setValue] = React.useState('');
   const [direction, setDirection] =
     React.useState<GetProp<ConfigProviderProps, 'direction'>>('ltr');
 
   const list: any[] = [];
-  for (let i = 1; i < 10; i += 1) {
+  for (let i = 1; i < 7; i += 1) {
     list.push({
       id: i,
       title: '卡片列表',
@@ -148,7 +151,22 @@ export default () => {
                 }}
                 dataSource={[...list]}
                 renderItem={(item) => {
-                  return <Card>item</Card>;
+                  return (
+                    <Card
+                      className={styles.machineCard}
+                      styles={{
+                        body: {
+                          padding: 0,
+                        },
+                      }}
+                    >
+                      <div
+                        className={isDark ? styles.darkCard : styles.lightCard}
+                      >
+                        item
+                      </div>
+                    </Card>
+                  );
                 }}
               />
               <List

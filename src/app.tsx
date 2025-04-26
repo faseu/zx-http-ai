@@ -1,4 +1,4 @@
-import { AvatarDropdown, AvatarName, Footer, Question } from '@/components';
+import { AvatarDropdown, AvatarName, CustomMenu, Question } from '@/components';
 import { getToken } from '@/utils/token';
 import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
@@ -6,8 +6,8 @@ import { SettingDrawer } from '@ant-design/pro-components';
 import type { RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
-import { errorConfig } from './requestErrorConfig';
 import './global.less';
+import { errorConfig } from './requestErrorConfig';
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/login';
@@ -22,7 +22,7 @@ export async function getInitialState(): Promise<{
   fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
   if (!getToken() || !localStorage.getItem('userInfo')) {
-    history.push(loginPath);
+    // history.push(loginPath);
     return {
       settings: defaultSettings as Partial<LayoutSettings>,
     };
@@ -41,7 +41,6 @@ export const layout: RunTimeLayoutConfig = ({
   initialState,
   setInitialState,
 }) => {
-  console.log(initialState);
   return {
     actionsRender: () => [<Question key="doc" />],
     avatarProps: {
@@ -54,7 +53,7 @@ export const layout: RunTimeLayoutConfig = ({
     // waterMarkProps: {
     //   content: initialState?.currentUser?.name,
     // },
-    footerRender: () => <Footer />,
+    footerRender: () => false,
     onPageChange: () => {
       // const { location } = history;
       // 如果没有登录，重定向到 login
@@ -62,8 +61,14 @@ export const layout: RunTimeLayoutConfig = ({
       //   history.push(loginPath);
       // }
     },
+
+    menuRender: (props, defaultDom) => {
+      // return <CustomMenu {...props} />;
+      console.log(props);
+      return <CustomMenu {...props} />;
+    },
     postMenuData: (e) => {
-      return e;
+      return e ?? [];
     },
     bgLayoutImgList: [
       {

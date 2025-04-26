@@ -27,6 +27,7 @@ export default [
     // 不展示菜单顶栏
     menuHeaderRender: false,
     hideInMenu: true,
+    layout: false,
   },
   {
     name: '设备管理',

@@ -18,7 +18,7 @@ export default defineConfig({
     },
   },
   layout: {
-    title: '快搭后台',
+    title: '即插智联',
   },
   routes,
   npmClient: 'yarn',

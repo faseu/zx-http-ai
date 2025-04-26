@@ -1,9 +1,9 @@
+import ThemeSwitchButton from '@/components/ThemeSwitchButton';
 import { Dropdown } from 'antd';
 import { createStyles } from 'antd-style';
 import type { DropDownProps } from 'antd/es/dropdown';
 import classNames from 'classnames';
 import React from 'react';
-
 const useStyles = createStyles(({ token }) => {
   return {
     dropdown: {
@@ -31,10 +31,13 @@ const HeaderDropdown: React.FC<HeaderDropdownProps> = ({
 }) => {
   const { styles } = useStyles();
   return (
-    <Dropdown
-      overlayClassName={classNames(styles.dropdown, cls)}
-      {...restProps}
-    />
+    <div>
+      <Dropdown
+        overlayClassName={classNames(styles.dropdown, cls)}
+        {...restProps}
+      />
+      <ThemeSwitchButton />
+    </div>
   );
 };
 
