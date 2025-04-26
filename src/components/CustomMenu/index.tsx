@@ -1,5 +1,7 @@
 // src/components/CustomMenu/index.tsx
+import { RedditCircleFilled } from '@ant-design/icons';
 import type { HeaderProps } from '@ant-design/pro-layout';
+import { Flex } from 'antd';
 import React from 'react';
 import styles from './index.less';
 
@@ -8,15 +10,16 @@ const CustomMenu: React.FC<HeaderProps> = (props) => {
   console.log(props.menuData);
   return (
     <aside className={styles.aside}>
-      <h3 style={{ margin: 0 }}>自定义菜单</h3>
-      <ul>
-        {props.menuData?.map((item: any) => (
-          <li key={item.key}>
-            {item.icon}
-            {item.name}
-          </li>
-        ))}
-      </ul>
+      <Flex vertical align="center">
+        {props.menuData
+          ?.filter((item) => item.path !== '/')
+          ?.map((item: any) => (
+            <div className={styles.menuBox} key={item.key}>
+              <RedditCircleFilled style={{ fontSize: '24px' }} />
+              <div>{item.name}</div>
+            </div>
+          ))}
+      </Flex>
     </aside>
   );
 };

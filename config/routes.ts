@@ -14,6 +14,7 @@ export default [
   {
     path: '/',
     redirect: '/machine',
+    hideInMenu: true,
   },
   {
     name: '登录',

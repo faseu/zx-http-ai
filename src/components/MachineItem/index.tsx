@@ -1,6 +1,7 @@
 // src/components/ThemeSwitchButton/index.tsx
 import { useModel } from '@umijs/max';
-import { Card } from 'antd';
+import { Flex, Popconfirm } from 'antd';
+import classNames from 'classnames';
 import styles from './index.less';
 
 interface MachineItemProps {
@@ -12,16 +13,54 @@ const MachineItem: React.FC<MachineItemProps> = ({ text }) => {
   const isDark = initialState?.settings?.navTheme === 'realDark';
 
   return (
-    <Card
-      className={styles.machineCard}
-      styles={{
-        body: {
-          padding: 0,
-        },
-      }}
+    <div
+      className={classNames({
+        [styles.commonCard]: true,
+        [styles.darkCard]: isDark,
+        [styles.lightCard]: !isDark,
+      })}
     >
-      <div className={isDark ? styles.darkCard : styles.lightCard}>{text}</div>
-    </Card>
+      <div
+        className={classNames({
+          [styles.commonImgBox]: true,
+          [styles.darkImgBox]: isDark,
+          [styles.lightImgBox]: !isDark,
+        })}
+      >
+        <img src="" alt="" />
+      </div>
+      <Flex
+        justify="space-between"
+        align="flex-end"
+        style={{ marginTop: '8px' }}
+      >
+        <div>智能网关A1</div>
+        <div style={{ fontSize: '12px' }}>V1.2.3</div>
+      </Flex>
+      <Flex justify="space-between" style={{ marginTop: '8px' }}>
+        <Flex>
+          <div
+            className={styles.buttom}
+            style={{ background: '#2E60B5', marginRight: '8px' }}
+          >
+            编辑
+          </div>
+          <Popconfirm
+            title="删除设备"
+            description="删除后无法回复，确定删除设备?"
+            okText="确定"
+            cancelText="取消"
+          >
+            <div className={styles.buttom} style={{ background: '#3E3F43' }}>
+              删除
+            </div>
+          </Popconfirm>
+        </Flex>
+        <div className={styles.buttom} style={{ background: '#516EFA' }}>
+          详情
+        </div>
+      </Flex>
+    </div>
   );
 };
 
