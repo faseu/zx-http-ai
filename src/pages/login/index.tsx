@@ -1,4 +1,7 @@
 import styles from '@/pages/login/index.less';
+import { accountLogin } from '@/services/login';
+import { setToken } from '@/utils/token';
+import { history } from '@@/core/history';
 import { LockOutlined, MobileOutlined, UserOutlined } from '@ant-design/icons';
 import {
   LoginFormPage,
@@ -18,8 +21,18 @@ const iconStyles: CSSProperties = {
   cursor: 'pointer',
 };
 
+const handleSubmit = async (value: { [key: string]: any } | undefined) => {
+  let { userToken } = await accountLogin({ ...value });
+  if (userToken) {
+    setToken(userToken);
+    history.replace('/');
+  } else {
+    message.error('登录失败！');
+  }
+};
+
 const Page = () => {
-  const [loginType, setLoginType] = useState<LoginType>('phone');
+  const [loginType, setLoginType] = useState<LoginType>('account');
   const { token } = theme.useToken();
   return (
     <div
@@ -48,6 +61,9 @@ const Page = () => {
         style={{
           paddingRight: '75px',
         }}
+        onFinish={async (values) => {
+          await handleSubmit(values as API.LoginParams);
+        }}
       >
         <Tabs
           centered
@@ -60,7 +76,7 @@ const Page = () => {
         {loginType === 'account' && (
           <>
             <ProFormText
-              name="username"
+              name="phone"
               fieldProps={{
                 size: 'large',
                 prefix: (
@@ -72,7 +88,7 @@ const Page = () => {
                   />
                 ),
               }}
-              placeholder={'用户名: admin or user'}
+              placeholder={'请输入用户名'}
               rules={[
                 {
                   required: true,
@@ -93,7 +109,7 @@ const Page = () => {
                   />
                 ),
               }}
-              placeholder={'密码: ant.design'}
+              placeholder={'请输入密码'}
               rules={[
                 {
                   required: true,

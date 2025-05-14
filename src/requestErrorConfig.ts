@@ -106,7 +106,8 @@ export const errorConfig: RequestConfig = {
           ...config,
           headers: {
             ...config.headers,
-            Authorization: `Bearer ${token}`, // 添加 Authorization 请求头
+            'x-access-token': `${token}`, // 添加 token
+            'x-access-appid': `ty9fd2848a039ab554`, // 添加 appid
           },
         };
       } else {
@@ -121,11 +122,12 @@ export const errorConfig: RequestConfig = {
   responseInterceptors: [
     (response) => {
       // 拦截响应数据，进行个性化处理
-      const { data } = response as unknown as ResponseStructure;
-      if (data?.code && data?.code !== 200) {
+      const { data: resData } = response as unknown as ResponseStructure;
+      const { code, error, data } = resData;
+      if (code !== 10000) {
         throw error;
       }
-      return response;
+      return { ...response, data };
     },
   ],
 };

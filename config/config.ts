@@ -12,9 +12,9 @@ export default defineConfig({
   proxy: {
     '/api': {
       // target: 'http://192.168.1.69:8092/',
-      target: 'http://1.14.59.102:8000/',
+      target: 'http://120.26.6.243:80/',
       changeOrigin: true,
-      pathRewrite: { '^/api': '/api' },
+      pathRewrite: { '^/api': '' },
     },
   },
   layout: {

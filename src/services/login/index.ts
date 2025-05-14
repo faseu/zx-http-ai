@@ -12,7 +12,7 @@ export async function getFakeCaptcha(options?: { [key: string]: any }) {
 
 /** 登录 POST /code/note */
 export async function accountLogin(options?: { [key: string]: any }) {
-  return request('/api/login', {
+  return request('/api/admin/login/index', {
     method: 'POST',
     data: options,
   });

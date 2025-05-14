@@ -4,6 +4,7 @@ import AIBox from '@/components/AIBox';
 import CustomTitle from '@/components/CustomTitle';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
+import { getMachineList } from '@/pages/machine/service';
 import { useModel } from '@umijs/max';
 import {
   Card,
@@ -14,7 +15,7 @@ import {
   Table,
   TableColumnsType,
 } from 'antd';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
 interface DataType {
@@ -115,6 +116,10 @@ export default () => {
   const addDirective = () => {
     setModalDirectiveOpen(true);
   };
+
+  useEffect(() => {
+    getMachineList();
+  }, []);
   return (
     <Card
       styles={{
