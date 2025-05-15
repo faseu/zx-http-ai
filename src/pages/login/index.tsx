@@ -61,6 +61,10 @@ const Page = () => {
         style={{
           paddingRight: '75px',
         }}
+        initialValues={{
+          phone: '13018909115',
+          password: 'zxc123',
+        }}
         onFinish={async (values) => {
           await handleSubmit(values as API.LoginParams);
         }}

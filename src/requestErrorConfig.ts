@@ -123,9 +123,9 @@ export const errorConfig: RequestConfig = {
     (response) => {
       // 拦截响应数据，进行个性化处理
       const { data: resData } = response as unknown as ResponseStructure;
-      const { code, error, data } = resData;
+      const { code, msg, data } = resData;
       if (code !== 10000) {
-        throw error;
+        throw msg;
       }
       return { ...response, data };
     },

@@ -29,10 +29,22 @@ export async function editActivitiesType(
 }
 
 /**
- * 列表
+ * 设备列表
  */
 export async function getMachineList(params?: { [key: string]: any }) {
   return request('/api/admin/machine/index', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+  });
+}
+
+/**
+ * 分类列表
+ */
+export async function getCateList(params?: { [key: string]: any }) {
+  return request('/api/admin/cate/getCateList', {
     method: 'POST',
     params: {
       ...params,

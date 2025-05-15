@@ -4,7 +4,7 @@ import AIBox from '@/components/AIBox';
 import CustomTitle from '@/components/CustomTitle';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
-import { getMachineList } from '@/pages/machine/service';
+import { getCateList, getMachineList } from '@/pages/machine/service';
 import { useModel } from '@umijs/max';
 import {
   Card,
@@ -25,11 +25,21 @@ interface DataType {
   address: string;
 }
 
+const fetchMachineList = async () => {
+  const { data } = await getMachineList();
+  console.log('data', data);
+  return data;
+};
+const fetchDict = async () => {
+  const [] = await Promise.all([getCateList()]);
+};
+
 export default () => {
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
   const [modalMachineOpen, setModalMachineOpen] = useState(false);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
+  const [machineList, setMachineList] = useState([]);
 
   const list: any[] = [];
   for (let i = 1; i < 7; i += 1) {
@@ -118,7 +128,10 @@ export default () => {
   };
 
   useEffect(() => {
-    getMachineList();
+    fetchMachineList().then((res) => {
+      setMachineList(res);
+    });
+    fetchDict();
   }, []);
   return (
     <Card
@@ -162,7 +175,7 @@ export default () => {
               xl: 2,
               xxl: 3,
             }}
-            dataSource={[...list]}
+            dataSource={machineList}
             renderItem={() => {
               return <MachineItem text="这是设备信息" />;
             }}
