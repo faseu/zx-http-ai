@@ -4,8 +4,8 @@ import { request } from '@umijs/max';
 /**
  * 新增活动类型
  */
-export async function addActivitiesType(params?: { [key: string]: any }) {
-  return request('/api/category/categories', {
+export async function addMachine(params?: { [key: string]: any }) {
+  return request('/api/admin/machine/save', {
     method: 'POST',
     data: {
       ...params,

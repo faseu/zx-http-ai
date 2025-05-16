@@ -4,7 +4,11 @@ import AIBox from '@/components/AIBox';
 import CustomTitle from '@/components/CustomTitle';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
-import { getCateList, getMachineList } from '@/pages/machine/service';
+import {
+  addMachine,
+  getCateList,
+  getMachineList,
+} from '@/pages/machine/service';
 import { useModel } from '@umijs/max';
 import {
   Card,
@@ -14,9 +18,30 @@ import {
   Space,
   Table,
   TableColumnsType,
+  message,
 } from 'antd';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
+
+/**
+ * 更新节点
+ * @param fields
+ */
+const handleAddMachine = async (fields: any) => {
+  const hide = message.loading('正在新增');
+  try {
+    await addMachine({
+      ...fields,
+    });
+    hide();
+    message.success('新增成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('新增失败请重试！');
+    return false;
+  }
+};
 
 interface DataType {
   key: React.Key;
@@ -31,7 +56,10 @@ const fetchMachineList = async () => {
   return data;
 };
 const fetchDict = async () => {
-  const [] = await Promise.all([getCateList()]);
+  const [cateList] = await Promise.all([getCateList()]);
+  return [
+    cateList.map((item: any) => ({ label: item.cateName, value: item.id })),
+  ];
 };
 
 export default () => {
@@ -40,6 +68,7 @@ export default () => {
   const [modalMachineOpen, setModalMachineOpen] = useState(false);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
   const [machineList, setMachineList] = useState([]);
+  const [cateList, setCateList] = useState([]);
 
   const list: any[] = [];
   for (let i = 1; i < 7; i += 1) {
@@ -131,7 +160,10 @@ export default () => {
     fetchMachineList().then((res) => {
       setMachineList(res);
     });
-    fetchDict();
+    fetchDict().then((res) => {
+      const [cateList] = res;
+      setCateList(cateList);
+    });
   }, []);
   return (
     <Card
@@ -203,8 +235,17 @@ export default () => {
         </Flex>
       </Flex>
       <AddMachineModal
+        cateList={cateList}
         open={modalMachineOpen}
-        onOk={() => setModalMachineOpen(false)}
+        onOk={async (values: any) => {
+          const success = await handleAddMachine(values);
+          if (success) {
+            setModalMachineOpen(false);
+            fetchMachineList().then((res) => {
+              setMachineList(res);
+            });
+          }
+        }}
         onCancel={() => setModalMachineOpen(false)}
       />
       <AddDirectiveModal
