@@ -1,4 +1,3 @@
-import ThemeSwitchButton from '@/components/ThemeSwitchButton';
 import { Dropdown } from 'antd';
 import { createStyles } from 'antd-style';
 import type { DropDownProps } from 'antd/es/dropdown';
@@ -36,7 +35,7 @@ const HeaderDropdown: React.FC<HeaderDropdownProps> = ({
         overlayClassName={classNames(styles.dropdown, cls)}
         {...restProps}
       />
-      <ThemeSwitchButton />
+      {/*<ThemeSwitchButton />*/}
     </div>
   );
 };

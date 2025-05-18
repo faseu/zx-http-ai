@@ -6,9 +6,16 @@ import styles from './index.less';
 
 interface MachineItemProps {
   text: string;
+  detail: any;
+  onDelMachine: any;
 }
 
-const MachineItem: React.FC<MachineItemProps> = ({ text }) => {
+const MachineItem: React.FC<MachineItemProps> = ({
+  text,
+  detail,
+  onDelMachine,
+}) => {
+  console.log(detail);
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
 
@@ -50,6 +57,7 @@ const MachineItem: React.FC<MachineItemProps> = ({ text }) => {
             description="删除后无法回复，确定删除设备?"
             okText="确定"
             cancelText="取消"
+            onConfirm={() => onDelMachine(detail)}
           >
             <div className={styles.buttom} style={{ background: '#3E3F43' }}>
               删除

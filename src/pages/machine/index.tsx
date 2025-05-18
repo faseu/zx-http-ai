@@ -6,6 +6,7 @@ import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
 import {
   addMachine,
+  delMachine,
   getCateList,
   getMachineList,
 } from '@/pages/machine/service';
@@ -24,7 +25,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
 /**
- * 更新节点
+ * add节点
  * @param fields
  */
 const handleAddMachine = async (fields: any) => {
@@ -32,6 +33,7 @@ const handleAddMachine = async (fields: any) => {
   try {
     await addMachine({
       ...fields,
+      img: 'aaaaaaaaaa',
     });
     hide();
     message.success('新增成功');
@@ -39,6 +41,25 @@ const handleAddMachine = async (fields: any) => {
   } catch (error) {
     hide();
     message.error('新增失败请重试！');
+    return false;
+  }
+};
+
+/**
+ *  del节点
+ * @param record
+ * @param action
+ */
+const handleDelMachine = async (record: any) => {
+  const hide = message.loading('正在删除');
+  try {
+    await delMachine({ machineId: record.machineId });
+    hide();
+    message.success('删除成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('删除失败，请重试');
     return false;
   }
 };
@@ -208,8 +229,19 @@ export default () => {
               xxl: 3,
             }}
             dataSource={machineList}
-            renderItem={() => {
-              return <MachineItem text="这是设备信息" />;
+            renderItem={(item) => {
+              return (
+                <MachineItem
+                  detail={item}
+                  text="这是设备信息"
+                  onDelMachine={async (item: any) => {
+                    await handleDelMachine(item);
+                    fetchMachineList().then((res) => {
+                      setMachineList(res);
+                    });
+                  }}
+                />
+              );
             }}
           />
           <CustomTitle title="指令历史" showEmpty />

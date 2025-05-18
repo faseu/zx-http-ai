@@ -12,6 +12,17 @@ export async function addMachine(params?: { [key: string]: any }) {
     },
   });
 }
+/**
+ * 新增活动类型
+ */
+export async function delMachine(params?: { [key: string]: any }) {
+  return request('/api/admin/machine/del', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
 
 /**
  * 编辑活动类型

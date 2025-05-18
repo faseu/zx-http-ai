@@ -29,6 +29,7 @@ interface ResponseStructure {
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const errorConfig: RequestConfig = {
+  // baseURL: 'http://120.26.6.243',
   // 错误处理： umi@3 的错误处理方案。
   errorConfig: {
     // 错误抛出
@@ -124,8 +125,11 @@ export const errorConfig: RequestConfig = {
       // 拦截响应数据，进行个性化处理
       const { data: resData } = response as unknown as ResponseStructure;
       const { code, msg, data } = resData;
+      if (code > 10300 && code < 10399) {
+        history.push('/login');
+      }
       if (code !== 10000) {
-        throw msg;
+        throw msg || {};
       }
       return { ...response, data };
     },

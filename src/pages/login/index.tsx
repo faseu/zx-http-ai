@@ -1,7 +1,6 @@
 import styles from '@/pages/login/index.less';
 import { accountLogin } from '@/services/login';
 import { setToken } from '@/utils/token';
-import { history } from '@@/core/history';
 import { LockOutlined, MobileOutlined, UserOutlined } from '@ant-design/icons';
 import {
   LoginFormPage,
@@ -10,30 +9,65 @@ import {
   ProFormCheckbox,
   ProFormText,
 } from '@ant-design/pro-components';
+import { history, useModel } from '@umijs/max';
 import { Tabs, message, theme } from 'antd';
-import { CSSProperties, useState } from 'react';
+import { useState } from 'react';
+
+import { flushSync } from 'react-dom';
+
 type LoginType = 'phone' | 'account';
 
-const iconStyles: CSSProperties = {
-  color: 'rgba(0, 0, 0, 0.2)',
-  fontSize: '18px',
-  verticalAlign: 'middle',
-  cursor: 'pointer',
-};
-
-const handleSubmit = async (value: { [key: string]: any } | undefined) => {
-  let { userToken } = await accountLogin({ ...value });
-  if (userToken) {
-    setToken(userToken);
-    history.replace('/');
-  } else {
-    message.error('登录失败！');
-  }
+const a = {
+  id: 1,
+  userName: 'admin',
+  password: '1d9e7e492ee5afc2871adb689a0da830',
+  email: '123@163.com',
+  realName: '郑飞',
+  phone: '13018909115',
+  img: 'https://well.iothzbf.com/uploads/images/20220830/3355afc1c1db8bc4150530c62bb761b9.png',
+  regTime: 1498276451,
+  regIp: '127.0.0.1',
+  loginTime: 1747565836,
+  loginIp: '39.149.12.184',
+  updateTime: 1686822815,
+  isEnabled: 1,
+  groupId: 2,
+  deptId: 2,
+  deptGroupId: 1,
+  isAdmin: null,
+  title: '客户管理员',
 };
 
 const Page = () => {
   const [loginType, setLoginType] = useState<LoginType>('account');
+  const { initialState, setInitialState } = useModel('@@initialState');
+
   const { token } = theme.useToken();
+  const handleSubmit = async (value: { [key: string]: any } | undefined) => {
+    let { userToken, userInfo } = await accountLogin({ ...value });
+    if (userInfo) {
+      flushSync(() => {
+        setInitialState((s) => {
+          const obj = {
+            ...s,
+            currentUser: {
+              avatar: '',
+              name: `${userInfo.realName}`,
+            },
+            ...userInfo,
+          };
+          localStorage.setItem('userInfo', JSON.stringify(obj));
+          return obj;
+        });
+      });
+    }
+    if (userToken) {
+      setToken(userToken);
+      history.replace('/');
+    } else {
+      message.error('登录失败！');
+    }
+  };
   return (
     <div
       style={{
