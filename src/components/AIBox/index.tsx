@@ -5,7 +5,7 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 // import 'highlight.js/styles/github.css'; // 你也可以用别的主题
 import MarkdownIt from 'markdown-it';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './index.less';
 
 const BASE_URL =
@@ -34,12 +34,17 @@ const md = new MarkdownIt({
 export default () => {
   const [value, setValue] = useState('');
   const [status, setStatus] = useState<string>();
-  const [lines, setLines] = useState<Record<string, string>[]>([]);
+  const [lines, setLines] = useState([]);
+  const streamingContent = useMemo(() => lines.join(''), [lines]);
+
+  const [messages, setMessages] = useState([
+    { role: 'system', content: '你好，请问有什么可以帮您？' },
+  ]);
+  const linesRef = useRef<string[]>([]);
   const abortController = useRef<AbortController>(null);
 
   useEffect(() => {
     const codeBlocks = document.querySelectorAll('.markdown-body pre');
-
     codeBlocks.forEach((block) => {
       // 避免重复添加按钮
       if (block.querySelector('.copy-btn')) return;
@@ -79,20 +84,28 @@ export default () => {
     <div
       dangerouslySetInnerHTML={{ __html: md.render(content) }}
       className="markdown-body"
-      style={{ whiteSpace: 'pre-wrap' }}
+      style={{ whiteSpace: 'pre-wrap', minHeight: '23px' }}
     />
   );
-  const request = async (value) => {
+  const request = async (messages: { role: string; content: string }[]) => {
     setStatus('pending');
     setLines([]);
+    linesRef.current = [];
+
     await exampleRequest.create(
       {
-        messages: [{ role: 'user', content: value }],
+        messages: messages,
         stream: true,
       },
       {
         onSuccess: () => {
           setStatus('success');
+          // ✅ 成功后，把累积的内容加入消息流
+          const assistantContent = linesRef.current.join('');
+          setMessages((prev) => [
+            ...prev,
+            { role: 'assistant', content: assistantContent },
+          ]);
         },
         onError: (error) => {
           if (error.name === 'AbortError') {
@@ -101,11 +114,16 @@ export default () => {
         },
         onUpdate: (chunk) => {
           try {
-            const parsed = JSON.parse(chunk.data); // 第一次 JSON.parse
+            const parsed = JSON.parse(chunk.data);
+            console.log(parsed);
+            if (parsed === '[DONE]') {
+              console.log(parsed);
+              setStatus('success');
+            }
             const content = parsed.choices?.[0]?.delta?.content || '';
-
             if (content) {
-              setLines((prev) => [...prev, content]);
+              linesRef.current.push(content);
+              setLines([...linesRef.current]); // 显示更新 markdown
             }
           } catch (err) {
             console.error('解析 chunk 出错：', err, chunk);
@@ -120,7 +138,9 @@ export default () => {
   };
 
   const handleSubmit = (value) => {
-    request(value);
+    const newMessages = [...messages, { role: 'user', content: value }];
+    setMessages(newMessages);
+    request(newMessages);
   };
 
   return (
@@ -128,26 +148,27 @@ export default () => {
       <Bubble.List
         style={{ flex: 1 }}
         items={[
-          {
-            key: '1',
-            placement: 'end',
-            content: '写一个arduino控制LED灯的程序',
+          ...messages.map((item, index) => ({
+            key: index,
+            placement: item.role === 'user' ? 'end' : 'start',
+            content: item.content,
             avatar: { icon: <UserOutlined /> },
-          },
-          {
-            key: '2',
-            content:
-              '好的，用户让我写一个 Arduino 控制 LED 灯的程序。首先，我需要确定用户的具体需求是什么。控制 LED 灯有很多种方式，比如简单的闪烁、调光或者根据传感器输入变化等。用户没有特别说明，所以应该从最基础的开始，比如让LED 灯闪烁。',
-            avatar: { icon: <UserOutlined /> },
-          },
-          {
-            key: 'ai-response',
-            content: lines.join(''),
-            avatar: { icon: <UserOutlined /> },
-            messageRender: renderMarkdown, // 加上这句支持 Markdown 渲染
-          },
+            messageRender: renderMarkdown,
+          })),
+          ...(status === 'pending' && streamingContent
+            ? [
+                {
+                  key: 'streaming',
+                  placement: 'start',
+                  content: streamingContent,
+                  avatar: { icon: <UserOutlined /> },
+                  messageRender: renderMarkdown,
+                },
+              ]
+            : []),
         ]}
       />
+
       <Suggestion items={[{ label: 'Write a report', value: 'report' }]}>
         {({ onTrigger, onKeyDown }) => {
           return (

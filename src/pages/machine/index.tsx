@@ -6,9 +6,11 @@ import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
 import {
   addMachine,
+  addOta,
   delMachine,
   getCateList,
   getMachineList,
+  getOtaList,
 } from '@/pages/machine/service';
 import { useModel } from '@umijs/max';
 import {
@@ -34,6 +36,26 @@ const handleAddMachine = async (fields: any) => {
     await addMachine({
       ...fields,
       img: 'aaaaaaaaaa',
+    });
+    hide();
+    message.success('新增成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('新增失败请重试！');
+    return false;
+  }
+};
+/**
+ * add节点
+ * @param fields
+ */
+const handleAddOta = async (fields: any) => {
+  const hide = message.loading('正在新增');
+  try {
+    await addOta({
+      ...fields,
+      fileUrl: 'aaaaaaaaaa',
     });
     hide();
     message.success('新增成功');
@@ -71,11 +93,6 @@ interface DataType {
   address: string;
 }
 
-const fetchMachineList = async () => {
-  const { data } = await getMachineList();
-  console.log('data', data);
-  return data;
-};
 const fetchDict = async () => {
   const [cateList] = await Promise.all([getCateList()]);
   return [
@@ -89,6 +106,7 @@ export default () => {
   const [modalMachineOpen, setModalMachineOpen] = useState(false);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
   const [machineList, setMachineList] = useState([]);
+  const [directiveList, setDirectiveList] = useState([]);
   const [cateList, setCateList] = useState([]);
 
   const list: any[] = [];
@@ -106,18 +124,28 @@ export default () => {
     'Australian walks 100km after outback crash.',
   ];
 
+  const fetchMachineList = async () => {
+    const { data } = await getMachineList();
+    setMachineList(data);
+  };
+
+  const fetchOtaList = async () => {
+    const { data } = await getOtaList();
+    setDirectiveList(data);
+  };
+
   const columns: TableColumnsType<DataType> = [
     {
       title: '协议名称',
-      dataIndex: 'name',
+      dataIndex: 'otaName',
     },
     {
       title: '硬件厂家',
-      dataIndex: 'age',
+      dataIndex: 'reason',
     },
     {
       title: '设备型号',
-      dataIndex: 'address',
+      dataIndex: 'cateName',
     },
     {
       title: '操作',
@@ -131,45 +159,6 @@ export default () => {
     },
   ];
 
-  const tableData: DataType[] = [
-    {
-      key: '1',
-      name: 'John Brown',
-      age: '施耐德电气',
-      address: 'TM241CE40T',
-    },
-    {
-      key: '2',
-      name: 'Jim Green',
-      age: '施耐德电气',
-      address: 'TM241CE40T',
-    },
-    {
-      key: '3',
-      name: 'Joe Black',
-      age: '施耐德电气',
-      address: 'TM241CE40T',
-    },
-    {
-      key: '4',
-      name: 'Joe Black',
-      age: '施耐德电气',
-      address: 'TM241CE40T',
-    },
-    {
-      key: '5',
-      name: 'Joe Black',
-      age: '施耐德电气',
-      address: 'TM241CE40T',
-    },
-    {
-      key: '6',
-      name: 'Joe Black',
-      age: '施耐德电气',
-      address: 'TM241CE40T',
-    },
-  ];
-
   const addMachine = () => {
     setModalMachineOpen(true);
   };
@@ -178,9 +167,8 @@ export default () => {
   };
 
   useEffect(() => {
-    fetchMachineList().then((res) => {
-      setMachineList(res);
-    });
+    fetchMachineList();
+    fetchOtaList();
     fetchDict().then((res) => {
       const [cateList] = res;
       setCateList(cateList);
@@ -217,33 +205,34 @@ export default () => {
             addButtonText="新增设备"
             onSubmit={addMachine}
           />
-          <List
-            rowKey="id"
-            grid={{
-              gutter: 10,
-              xs: 1,
-              sm: 1,
-              md: 1,
-              lg: 2,
-              xl: 2,
-              xxl: 3,
-            }}
-            dataSource={machineList}
-            renderItem={(item) => {
-              return (
-                <MachineItem
-                  detail={item}
-                  text="这是设备信息"
-                  onDelMachine={async (item: any) => {
-                    await handleDelMachine(item);
-                    fetchMachineList().then((res) => {
-                      setMachineList(res);
-                    });
-                  }}
-                />
-              );
-            }}
-          />
+          <div className={styles.hideScrollbar}>
+            <List
+              rowKey="id"
+              grid={{
+                gutter: 10,
+                xs: 1,
+                sm: 1,
+                md: 1,
+                lg: 2,
+                xl: 2,
+                xxl: 3,
+              }}
+              dataSource={machineList}
+              renderItem={(item) => {
+                return (
+                  <MachineItem
+                    detail={item}
+                    text="这是设备信息"
+                    onDelMachine={async (item: any) => {
+                      await handleDelMachine(item);
+                      await fetchMachineList();
+                    }}
+                  />
+                );
+              }}
+            />
+          </div>
+
           <CustomTitle title="指令历史" showEmpty />
           <List
             dataSource={data}
@@ -261,7 +250,7 @@ export default () => {
             scroll={{ y: 200 }}
             pagination={false}
             columns={columns}
-            dataSource={tableData}
+            dataSource={directiveList}
             size="small"
           />
         </Flex>
@@ -273,16 +262,21 @@ export default () => {
           const success = await handleAddMachine(values);
           if (success) {
             setModalMachineOpen(false);
-            fetchMachineList().then((res) => {
-              setMachineList(res);
-            });
+            await fetchMachineList();
           }
         }}
         onCancel={() => setModalMachineOpen(false)}
       />
       <AddDirectiveModal
+        cateList={cateList}
         open={modalDirectiveOpen}
-        onOk={() => setModalDirectiveOpen(false)}
+        onOk={async (values: any) => {
+          const success = await handleAddOta(values);
+          if (success) {
+            setModalDirectiveOpen(false);
+            await fetchOtaList();
+          }
+        }}
         onCancel={() => setModalDirectiveOpen(false)}
       />
     </Card>

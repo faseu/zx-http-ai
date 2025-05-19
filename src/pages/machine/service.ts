@@ -52,6 +52,30 @@ export async function getMachineList(params?: { [key: string]: any }) {
 }
 
 /**
+ * 新增协议
+ */
+export async function addOta(params?: { [key: string]: any }) {
+  return request('/api/admin/ota/save', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+  });
+}
+
+/**
+ * 协议列表
+ */
+export async function getOtaList(params?: { [key: string]: any }) {
+  return request('/api/admin/ota/index', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+  });
+}
+
+/**
  * 分类列表
  */
 export async function getCateList(params?: { [key: string]: any }) {

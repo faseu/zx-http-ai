@@ -6,3 +6,18 @@
   box-sizing: border-box;
   height: calc(100vh - 72px)
 }
+
+
+.hideScrollbar {
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* 隐藏滚动条 */
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE & Edge */
+}
+/* 隐藏滚动条，保留滚动行为 */
+.hideScrollbar::-webkit-scrollbar {
+  display: none;
+}
