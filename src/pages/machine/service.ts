@@ -5,7 +5,7 @@ import { request } from '@umijs/max';
  * 新增活动类型
  */
 export async function addMachine(params?: { [key: string]: any }) {
-  return request('/api/admin/machine/save', {
+  return request('/admin/machine/save', {
     method: 'POST',
     data: {
       ...params,
@@ -16,7 +16,7 @@ export async function addMachine(params?: { [key: string]: any }) {
  * 新增活动类型
  */
 export async function delMachine(params?: { [key: string]: any }) {
-  return request('/api/admin/machine/del', {
+  return request('/admin/machine/del', {
     method: 'POST',
     data: {
       ...params,
@@ -31,7 +31,7 @@ export async function editActivitiesType(
   id: number,
   params?: { [p: string]: any },
 ) {
-  return request(`/api/category/categories/${id}`, {
+  return request(`/category/categories/${id}`, {
     method: 'PUT',
     data: {
       ...params,
@@ -43,7 +43,7 @@ export async function editActivitiesType(
  * 设备列表
  */
 export async function getMachineList(params?: { [key: string]: any }) {
-  return request('/api/admin/machine/index', {
+  return request('/admin/machine/index', {
     method: 'POST',
     params: {
       ...params,
@@ -55,7 +55,7 @@ export async function getMachineList(params?: { [key: string]: any }) {
  * 新增协议
  */
 export async function addOta(params?: { [key: string]: any }) {
-  return request('/api/admin/ota/save', {
+  return request('/admin/ota/save', {
     method: 'POST',
     params: {
       ...params,
@@ -67,7 +67,7 @@ export async function addOta(params?: { [key: string]: any }) {
  * 协议列表
  */
 export async function getOtaList(params?: { [key: string]: any }) {
-  return request('/api/admin/ota/index', {
+  return request('/admin/ota/index', {
     method: 'POST',
     params: {
       ...params,
@@ -79,7 +79,7 @@ export async function getOtaList(params?: { [key: string]: any }) {
  * 分类列表
  */
 export async function getCateList(params?: { [key: string]: any }) {
-  return request('/api/admin/cate/getCateList', {
+  return request('/admin/cate/getCateList', {
     method: 'POST',
     params: {
       ...params,
@@ -91,7 +91,7 @@ export async function getCateList(params?: { [key: string]: any }) {
  * 删除活动类型
  */
 export async function delActivitiesType(params?: { [key: string]: any }) {
-  return request('/api/category/categories', {
+  return request('/category/categories', {
     method: 'delete',
     data: {
       ...params,

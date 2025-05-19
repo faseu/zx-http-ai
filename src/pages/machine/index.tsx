@@ -13,16 +13,7 @@ import {
   getOtaList,
 } from '@/pages/machine/service';
 import { useModel } from '@umijs/max';
-import {
-  Card,
-  Divider,
-  Flex,
-  List,
-  Space,
-  Table,
-  TableColumnsType,
-  message,
-} from 'antd';
+import { Card, List, Space, Table, TableColumnsType, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
@@ -183,8 +174,14 @@ export default () => {
       }}
       style={{ borderRadius: 0 }}
     >
-      <Flex gap={12}>
-        <Flex vertical style={{ flex: 7 }} gap={6}>
+      <div style={{ display: 'flex' }}>
+        <div
+          style={{
+            display: 'flex',
+            width: '45%',
+            justifyContent: 'space-between',
+          }}
+        >
           <Card
             className={styles.aiBoxCard}
             styles={{
@@ -196,9 +193,13 @@ export default () => {
           >
             <AIBox />
           </Card>
-        </Flex>
-        <Divider type="vertical" style={{ height: '100%' }} />
-        <Flex vertical style={{ flex: 5, paddingRight: '24px' }}>
+        </div>
+        <div
+          style={{
+            width: '55%',
+            padding: '0 50px',
+          }}
+        >
           <CustomTitle
             title="设备管理"
             searchPlaceholder="搜索设备..."
@@ -253,8 +254,8 @@ export default () => {
             dataSource={directiveList}
             size="small"
           />
-        </Flex>
-      </Flex>
+        </div>
+      </div>
       <AddMachineModal
         cateList={cateList}
         open={modalMachineOpen}

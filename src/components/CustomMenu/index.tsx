@@ -1,5 +1,4 @@
 // src/components/CustomMenu/index.tsx
-import { RedditCircleFilled } from '@ant-design/icons';
 import type { HeaderProps } from '@ant-design/pro-layout';
 import { Flex } from 'antd';
 import React from 'react';
@@ -14,7 +13,11 @@ const CustomMenu: React.FC<HeaderProps> = (props) => {
           ?.filter((item) => item.path !== '/')
           ?.map((item: any) => (
             <div className={styles.menuBox} key={item.key}>
-              <RedditCircleFilled style={{ fontSize: '24px' }} />
+              <img
+                src="/menu-machine.png"
+                style={{ width: '28px', height: '28px', marginBottom: '8px' }}
+                alt=""
+              />
               <div>{item.name}</div>
             </div>
           ))}

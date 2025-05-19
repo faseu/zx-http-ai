@@ -82,9 +82,11 @@ export default () => {
 
   const renderMarkdown = (content) => (
     <div
-      dangerouslySetInnerHTML={{ __html: md.render(content) }}
+      dangerouslySetInnerHTML={{
+        __html: md.render(content).replace(/\n$/, ''),
+      }}
       className="markdown-body"
-      style={{ whiteSpace: 'pre-wrap', minHeight: '23px' }}
+      style={{ minHeight: '23px' }}
     />
   );
   const request = async (messages: { role: string; content: string }[]) => {
@@ -140,6 +142,7 @@ export default () => {
   const handleSubmit = (value) => {
     const newMessages = [...messages, { role: 'user', content: value }];
     setMessages(newMessages);
+    setValue('');
     request(newMessages);
   };
 

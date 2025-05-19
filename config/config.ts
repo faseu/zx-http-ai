@@ -2,7 +2,7 @@ import { defineConfig } from '@umijs/max';
 import routes from './routes';
 
 export default defineConfig({
-  // history: { type: 'hash' },
+  history: { type: 'hash' },
   antd: {},
   access: {},
   model: {},
@@ -23,6 +23,6 @@ export default defineConfig({
   },
   routes,
   npmClient: 'yarn',
-  // base: '/admin/',
-  // publicPath: '/admin/',
+  base: '/admin/',
+  publicPath: '/admin/',
 });

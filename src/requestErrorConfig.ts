@@ -83,15 +83,15 @@ export const errorConfig: RequestConfig = {
       } else if (error.response) {
         // Axios 的错误
         // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-        message.error(`Response status:${error.response.status}`);
+        // message.error(`Response status:${error.response.status}`);
       } else if (error.request) {
         // 请求已经成功发起，但没有收到响应
         // \`error.request\` 在浏览器中是 XMLHttpRequest 的实例，
         // 而在node.js中是 http.ClientRequest 的实例
-        message.error('None response! Please retry.');
+        // message.error('None response! Please retry.');
       } else {
         // 发送请求时出了点问题
-        message.error('Request error, please retry.');
+        // message.error('Request error, please retry.');
       }
     },
   },
@@ -129,6 +129,7 @@ export const errorConfig: RequestConfig = {
         history.push('/login');
       }
       if (code !== 10000) {
+        message.error(msg);
         throw msg || {};
       }
       return { ...response, data };
