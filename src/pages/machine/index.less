@@ -1,11 +1,15 @@
 .machineCard {
   padding: 7px 9px 0 9px;
 }
+
 .aiBoxCard {
-width: 100%;
+  position: relative;
+  width: 100%;
   padding: 28px 40px 30px 40px;
   box-sizing: border-box;
-  height: calc(100vh - 72px)
+  height: calc(100vh - 72px);
+  background-image: url("../../assets/ai-bg.png") !important;
+  background-size: 100% 100% !important;
 }
 
 
@@ -16,9 +20,10 @@ width: 100%;
   overflow-x: hidden;
 
   /* 隐藏滚动条 */
-  scrollbar-width: none;       /* Firefox */
-  -ms-overflow-style: none;    /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE & Edge */
 }
+
 /* 隐藏滚动条，保留滚动行为 */
 .hideScrollbar::-webkit-scrollbar {
   display: none;
