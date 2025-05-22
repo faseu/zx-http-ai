@@ -76,14 +76,14 @@ const Page = () => {
       }}
     >
       <div className={styles.rightBox}>
-        <img className={styles.rightBox_img} src="/logo.png" alt="" />
+        <img className={styles.rightBox_img} src="/admin/logo.png" alt="" />
         <div className={styles.titleBox}>
           <div className={styles.rightBox_title1}>即插智联管理后台</div>
           <div className={styles.rightBox_title2}>自然语言编程智能体</div>
         </div>
       </div>
       <LoginFormPage
-        backgroundImageUrl="/login-bg.jpg"
+        backgroundImageUrl="/admin/login-bg.jpg"
         title="欢 迎 登 陆"
         containerStyle={{
           height: 720,

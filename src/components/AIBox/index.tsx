@@ -155,7 +155,13 @@ export default () => {
             key: index,
             placement: item.role === 'user' ? 'end' : 'start',
             content: item.content,
-            avatar: { icon: <UserOutlined /> },
+            avatar: (
+              <img
+                style={{ width: '32px', height: '32px' }}
+                src="/admin/logo.png"
+                alt=""
+              />
+            ),
             messageRender: renderMarkdown,
           })),
           ...(status === 'pending' && streamingContent
@@ -188,7 +194,7 @@ export default () => {
               onSubmit={handleSubmit}
               autoSize={{ minRows: 6, maxRows: 6 }}
               onKeyDown={onKeyDown}
-              placeholder='Type "/" to trigger suggestion'
+              placeholder="请输入问题"
             />
           );
         }}

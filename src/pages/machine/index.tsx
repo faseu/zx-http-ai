@@ -2,6 +2,7 @@ import AddDirectiveModal from '@/components/AddDirectiveModal';
 import AddMachineModal from '@/components/AddMachineModal';
 import AIBox from '@/components/AIBox';
 import CustomTitle from '@/components/CustomTitle';
+import DetailMachineModal from '@/components/DetailMachineModal';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
 import {
@@ -96,6 +97,7 @@ export default () => {
   const isDark = initialState?.settings?.navTheme === 'realDark';
   const [modalMachineOpen, setModalMachineOpen] = useState(false);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
+  const [detailMachineOpen, setDetailMachineOpen] = useState(false);
   const [machineList, setMachineList] = useState([]);
   const [directiveList, setDirectiveList] = useState([]);
   const [cateList, setCateList] = useState([]);
@@ -280,6 +282,7 @@ export default () => {
         }}
         onCancel={() => setModalDirectiveOpen(false)}
       />
+      <DetailMachineModal open={detailMachineOpen} />
     </Card>
   );
 };

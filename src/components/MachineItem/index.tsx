@@ -34,7 +34,7 @@ const MachineItem: React.FC<MachineItemProps> = ({
           [styles.lightImgBox]: !isDark,
         })}
       >
-        <img src="/machine.png" alt="" />
+        <img src="/admin/machine.png" alt="" />
       </div>
       <Flex
         justify="space-between"
