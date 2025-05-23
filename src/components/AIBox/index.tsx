@@ -37,9 +37,7 @@ export default () => {
   const [lines, setLines] = useState([]);
   const streamingContent = useMemo(() => lines.join(''), [lines]);
 
-  const [messages, setMessages] = useState([
-    { role: 'system', content: '你好，请问有什么可以帮您？' },
-  ]);
+  const [messages, setMessages] = useState([]);
   const linesRef = useRef<string[]>([]);
   const abortController = useRef<AbortController>(null);
 
@@ -148,35 +146,62 @@ export default () => {
 
   return (
     <Flex vertical className={styles.aiBox} gap={6}>
-      <Bubble.List
-        style={{ flex: 1 }}
-        items={[
-          ...messages.map((item, index) => ({
-            key: index,
-            placement: item.role === 'user' ? 'end' : 'start',
-            content: item.content,
-            avatar: (
-              <img
-                style={{ width: '32px', height: '32px' }}
-                src="/admin/logo.png"
-                alt=""
-              />
-            ),
-            messageRender: renderMarkdown,
-          })),
-          ...(status === 'pending' && streamingContent
-            ? [
-                {
-                  key: 'streaming',
-                  placement: 'start',
-                  content: streamingContent,
-                  avatar: { icon: <UserOutlined /> },
-                  messageRender: renderMarkdown,
-                },
-              ]
-            : []),
-        ]}
-      />
+      {messages.length > 0 && (
+        <Bubble.List
+          style={{ flex: 1 }}
+          items={[
+            ...messages.map((item, index) => ({
+              key: index,
+              placement: item.role === 'user' ? 'end' : 'start',
+              content: item.content,
+              avatar:
+                item.role === 'user' ? (
+                  { icon: <UserOutlined /> }
+                ) : (
+                  <img
+                    style={{ width: '32px', height: '32px' }}
+                    src="/admin/logo.png"
+                    alt=""
+                  />
+                ),
+              messageRender: renderMarkdown,
+            })),
+            ...(status === 'pending' && streamingContent
+              ? [
+                  {
+                    key: 'streaming',
+                    placement: 'start',
+                    content: streamingContent,
+                    avatar: (
+                      <img
+                        style={{ width: '32px', height: '32px' }}
+                        src="/admin/logo.png"
+                        alt=""
+                      />
+                    ),
+                    messageRender: renderMarkdown,
+                  },
+                ]
+              : []),
+          ]}
+        />
+      )}
+      {!messages.length && (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <img style={{ width: '305px' }} src="/admin/ai-prompt.png" alt="" />
+          <div style={{ fontSize: '18px', marginTop: '32px' }}>
+            你好，我是即插智联，一款自然语言编程的小小智能体！
+          </div>
+        </div>
+      )}
 
       <Suggestion items={[{ label: 'Write a report', value: 'report' }]}>
         {({ onTrigger, onKeyDown }) => {

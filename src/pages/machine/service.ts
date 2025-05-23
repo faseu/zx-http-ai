@@ -2,7 +2,7 @@
 import { request } from '@umijs/max';
 
 /**
- * 新增活动类型
+ * 新增设备
  */
 export async function addMachine(params?: { [key: string]: any }) {
   return request('/admin/machine/save', {
@@ -13,26 +13,22 @@ export async function addMachine(params?: { [key: string]: any }) {
   });
 }
 /**
- * 新增活动类型
+ * 删除设备
  */
-export async function delMachine(params?: { [key: string]: any }) {
-  return request('/admin/machine/del', {
+export async function detailMachine(params?: { [key: string]: any }) {
+  return request('/admin/machine/getInfo', {
     method: 'POST',
     data: {
       ...params,
     },
   });
 }
-
 /**
- * 编辑活动类型
+ * 删除设备
  */
-export async function editActivitiesType(
-  id: number,
-  params?: { [p: string]: any },
-) {
-  return request(`/category/categories/${id}`, {
-    method: 'PUT',
+export async function delMachine(params?: { [key: string]: any }) {
+  return request('/admin/machine/del', {
+    method: 'POST',
     data: {
       ...params,
     },

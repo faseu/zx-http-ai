@@ -8,12 +8,14 @@ interface MachineItemProps {
   text: string;
   detail: any;
   onDelMachine: any;
+  onGetDetail: any;
 }
 
 const MachineItem: React.FC<MachineItemProps> = ({
   text,
   detail,
   onDelMachine,
+  onGetDetail,
 }) => {
   console.log(detail);
   const { initialState } = useModel('@@initialState');
@@ -34,14 +36,18 @@ const MachineItem: React.FC<MachineItemProps> = ({
           [styles.lightImgBox]: !isDark,
         })}
       >
-        <img src="/admin/machine.png" alt="" />
+        <img
+          style={{ width: '82px', height: '82px' }}
+          src={detail.img}
+          alt=""
+        />
       </div>
       <Flex
         justify="space-between"
         align="flex-end"
         style={{ marginTop: '8px' }}
       >
-        <div>智能网关A1</div>
+        <div>{detail.machineName}</div>
         <div style={{ fontSize: '12px' }}>V1.2.3</div>
       </Flex>
       <Flex justify="space-between" style={{ marginTop: '8px' }}>
@@ -64,7 +70,11 @@ const MachineItem: React.FC<MachineItemProps> = ({
             </div>
           </Popconfirm>
         </Flex>
-        <div className={styles.buttom} style={{ background: '#516EFA' }}>
+        <div
+          onClick={() => onGetDetail(detail)}
+          className={styles.buttom}
+          style={{ background: '#516EFA' }}
+        >
           详情
         </div>
       </Flex>

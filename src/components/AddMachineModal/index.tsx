@@ -72,8 +72,14 @@ const AddMachineModal: React.FC<AddMachineModalProps> = ({
         >
           <Input placeholder="请输入设备位置" />
         </Form.Item>
-        <Form.Item label="设备图片：">
-          <UploadImage name="" />
+        <Form.Item label="设备图片：" name="img" rules={[{ required: true }]}>
+          <UploadImage
+            name="img"
+            onSuccess={(value: any) => {
+              console.log(value);
+              form.setFieldValue('img', value);
+            }}
+          />
         </Form.Item>
       </Form>
     </Modal>

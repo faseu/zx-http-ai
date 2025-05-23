@@ -9,6 +9,7 @@ import {
   addMachine,
   addOta,
   delMachine,
+  detailMachine,
   getCateList,
   getMachineList,
   getOtaList,
@@ -19,7 +20,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
 /**
- * add节点
+ * add设备
  * @param fields
  */
 const handleAddMachine = async (fields: any) => {
@@ -27,7 +28,6 @@ const handleAddMachine = async (fields: any) => {
   try {
     await addMachine({
       ...fields,
-      img: 'aaaaaaaaaa',
     });
     hide();
     message.success('新增成功');
@@ -38,8 +38,29 @@ const handleAddMachine = async (fields: any) => {
     return false;
   }
 };
+
 /**
- * add节点
+ * 设备详情
+ * @param fields
+ */
+const handleDetailMachine = async (fields: any) => {
+  const hide = message.loading('正在获取详情');
+  try {
+    await detailMachine({
+      machineId: fields.machineId,
+    });
+    hide();
+    message.success('获取详情成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('获取详情失败请重试！');
+    return false;
+  }
+};
+
+/**
+ * 新增协议
  * @param fields
  */
 const handleAddOta = async (fields: any) => {
@@ -60,14 +81,13 @@ const handleAddOta = async (fields: any) => {
 };
 
 /**
- *  del节点
- * @param record
- * @param action
+ *  删除设备
+ * @param fields
  */
-const handleDelMachine = async (record: any) => {
+const handleDelMachine = async (fields: any) => {
   const hide = message.loading('正在删除');
   try {
-    await delMachine({ machineId: record.machineId });
+    await delMachine({ machineId: fields.machineId });
     hide();
     message.success('删除成功');
     return true;
@@ -118,7 +138,10 @@ export default () => {
   ];
 
   const fetchMachineList = async () => {
-    const { data } = await getMachineList();
+    const { data } = await getMachineList({
+      page: 1,
+      psize: 1000,
+    });
     setMachineList(data);
   };
 
@@ -230,6 +253,10 @@ export default () => {
                       await handleDelMachine(item);
                       await fetchMachineList();
                     }}
+                    onGetDetail={async (item: any) => {
+                      await handleDetailMachine(item);
+                      setDetailMachineOpen(true);
+                    }}
                   />
                 );
               }}
@@ -262,6 +289,7 @@ export default () => {
         cateList={cateList}
         open={modalMachineOpen}
         onOk={async (values: any) => {
+          console.log(values);
           const success = await handleAddMachine(values);
           if (success) {
             setModalMachineOpen(false);
@@ -282,7 +310,10 @@ export default () => {
         }}
         onCancel={() => setModalDirectiveOpen(false)}
       />
-      <DetailMachineModal open={detailMachineOpen} />
+      <DetailMachineModal
+        open={detailMachineOpen}
+        onCancel={() => setDetailMachineOpen(false)}
+      />
     </Card>
   );
 };
