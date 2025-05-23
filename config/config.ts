@@ -23,6 +23,6 @@ export default defineConfig({
   },
   routes,
   npmClient: 'yarn',
-  // base: '/admin/',
-  // publicPath: '/admin/',
+  base: '/admin/',
+  publicPath: '/admin/',
 });
