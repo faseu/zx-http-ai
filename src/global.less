@@ -29,6 +29,10 @@ input {
   background-color: transparent;
 }
 
+textarea {
+  resize: none!important;
+  overflow: auto; /* 保留滚动条功能 */
+}
 
 textarea::-webkit-scrollbar {
   width: 8px;
@@ -50,5 +54,6 @@ textarea::-webkit-scrollbar-thumb:hover {
   background-color: #8c8c8c !important;
 }
 textarea::-webkit-scrollbar-corner {
-  background: #141414 !important; /* 关键：交汇处背景改暗色 */
+  border: 0!important;
+  background-color: #282c34 !important; /* 关键：交汇处背景改暗色 */
 }

@@ -13,6 +13,11 @@ interface CustomTitleProps {
   showEmpty?: boolean;
   showCheckbox?: boolean;
   onSubmit?: (inputValue: string) => void;
+  // 新增：全选相关props
+  isAllSelected?: boolean;
+  onSelectAll?: (checked: boolean) => void;
+  selectedCount?: number;
+  totalCount?: number;
 }
 
 const CustomTitle: React.FC<CustomTitleProps> = ({
@@ -22,6 +27,11 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
   showEmpty,
   showCheckbox,
   onSubmit,
+  // 新增：全选相关props
+  isAllSelected = false,
+  onSelectAll,
+  selectedCount = 0,
+  totalCount = 0,
 }) => {
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
@@ -36,6 +46,47 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
       onSubmit(inputValue); // 点击时把输入框的值传给父组件
     }
   };
+
+  // 新增：全选checkbox变化处理
+  const handleSelectAllChange = (e: any) => {
+    if (onSelectAll) {
+      onSelectAll(e.target.checked);
+    }
+  };
+
+  // 新增：计算全选checkbox的状态
+  const getCheckboxProps = () => {
+    if (totalCount === 0) {
+      return {
+        checked: false,
+        indeterminate: false,
+        disabled: true,
+      };
+    }
+
+    if (selectedCount === totalCount) {
+      return {
+        checked: true,
+        indeterminate: false,
+        disabled: false,
+      };
+    }
+
+    if (selectedCount > 0 && selectedCount < totalCount) {
+      return {
+        checked: false,
+        indeterminate: true,
+        disabled: false,
+      };
+    }
+
+    return {
+      checked: false,
+      indeterminate: false,
+      disabled: false,
+    };
+  };
+
   return (
     <div
       className={classNames({
@@ -49,7 +100,32 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
       {addButtonText && (
         <>
           {showCheckbox && (
-            <Checkbox style={{ marginRight: '8px' }}>全选</Checkbox>
+            <div
+              style={{
+                marginRight: '8px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <Checkbox
+                {...getCheckboxProps()}
+                onChange={handleSelectAllChange}
+              >
+                全选
+              </Checkbox>
+              {/* 显示选中数量 */}
+              {totalCount > 0 && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: isDark ? '#888' : '#666',
+                  }}
+                >
+                  ({selectedCount}/{totalCount})
+                </span>
+              )}
+            </div>
           )}
           <Input
             style={{ width: '200px', marginRight: '8px' }}

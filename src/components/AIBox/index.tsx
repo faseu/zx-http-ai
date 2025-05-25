@@ -6,6 +6,7 @@ import 'highlight.js/styles/atom-one-dark.css';
 // import 'highlight.js/styles/github.css'; // 你也可以用别的主题
 import MarkdownIt from 'markdown-it';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import EditCodeModal from './EditCodeModal'; // 引入编辑代码模态框组件
 import styles from './index.less';
 
 const BASE_URL =
@@ -41,6 +42,13 @@ export default () => {
   const linesRef = useRef<string[]>([]);
   const abortController = useRef<AbortController>(null);
 
+  // 编辑模态框相关状态
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingCode, setEditingCode] = useState('');
+  const [currentCodeBlock, setCurrentCodeBlock] = useState<HTMLElement | null>(
+    null,
+  );
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       const codeBlocks = document.querySelectorAll('.markdown-body pre');
@@ -66,7 +74,7 @@ export default () => {
         actionContainer.style.bottom = '8px';
         actionContainer.style.right = '8px';
         actionContainer.style.display = 'flex';
-        actionContainer.style.gap = '12px';
+        actionContainer.style.gap = '8px';
         actionContainer.style.alignItems = 'center';
 
         // 复制按钮
@@ -83,6 +91,20 @@ export default () => {
             copyButton.textContent = '失败';
             setTimeout(() => (copyButton.textContent = '复制'), 1500);
           }
+        };
+
+        // 编辑按钮
+        const editButton = document.createElement('button');
+        editButton.className = 'edit-btn';
+        editButton.textContent = '编辑';
+        editButton.onclick = () => {
+          const codeElement = block.querySelector('code');
+          const originalCode = codeElement.innerText;
+
+          // 打开编辑模态框
+          setCurrentCodeBlock(codeElement);
+          setEditingCode(originalCode);
+          setEditModalOpen(true);
         };
 
         // 提交编译按钮
@@ -134,6 +156,11 @@ export default () => {
           color: '#fff',
         });
 
+        Object.assign(editButton.style, buttonStyle, {
+          background: '#52c41a',
+          color: '#fff',
+        });
+
         Object.assign(compileButton.style, buttonStyle, {
           background: '#4091ED',
           color: '#fff',
@@ -157,11 +184,13 @@ export default () => {
         };
 
         addHoverEffect(copyButton, '#40a9ff');
-        addHoverEffect(compileButton, '#73d13d');
+        addHoverEffect(editButton, '#73d13d');
+        addHoverEffect(compileButton, '#4091ED');
         addHoverEffect(upgradeButton, '#ffa940');
 
         // 将按钮添加到对应容器
         copyContainer.appendChild(copyButton);
+        actionContainer.appendChild(editButton);
         actionContainer.appendChild(compileButton);
         actionContainer.appendChild(upgradeButton);
 
@@ -174,6 +203,141 @@ export default () => {
 
     return () => clearTimeout(timeoutId);
   }, [messages]);
+
+  // 处理编辑代码保存
+  const handleEditCodeSave = (newCode: string) => {
+    if (currentCodeBlock) {
+      // 更新代码块内容
+      currentCodeBlock.innerHTML = hljs.highlightAuto(newCode).value;
+
+      // 找到对应的编辑按钮并显示保存状态
+      const editButton = currentCodeBlock
+        .closest('pre')
+        ?.querySelector('.edit-btn') as HTMLButtonElement;
+      if (editButton) {
+        editButton.textContent = '已保存';
+        setTimeout(() => (editButton.textContent = '编辑'), 1500);
+      }
+    }
+    setEditModalOpen(false);
+    setCurrentCodeBlock(null);
+  };
+
+  // 处理编辑模态框取消
+  const handleEditCodeCancel = () => {
+    setEditModalOpen(false);
+    setCurrentCodeBlock(null);
+  };
+
+  // 创建编辑模态框的函数
+  const createEditModal = (codeBlock, originalCode, onSave) => {
+    // 创建遮罩层
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    overlay.style.zIndex = '1000';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+
+    // 创建模态框
+    const modal = document.createElement('div');
+    modal.style.backgroundColor = '#fff';
+    modal.style.borderRadius = '8px';
+    modal.style.padding = '20px';
+    modal.style.width = '80%';
+    modal.style.maxWidth = '800px';
+    modal.style.maxHeight = '80%';
+    modal.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+
+    // 创建标题
+    const title = document.createElement('h3');
+    title.textContent = '编辑代码';
+    title.style.margin = '0 0 16px 0';
+    title.style.color = '#333';
+
+    // 创建文本域
+    const textarea = document.createElement('textarea');
+    textarea.value = originalCode;
+    textarea.style.width = '100%';
+    textarea.style.height = '400px';
+    textarea.style.fontFamily = 'Monaco, Menlo, "Ubuntu Mono", monospace';
+    textarea.style.fontSize = '14px';
+    textarea.style.border = '1px solid #d9d9d9';
+    textarea.style.borderRadius = '6px';
+    textarea.style.padding = '12px';
+    textarea.style.resize = 'vertical';
+    textarea.style.outline = 'none';
+    textarea.style.backgroundColor = '#fafafa';
+
+    // 创建按钮容器
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'flex-end';
+    buttonContainer.style.gap = '12px';
+    buttonContainer.style.marginTop = '16px';
+
+    // 创建取消按钮
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = '取消';
+    cancelButton.style.padding = '8px 16px';
+    cancelButton.style.border = '1px solid #d9d9d9';
+    cancelButton.style.borderRadius = '6px';
+    cancelButton.style.backgroundColor = '#fff';
+    cancelButton.style.cursor = 'pointer';
+    cancelButton.onclick = () => {
+      document.body.removeChild(overlay);
+    };
+
+    // 创建保存按钮
+    const saveButton = document.createElement('button');
+    saveButton.textContent = '保存';
+    saveButton.style.padding = '8px 16px';
+    saveButton.style.border = 'none';
+    saveButton.style.borderRadius = '6px';
+    saveButton.style.backgroundColor = '#1890ff';
+    saveButton.style.color = '#fff';
+    saveButton.style.cursor = 'pointer';
+    saveButton.onclick = () => {
+      const newCode = textarea.value;
+      onSave(newCode);
+      document.body.removeChild(overlay);
+    };
+
+    // 组装模态框
+    buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(saveButton);
+    modal.appendChild(title);
+    modal.appendChild(textarea);
+    modal.appendChild(buttonContainer);
+    overlay.appendChild(modal);
+
+    // 添加到页面
+    document.body.appendChild(overlay);
+
+    // 聚焦到文本域
+    textarea.focus();
+
+    // 点击遮罩关闭
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    // ESC键关闭
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(overlay);
+        document.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+  };
 
   const renderMarkdown = (content) => (
     <div
@@ -368,6 +532,15 @@ export default () => {
           );
         }}
       </Suggestion>
+
+      {/* 编辑代码模态框 */}
+      <EditCodeModal
+        open={editModalOpen}
+        initialCode={editingCode}
+        title="编辑代码"
+        onOk={handleEditCodeSave}
+        onCancel={handleEditCodeCancel}
+      />
     </Flex>
   );
 };

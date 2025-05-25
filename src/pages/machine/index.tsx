@@ -39,6 +39,7 @@ const handleAddMachine = async (fields: any) => {
     return false;
   }
 };
+
 /**
  * edit设备
  * @param fields
@@ -144,13 +145,17 @@ export default () => {
   const [editMachineId, setEditMachineId] = useState(0);
   const [editMachineDetail, setEditMachineDetail] = useState({});
 
+  // 新增：管理选中状态的state
+  const [selectedMachineIds, setSelectedMachineIds] = useState<number[]>([]);
+  const [isAllSelected, setIsAllSelected] = useState(false);
+
   const list: any[] = [];
   for (let i = 1; i < 7; i += 1) {
     list.push({
       id: i,
       title: '卡片列表',
       description:
-        'Umi@4 实战教程，专门针对中后台项目零基础的朋友，不管你是前端还是后端，看完这个系列你也有能力合理“抗雷”，“顶坑”',
+        'Umi@4 实战教程，专门针对中后台项目零基础的朋友，不管你是前端还是后端，看完这个系列你也有能力合理"抗雷"，"顶坑"',
     });
   }
   const data = [
@@ -204,6 +209,69 @@ export default () => {
     setModalDirectiveOpen(true);
   };
 
+  // 新增：全选/取消全选处理函数
+  const handleSelectAll = (checked: boolean) => {
+    setIsAllSelected(checked);
+    if (checked) {
+      // 全选：选中所有设备ID
+      const allMachineIds = machineList.map(
+        (machine: any) => machine.machineId,
+      );
+      setSelectedMachineIds(allMachineIds);
+    } else {
+      // 取消全选：清空选中列表
+      setSelectedMachineIds([]);
+    }
+  };
+
+  // 新增：单个设备选中/取消选中处理函数
+  const handleMachineCheck = (machineId: number, checked: boolean) => {
+    let newSelectedIds: number[];
+
+    if (checked) {
+      // 添加到选中列表
+      newSelectedIds = [...selectedMachineIds, machineId];
+    } else {
+      // 从选中列表移除
+      newSelectedIds = selectedMachineIds.filter((id) => id !== machineId);
+    }
+
+    setSelectedMachineIds(newSelectedIds);
+
+    // 更新全选状态
+    const allMachineIds = machineList.map((machine: any) => machine.machineId);
+    setIsAllSelected(
+      newSelectedIds.length === allMachineIds.length &&
+        allMachineIds.length > 0,
+    );
+  };
+
+  // 新增：当设备列表变化时，重新计算全选状态
+  useEffect(() => {
+    if (machineList.length > 0) {
+      const allMachineIds = machineList.map(
+        (machine: any) => machine.machineId,
+      );
+      const currentValidSelected = selectedMachineIds.filter((id) =>
+        allMachineIds.includes(id),
+      );
+
+      // 更新有效的选中列表
+      if (currentValidSelected.length !== selectedMachineIds.length) {
+        setSelectedMachineIds(currentValidSelected);
+      }
+
+      // 更新全选状态
+      setIsAllSelected(
+        currentValidSelected.length === allMachineIds.length &&
+          allMachineIds.length > 0,
+      );
+    } else {
+      setSelectedMachineIds([]);
+      setIsAllSelected(false);
+    }
+  }, [machineList]);
+
   useEffect(() => {
     fetchMachineList();
     fetchOtaList();
@@ -212,6 +280,7 @@ export default () => {
       setCateList(cateList);
     });
   }, []);
+
   return (
     <Card
       styles={{
@@ -253,6 +322,11 @@ export default () => {
             searchPlaceholder="搜索设备..."
             addButtonText="新增设备"
             onSubmit={addMachine}
+            // 新增：传递全选相关props
+            isAllSelected={isAllSelected}
+            onSelectAll={handleSelectAll}
+            selectedCount={selectedMachineIds.length}
+            totalCount={machineList.length}
           />
           <div className={styles.hideScrollbar}>
             <List
@@ -272,6 +346,11 @@ export default () => {
                   <MachineItem
                     detail={item}
                     text="这是设备信息"
+                    // 新增：传递选中状态和处理函数
+                    isChecked={selectedMachineIds.includes(item.machineId)}
+                    onCheckChange={(checked: boolean) =>
+                      handleMachineCheck(item.machineId, checked)
+                    }
                     onEditMachine={async (item: any) => {
                       const data = await handleDetailMachine(item);
                       setEditMachineDetail(data);
@@ -285,9 +364,6 @@ export default () => {
                     onGetDetail={async (item: any) => {
                       await handleDetailMachine(item);
                       setDetailMachineOpen(true);
-                    }}
-                    onCheckChange={(e: any) => {
-                      console.log(e);
                     }}
                   />
                 );

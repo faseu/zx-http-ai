@@ -10,7 +10,9 @@ interface MachineItemProps {
   onEditMachine: any;
   onDelMachine: any;
   onGetDetail: any;
-  onCheckChange: any;
+  // 更新：改为简化的checkbox处理
+  isChecked?: boolean;
+  onCheckChange?: (checked: boolean) => void;
 }
 
 const MachineItem: React.FC<MachineItemProps> = ({
@@ -19,11 +21,20 @@ const MachineItem: React.FC<MachineItemProps> = ({
   onEditMachine,
   onDelMachine,
   onGetDetail,
+  // 更新：新的checkbox props
+  isChecked = false,
   onCheckChange,
 }) => {
   console.log(detail);
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
+
+  // 更新：checkbox变化处理函数
+  const handleCheckboxChange = (e: any) => {
+    if (onCheckChange) {
+      onCheckChange(e.target.checked);
+    }
+  };
 
   return (
     <div
@@ -47,8 +58,8 @@ const MachineItem: React.FC<MachineItemProps> = ({
         />
         <Checkbox
           style={{ position: 'absolute', top: '6px', left: '8px' }}
-          value={detail.machineId}
-          onChange={(e) => onCheckChange(e)}
+          checked={isChecked}
+          onChange={handleCheckboxChange}
         />
         <div
           style={{
