@@ -9,7 +9,14 @@
 }
 .ant-sender-content {
   background: rgb(34, 32, 32) !important;
+  padding: 12px 28px !important;
 }
+.ant-layout-content {
+  margin-left: 114px;
+  width: calc(100% - 114px) !important;
+  border-left: 1px solid rgba(253, 253, 253, 0.12) !important;
+}
+
 
 input:-webkit-autofill,
 textarea:-webkit-autofill,
@@ -20,4 +27,28 @@ select:-webkit-autofill {
 }
 input {
   background-color: transparent;
+}
+
+
+textarea::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: #1f1f1f !important;
+  border-radius: 3px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: #595959 !important;
+  border-radius: 3px;
+  border: 1.5px solid #1f1f1f !important;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background-color: #8c8c8c !important;
+}
+textarea::-webkit-scrollbar-corner {
+  background: #141414 !important; /* 关键：交汇处背景改暗色 */
 }

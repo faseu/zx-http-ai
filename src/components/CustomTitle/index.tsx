@@ -1,16 +1,17 @@
 // src/components/ThemeSwitchButton/index.tsx
 import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
-import { Button, Input, Popconfirm } from 'antd';
+import { Button, Checkbox, Input, Popconfirm } from 'antd';
 import classNames from 'classnames';
 import { useState } from 'react';
 import styles from './index.less';
 
 interface CustomTitleProps {
   title: string;
-  searchPlaceholder?: string; //
-  addButtonText?: string; //
-  showEmpty?: boolean; //
+  searchPlaceholder?: string;
+  addButtonText?: string;
+  showEmpty?: boolean;
+  showCheckbox?: boolean;
   onSubmit?: (inputValue: string) => void;
 }
 
@@ -19,7 +20,8 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
   searchPlaceholder,
   addButtonText,
   showEmpty,
-  onSubmit, // 👈
+  showCheckbox,
+  onSubmit,
 }) => {
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
@@ -46,6 +48,9 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
       <div className={styles.title}>{title}</div>
       {addButtonText && (
         <>
+          {showCheckbox && (
+            <Checkbox style={{ marginRight: '8px' }}>全选</Checkbox>
+          )}
           <Input
             style={{ width: '200px', marginRight: '8px' }}
             placeholder={searchPlaceholder} // ✅ 用 props 里的

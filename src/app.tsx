@@ -64,7 +64,6 @@ export const layout: RunTimeLayoutConfig = ({
 
     menuRender: (props, defaultDom) => {
       // return <CustomMenu {...props} />;
-      console.log(props);
       return <CustomMenu {...props} />;
     },
     postMenuData: (e) => {

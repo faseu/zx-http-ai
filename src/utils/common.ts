@@ -41,8 +41,11 @@ export const getUploadFileUrls = (
 };
 
 export const normalizeUploadFileList = (
-  value: string | string[],
+  value: string | string[] | null | undefined,
 ): UploadFile[] => {
+  if (!value || value.length === 0) {
+    return [];
+  }
   const urls = typeof value === 'string' ? [value] : value;
   return urls.map((url, index) => ({
     uid: `pic-upload-${-index}`,

@@ -1,4 +1,3 @@
-import styles from '@/pages/login/index.less';
 import { accountLogin } from '@/services/login';
 import { setToken } from '@/utils/token';
 import { LockOutlined, MobileOutlined, UserOutlined } from '@ant-design/icons';
@@ -13,7 +12,13 @@ import { history, useModel } from '@umijs/max';
 import { Tabs, message, theme } from 'antd';
 import { useState } from 'react';
 
+import styles from '@/pages/login/index.less';
 import { flushSync } from 'react-dom';
+
+import classNames from 'classnames';
+import './index.less';
+
+const cx = classNames.bind(styles);
 
 type LoginType = 'phone' | 'account';
 
@@ -74,11 +79,12 @@ const Page = () => {
         backgroundColor: 'black',
         height: '100vh',
       }}
+      className={cx({ login: true })}
     >
       <div className={styles.rightBox}>
         <img className={styles.rightBox_img} src="/admin/logo.png" alt="" />
         <div className={styles.titleBox}>
-          <div className={styles.rightBox_title1}>即插智联管理后台</div>
+          <div className={styles.rightBox_title1}>即插智联管理平台</div>
           <div className={styles.rightBox_title2}>自然语言编程智能体</div>
         </div>
       </div>
@@ -86,7 +92,8 @@ const Page = () => {
         backgroundImageUrl="/admin/login-bg.jpg"
         title="欢 迎 登 陆"
         containerStyle={{
-          height: 720,
+          height: 716,
+          width: 500,
           backgroundColor: 'rgba(17, 17, 17,0.65)',
           backdropFilter: 'blur(4px)',
           backgroundImage: 'none',
@@ -121,6 +128,7 @@ const Page = () => {
                   <UserOutlined
                     style={{
                       color: token.colorText,
+                      fontSize: 23,
                     }}
                     className={'prefixIcon'}
                   />
@@ -142,6 +150,7 @@ const Page = () => {
                   <LockOutlined
                     style={{
                       color: token.colorText,
+                      fontSize: 23,
                     }}
                     className={'prefixIcon'}
                   />
@@ -166,6 +175,7 @@ const Page = () => {
                   <MobileOutlined
                     style={{
                       color: token.colorText,
+                      fontSize: 23,
                     }}
                     className={'prefixIcon'}
                   />
@@ -191,6 +201,7 @@ const Page = () => {
                   <LockOutlined
                     style={{
                       color: token.colorText,
+                      fontSize: 23,
                     }}
                     className={'prefixIcon'}
                   />
@@ -221,19 +232,21 @@ const Page = () => {
         )}
         <div
           style={{
-            marginBlockEnd: 24,
+            padding: '0 15px',
+            marginBlockEnd: 60,
           }}
         >
           <ProFormCheckbox noStyle name="autoLogin">
             自动登录
           </ProFormCheckbox>
-          <a
+          <div
             style={{
               float: 'right',
+              cursor: 'pointer',
             }}
           >
             忘记密码
-          </a>
+          </div>
         </div>
       </LoginFormPage>
     </div>

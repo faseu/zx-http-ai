@@ -1,6 +1,6 @@
 import { UserOutlined } from '@ant-design/icons';
 import { Bubble, Sender, Suggestion, XRequest } from '@ant-design/x';
-import { Flex } from 'antd';
+import { Divider, Flex, Space } from 'antd';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 // import 'highlight.js/styles/github.css'; // 你也可以用别的主题
@@ -42,41 +42,138 @@ export default () => {
   const abortController = useRef<AbortController>(null);
 
   useEffect(() => {
-    const codeBlocks = document.querySelectorAll('.markdown-body pre');
-    codeBlocks.forEach((block) => {
-      // 避免重复添加按钮
-      if (block.querySelector('.copy-btn')) return;
+    const timeoutId = setTimeout(() => {
+      const codeBlocks = document.querySelectorAll('.markdown-body pre');
+      codeBlocks.forEach((block) => {
+        // 检查是否已经添加过按钮容器，避免重复添加
+        if (
+          block.querySelector('.copy-container') ||
+          block.querySelector('.action-container')
+        )
+          return;
 
-      const button = document.createElement('button');
-      button.className = 'copy-btn';
-      button.textContent = '复制';
-      button.onclick = async () => {
-        const code = block.innerText;
-        try {
-          await navigator.clipboard.writeText(code);
-          button.textContent = '已复制';
-          setTimeout(() => (button.textContent = '复制'), 1500);
-        } catch (err) {
-          button.textContent = '失败';
-        }
-      };
+        // 创建复制按钮容器（右上角）
+        const copyContainer = document.createElement('div');
+        copyContainer.className = 'copy-container';
+        copyContainer.style.position = 'absolute';
+        copyContainer.style.top = '8px';
+        copyContainer.style.right = '8px';
 
-      block.style.position = 'relative';
-      button.style.position = 'absolute';
-      button.style.top = '8px';
-      button.style.right = '8px';
-      button.style.fontSize = '12px';
-      button.style.padding = '2px 6px';
-      button.style.background = '#1890ff';
-      button.style.color = '#fff';
-      button.style.border = 'none';
-      button.style.borderRadius = '4px';
-      button.style.cursor = 'pointer';
-      button.classList.add('copy-btn');
+        // 创建功能按钮容器（右下角）
+        const actionContainer = document.createElement('div');
+        actionContainer.className = 'action-container';
+        actionContainer.style.position = 'absolute';
+        actionContainer.style.bottom = '8px';
+        actionContainer.style.right = '8px';
+        actionContainer.style.display = 'flex';
+        actionContainer.style.gap = '12px';
+        actionContainer.style.alignItems = 'center';
 
-      block.appendChild(button);
-    });
-  }, [lines]); // 每次 markdown 内容更新都执行一次
+        // 复制按钮
+        const copyButton = document.createElement('button');
+        copyButton.className = 'copy-btn';
+        copyButton.textContent = '复制';
+        copyButton.onclick = async () => {
+          const code = block.innerText;
+          try {
+            await navigator.clipboard.writeText(code);
+            copyButton.textContent = '已复制';
+            setTimeout(() => (copyButton.textContent = '复制'), 1500);
+          } catch (err) {
+            copyButton.textContent = '失败';
+            setTimeout(() => (copyButton.textContent = '复制'), 1500);
+          }
+        };
+
+        // 提交编译按钮
+        const compileButton = document.createElement('button');
+        compileButton.className = 'compile-btn';
+        compileButton.textContent = '提交编译';
+        compileButton.onclick = () => {
+          const code = block.innerText;
+          // 这里可以添加您的编译逻辑
+          console.log('提交编译:', code);
+          compileButton.textContent = '编译中...';
+          // 模拟编译过程
+          setTimeout(() => {
+            compileButton.textContent = '编译完成';
+            setTimeout(() => (compileButton.textContent = '提交编译'), 2000);
+          }, 1000);
+        };
+
+        // 一键升级按钮
+        const upgradeButton = document.createElement('button');
+        upgradeButton.className = 'upgrade-btn';
+        upgradeButton.textContent = '一键升级';
+        upgradeButton.onclick = () => {
+          const code = block.innerText;
+          // 这里可以添加您的升级逻辑
+          console.log('一键升级:', code);
+          upgradeButton.textContent = '升级中...';
+          // 模拟升级过程
+          setTimeout(() => {
+            upgradeButton.textContent = '升级完成';
+            setTimeout(() => (upgradeButton.textContent = '一键升级'), 2000);
+          }, 1500);
+        };
+
+        // 通用按钮样式
+        const buttonStyle = {
+          fontSize: '12px',
+          padding: '4px 8px',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontWeight: '500',
+          transition: 'all 0.2s ease',
+        };
+
+        // 应用样式到各个按钮
+        Object.assign(copyButton.style, buttonStyle, {
+          background: '#282c34',
+          color: '#fff',
+        });
+
+        Object.assign(compileButton.style, buttonStyle, {
+          background: '#4091ED',
+          color: '#fff',
+        });
+
+        Object.assign(upgradeButton.style, buttonStyle, {
+          background: '#F39800',
+          color: '#fff',
+        });
+
+        // 添加悬停效果
+        const addHoverEffect = (button, hoverColor) => {
+          button.onmouseenter = () => {
+            button.style.opacity = '0.8';
+            button.style.transform = 'translateY(-1px)';
+          };
+          button.onmouseleave = () => {
+            button.style.opacity = '1';
+            button.style.transform = 'translateY(0)';
+          };
+        };
+
+        addHoverEffect(copyButton, '#40a9ff');
+        addHoverEffect(compileButton, '#73d13d');
+        addHoverEffect(upgradeButton, '#ffa940');
+
+        // 将按钮添加到对应容器
+        copyContainer.appendChild(copyButton);
+        actionContainer.appendChild(compileButton);
+        actionContainer.appendChild(upgradeButton);
+
+        // 设置代码块样式并添加按钮容器
+        block.style.position = 'relative';
+        block.appendChild(copyContainer);
+        block.appendChild(actionContainer);
+      });
+    }, 50);
+
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
 
   const renderMarkdown = (content) => (
     <div
@@ -219,7 +316,54 @@ export default () => {
               onSubmit={handleSubmit}
               autoSize={{ minRows: 6, maxRows: 6 }}
               onKeyDown={onKeyDown}
-              placeholder="请输入问题"
+              placeholder="发送消息..."
+              actions={(node, info) => {
+                const { SendButton, LoadingButton, ClearButton, SpeechButton } =
+                  info.components;
+                console.log(node, info);
+                return (
+                  <Space size="small">
+                    <SpeechButton
+                      type="text"
+                      icon={
+                        <img
+                          src="/admin/speech.png"
+                          width={42}
+                          height={42}
+                          alt=""
+                        />
+                      }
+                    />
+                    <Divider type="vertical" />
+                    {status === 'pending' ? (
+                      <SendButton
+                        type="text"
+                        disabled
+                        icon={
+                          <img
+                            src="/admin/send1.png"
+                            width={42}
+                            height={42}
+                            alt=""
+                          />
+                        }
+                      />
+                    ) : (
+                      <SendButton
+                        type="text"
+                        icon={
+                          <img
+                            src="/admin/send1.png"
+                            width={42}
+                            height={42}
+                            alt=""
+                          />
+                        }
+                      />
+                    )}
+                  </Space>
+                );
+              }}
             />
           );
         }}

@@ -10,6 +10,7 @@ import {
   addOta,
   delMachine,
   detailMachine,
+  editMachine,
   getCateList,
   getMachineList,
   getOtaList,
@@ -38,6 +39,25 @@ const handleAddMachine = async (fields: any) => {
     return false;
   }
 };
+/**
+ * edit设备
+ * @param fields
+ */
+const handleEditMachine = async (fields: any) => {
+  const hide = message.loading('正在更新');
+  try {
+    await editMachine({
+      ...fields,
+    });
+    hide();
+    message.success('更新成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('更新失败请重试！');
+    return false;
+  }
+};
 
 /**
  * 设备详情
@@ -46,12 +66,12 @@ const handleAddMachine = async (fields: any) => {
 const handleDetailMachine = async (fields: any) => {
   const hide = message.loading('正在获取详情');
   try {
-    await detailMachine({
+    const data = await detailMachine({
       machineId: fields.machineId,
     });
     hide();
     message.success('获取详情成功');
-    return true;
+    return data;
   } catch (error) {
     hide();
     message.error('获取详情失败请重试！');
@@ -121,6 +141,8 @@ export default () => {
   const [machineList, setMachineList] = useState([]);
   const [directiveList, setDirectiveList] = useState([]);
   const [cateList, setCateList] = useState([]);
+  const [editMachineId, setEditMachineId] = useState(0);
+  const [editMachineDetail, setEditMachineDetail] = useState({});
 
   const list: any[] = [];
   for (let i = 1; i < 7; i += 1) {
@@ -194,7 +216,7 @@ export default () => {
     <Card
       styles={{
         body: {
-          padding: '0 0 50px 0',
+          padding: '0',
         },
       }}
       style={{ borderRadius: 0 }}
@@ -203,7 +225,7 @@ export default () => {
         <div
           style={{
             display: 'flex',
-            width: '45%',
+            width: '50%',
             justifyContent: 'space-between',
           }}
         >
@@ -214,19 +236,20 @@ export default () => {
                 height: '100%',
               },
             }}
-            style={{ marginTop: 8, marginLeft: 8, background: '#222020' }}
+            style={{ margin: 8, background: '#222020' }}
           >
             <AIBox />
           </Card>
         </div>
         <div
           style={{
-            width: '55%',
+            width: '50%',
             padding: '0 50px',
           }}
         >
           <CustomTitle
             title="设备管理"
+            showCheckbox
             searchPlaceholder="搜索设备..."
             addButtonText="新增设备"
             onSubmit={addMachine}
@@ -249,6 +272,12 @@ export default () => {
                   <MachineItem
                     detail={item}
                     text="这是设备信息"
+                    onEditMachine={async (item: any) => {
+                      const data = await handleDetailMachine(item);
+                      setEditMachineDetail(data);
+                      setEditMachineId(data.machineId);
+                      setModalMachineOpen(true);
+                    }}
                     onDelMachine={async (item: any) => {
                       await handleDelMachine(item);
                       await fetchMachineList();
@@ -256,6 +285,9 @@ export default () => {
                     onGetDetail={async (item: any) => {
                       await handleDetailMachine(item);
                       setDetailMachineOpen(true);
+                    }}
+                    onCheckChange={(e: any) => {
+                      console.log(e);
                     }}
                   />
                 );
@@ -285,19 +317,30 @@ export default () => {
           />
         </div>
       </div>
-      <AddMachineModal
-        cateList={cateList}
-        open={modalMachineOpen}
-        onOk={async (values: any) => {
-          console.log(values);
-          const success = await handleAddMachine(values);
-          if (success) {
+      {modalMachineOpen && (
+        <AddMachineModal
+          cateList={cateList}
+          isEdit={!!editMachineId}
+          detail={editMachineDetail}
+          open={modalMachineOpen}
+          onOk={async (values: any) => {
+            console.log(values);
+            const success = editMachineId
+              ? await handleEditMachine({ machineId: editMachineId, ...values })
+              : await handleAddMachine(values);
+            if (success) {
+              setEditMachineId(0);
+              setModalMachineOpen(false);
+              await fetchMachineList();
+            }
+          }}
+          onCancel={() => {
             setModalMachineOpen(false);
-            await fetchMachineList();
-          }
-        }}
-        onCancel={() => setModalMachineOpen(false)}
-      />
+            setEditMachineDetail({});
+            setEditMachineId(0);
+          }}
+        />
+      )}
       <AddDirectiveModal
         cateList={cateList}
         open={modalDirectiveOpen}

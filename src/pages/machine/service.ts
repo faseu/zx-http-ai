@@ -12,6 +12,18 @@ export async function addMachine(params?: { [key: string]: any }) {
     },
   });
 }
+
+/**
+ * 编辑设备
+ */
+export async function editMachine(params?: { [key: string]: any }) {
+  return request('/admin/machine/save', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
 /**
  * 删除设备
  */

@@ -4,6 +4,8 @@ import { DefaultOptionType } from 'rc-select/es/Select';
 
 interface AddMachineModalProps {
   open: boolean;
+  detail: any;
+  isEdit: any;
   cateList: DefaultOptionType[];
   onOk: (fieldsValue: any) => void;
   onCancel: () => void;
@@ -11,6 +13,8 @@ interface AddMachineModalProps {
 
 const AddMachineModal: React.FC<AddMachineModalProps> = ({
   open,
+  isEdit,
+  detail,
   cateList,
   onOk,
   onCancel,
@@ -18,7 +22,7 @@ const AddMachineModal: React.FC<AddMachineModalProps> = ({
   const [form] = Form.useForm();
   return (
     <Modal
-      title="新增设备"
+      title={isEdit ? '编辑设备' : '新增设备'}
       style={{ position: 'fixed', top: 132, right: 146 }}
       open={open}
       onOk={() => {
@@ -31,8 +35,10 @@ const AddMachineModal: React.FC<AddMachineModalProps> = ({
       <Form
         form={form}
         labelCol={{ span: 4 }}
+        labelAlign="left"
         wrapperCol={{ span: 20 }}
         layout="horizontal"
+        initialValues={isEdit ? { ...detail, img: detail.img[0] } : {}}
         style={{ maxWidth: 490, marginTop: 20 }}
       >
         <Form.Item
@@ -49,7 +55,7 @@ const AddMachineModal: React.FC<AddMachineModalProps> = ({
         >
           <Input placeholder="请输入设备编号" />
         </Form.Item>
-        <Form.Item label="设备序列号：" name="sn" rules={[{ required: true }]}>
+        <Form.Item label="序列号：" name="sn" rules={[{ required: true }]}>
           <Input placeholder="请输入设备序列号" />
         </Form.Item>
         <Form.Item label="设备类型：" name="cate" rules={[{ required: true }]}>
@@ -75,6 +81,7 @@ const AddMachineModal: React.FC<AddMachineModalProps> = ({
         <Form.Item label="设备图片：" name="img" rules={[{ required: true }]}>
           <UploadImage
             name="img"
+            initialValue={detail.img}
             onSuccess={(value: any) => {
               console.log(value);
               form.setFieldValue('img', value);

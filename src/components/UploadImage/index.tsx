@@ -1,3 +1,4 @@
+import { normalizeUploadFileList } from '@/utils/common';
 import { UploadOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
 import { Button, Upload, message } from 'antd';
@@ -10,28 +11,27 @@ interface UploadImageProps {
   name: string;
   onSuccess?: (res: any) => void;
   colProps?: Record<string, any>;
-  initialValue?:
-    | string[]
-    | {
-        url: string;
-        description: string;
-      }[];
+  initialValue?: string | string[];
   addDescription?: boolean;
   readonly?: boolean;
 }
 
-const UploadImage: React.FC<UploadImageProps> = ({ onSuccess, name }) => {
+const UploadImage: React.FC<UploadImageProps> = ({
+  onSuccess,
+  name,
+  initialValue,
+}) => {
+  console.log(initialValue);
   const props: UploadProps = {
     listType: 'picture',
     maxCount: 1,
     name: name,
+    defaultFileList: normalizeUploadFileList(initialValue),
     customRequest: async (options) => {
       const { file, onSuccess: successCallback, onError } = options;
-
       const formData = new FormData();
       formData.append('img', file as RcFile); // 上传文件
       formData.append('filename', 'img'); // 原始文件名作为额外参数传给后端
-
       try {
         const response = await fetch('/admin/upload/upimage', {
           method: 'POST',

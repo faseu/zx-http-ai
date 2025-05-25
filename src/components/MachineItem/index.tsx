@@ -1,21 +1,25 @@
 // src/components/ThemeSwitchButton/index.tsx
 import { useModel } from '@umijs/max';
-import { Flex, Popconfirm } from 'antd';
+import { Checkbox, Flex, Popconfirm } from 'antd';
 import classNames from 'classnames';
 import styles from './index.less';
 
 interface MachineItemProps {
   text: string;
   detail: any;
+  onEditMachine: any;
   onDelMachine: any;
   onGetDetail: any;
+  onCheckChange: any;
 }
 
 const MachineItem: React.FC<MachineItemProps> = ({
   text,
   detail,
+  onEditMachine,
   onDelMachine,
   onGetDetail,
+  onCheckChange,
 }) => {
   console.log(detail);
   const { initialState } = useModel('@@initialState');
@@ -37,10 +41,23 @@ const MachineItem: React.FC<MachineItemProps> = ({
         })}
       >
         <img
-          style={{ width: '82px', height: '82px' }}
+          style={{ maxWidth: '100%', height: '64px' }}
           src={detail.img}
           alt=""
         />
+        <Checkbox
+          style={{ position: 'absolute', top: '6px', left: '8px' }}
+          value={detail.machineId}
+          onChange={(e) => onCheckChange(e)}
+        />
+        <div
+          style={{
+            background: detail.isOnline ? '#009944' : '#A40000',
+          }}
+          className={styles.tag}
+        >
+          {detail.isOnline ? '在线' : '离线'}
+        </div>
       </div>
       <Flex
         justify="space-between"
@@ -55,6 +72,7 @@ const MachineItem: React.FC<MachineItemProps> = ({
           <div
             className={styles.buttom}
             style={{ background: '#2E60B5', marginRight: '8px' }}
+            onClick={() => onEditMachine(detail)}
           >
             编辑
           </div>
