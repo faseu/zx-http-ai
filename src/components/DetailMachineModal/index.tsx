@@ -1,74 +1,52 @@
 import { Line } from '@ant-design/plots';
-import { Button, Flex, Input, Modal, Table, TableColumnsType, Tag } from 'antd';
+import {
+  Button,
+  Flex,
+  Input,
+  Modal,
+  Popconfirm,
+  Table,
+  TableColumnsType,
+  Tag,
+} from 'antd';
+import dayjs from 'dayjs';
 import React from 'react';
 import styles from './index.less';
 const { TextArea } = Input;
+
 interface DetailMachineModalProps {
   open: boolean;
   data: any;
-
   onCancel?: () => void;
-}
-
-interface DataType {
-  key: React.Key;
-  time: string;
-  param: string;
-  data: string;
+  // 新增：编辑和删除的回调函数
+  onEdit?: (machineData: any) => void;
+  onDelete?: (machineData: any) => void;
 }
 
 const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   open,
-  data: { baseData },
+  data: { baseData, alarmList },
   onCancel,
+  onEdit,
+  onDelete,
 }) => {
-  const columns: TableColumnsType<DataType> = [
+  const columns: TableColumnsType<any> = [
     {
       title: '报警时间',
-      dataIndex: 'time',
+      dataIndex: 'regTime',
+      render: (text) => dayjs.unix(text).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '报警参数',
-      dataIndex: 'param',
+      dataIndex: 'item',
     },
     {
       title: '原始数据',
-      dataIndex: 'data',
+      dataIndex: 'content',
       width: '300px',
     },
   ];
-  const alarmList: DataType[] = [
-    {
-      key: '1',
-      time: '2025-05-22 14:32:10',
-      param: '温度 > 80°C',
-      data: '{"temp": 85.6, "unit": "°C"}',
-    },
-    {
-      key: '2',
-      time: '2025-05-22 14:33:45',
-      param: '压力 > 1.5MPa',
-      data: '压力: 1.68MPa',
-    },
-    {
-      key: '3',
-      time: '2025-05-22 14:35:12',
-      param: '电流 > 20A',
-      data: '电流: 21.4A',
-    },
-    {
-      key: '4',
-      time: '2025-05-22 14:36:59',
-      param: '湿度 > 90%',
-      data: '湿度: 92.1%',
-    },
-    {
-      key: '5',
-      time: '2025-05-22 14:38:23',
-      param: '振动 > 5mm/s',
-      data: '振动: 5.7mm/s',
-    },
-  ];
+
   const chartData = [
     { year: '1991', value: 3 },
     { year: '1992', value: 4 },
@@ -100,6 +78,24 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
     theme: { type: 'classicDark' },
   };
 
+  // 处理编辑按钮点击
+  const handleEdit = () => {
+    if (onEdit && baseData) {
+      onEdit(baseData);
+      // 关闭详情弹窗
+      onCancel?.();
+    }
+  };
+
+  // 处理删除确认
+  const handleDelete = async () => {
+    if (onDelete && baseData) {
+      await onDelete(baseData);
+      // 关闭详情弹窗
+      onCancel?.();
+    }
+  };
+
   return (
     <Modal
       title="设备详情页"
@@ -121,7 +117,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                 <img src={baseData?.img?.[0] || '/admin/machine.png'} alt="" />
               </Flex>
               <div>
-                <Tag color={baseData?.isOnline ? '#87d068' : '#f50'}>
+                <Tag color={baseData?.isOnline ? '#87d068' : '#A40000'}>
                   {baseData?.isOnline ? '在线' : '离线'}
                 </Tag>
               </div>
@@ -129,29 +125,37 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
             <Flex justify="space-between">
               <div>
                 <div>
-                  <div>{`设备名称：${baseData?.machineName}`}</div>
-                  <div>{`设备类型：${baseData?.cateName}`}</div>
-                  <div>{`设备位置：${baseData?.address}`}</div>
-                  <div>{`ICCID：${baseData?.iccid}`}</div>
-                  <div>{`设备用途：${baseData?.application}`}</div>
+                  <div>{`设备名称：${baseData?.machineName || ''}`}</div>
+                  <div>{`设备类型：${baseData?.cateName || ''}`}</div>
+                  <div>{`设备位置：${baseData?.address || ''}`}</div>
+                  <div>{`ICCID：${baseData?.iccid || ''}`}</div>
+                  <div>{`设备用途：${baseData?.application || ''}`}</div>
                 </div>
               </div>
               <Flex vertical justify="flex-end">
-                <Button type="primary" size="small">
+                <Button type="primary" size="small" onClick={handleEdit}>
                   编辑
                 </Button>
-                <Button
-                  type="default"
-                  style={{
-                    backgroundColor: '#8c8c8c',
-                    color: '#fff',
-                    borderColor: '#8c8c8c',
-                    marginTop: '10px',
-                  }}
-                  size="small"
+                <Popconfirm
+                  title="删除设备"
+                  description="删除后无法恢复，确定删除设备?"
+                  okText="确定"
+                  cancelText="取消"
+                  onConfirm={handleDelete}
                 >
-                  删除
-                </Button>
+                  <Button
+                    type="default"
+                    style={{
+                      backgroundColor: '#8c8c8c',
+                      color: '#fff',
+                      borderColor: '#8c8c8c',
+                      marginTop: '10px',
+                    }}
+                    size="small"
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
               </Flex>
             </Flex>
           </div>
@@ -159,7 +163,8 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
             <Flex style={{ marginBottom: '8px' }}>
               <div className={styles.title}>报警信息</div>
             </Flex>
-            <Table<DataType>
+            <Table
+              key="id"
               scroll={{ y: 150 }}
               pagination={false}
               columns={columns}

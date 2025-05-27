@@ -63,7 +63,7 @@ const MachineItem: React.FC<MachineItemProps> = ({
         />
         <div
           style={{
-            background: detail.isOnline ? '#009944' : '#A40000',
+            background: detail.isOnline ? '#87d068' : '#A40000',
           }}
           className={styles.tag}
         >

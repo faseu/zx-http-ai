@@ -146,12 +146,12 @@ export async function getCateList(params?: { [key: string]: any }) {
 }
 
 /**
- * 删除活动类型 (保留原有的，可能其他地方在用)
+ * 指令列表
  */
-export async function delActivitiesType(params?: { [key: string]: any }) {
-  return request('/category/categories', {
-    method: 'delete',
-    data: {
+export async function getDialogueList(params?: { [key: string]: any }) {
+  return request('/admin/Ai_Log/index', {
+    method: 'POST',
+    params: {
       ...params,
     },
   });

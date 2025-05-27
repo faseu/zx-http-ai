@@ -101,7 +101,7 @@ const handleDetailMachine2 = async (fields: any) => {
     const baseData = await detailMachine({
       machineId: fields.machineId,
     });
-    const errorData = await detailMachineData({
+    const { data: alarmList } = await detailMachineData({
       machineId: fields.machineId,
       type: 'error',
     });
@@ -111,7 +111,7 @@ const handleDetailMachine2 = async (fields: any) => {
     });
     hide();
     message.success('获取详情成功');
-    return { baseData, errorData, infoData };
+    return { baseData, alarmList, infoData };
   } catch (error) {
     hide();
     message.error('获取详情失败请重试！');
@@ -237,7 +237,7 @@ export default () => {
   const [modalMachineOpen, setModalMachineOpen] = useState(false);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
   const [detailMachineOpen, setDetailMachineOpen] = useState(false);
-  const [machineList, setMachineList] = useState([]);
+  const [machineList, setMachineList] = useState<any[]>([]);
   const [directiveList, setDirectiveList] = useState([]);
   const [cateList, setCateList] = useState([]);
   const [editMachineId, setEditMachineId] = useState(0);
@@ -252,6 +252,7 @@ export default () => {
   const [selectedMachineIds, setSelectedMachineIds] = useState<number[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
+  console.log(isDark);
   const data = [
     'Racing car sprays burning fuel into crowd.',
     'Japanese princess to wed commoner.',
@@ -469,7 +470,7 @@ export default () => {
           />
           <div className={styles.hideScrollbar}>
             <List
-              rowKey="id"
+              rowKey="machineId"
               grid={{
                 gutter: 10,
                 xs: 1,
@@ -513,6 +514,7 @@ export default () => {
 
           <CustomTitle title="常用指令" showEmpty />
           <List
+            rowKey="id"
             dataSource={data}
             renderItem={() => {
               return <DirectiveItem text="指令历史" />;
@@ -525,6 +527,7 @@ export default () => {
             onSubmit={addDirective}
           />
           <Table<DataType>
+            key="id"
             scroll={{ y: 200 }}
             pagination={false}
             columns={columns}
@@ -584,6 +587,23 @@ export default () => {
         data={machineDetail}
         open={detailMachineOpen}
         onCancel={() => setDetailMachineOpen(false)}
+        // 新增：编辑回调函数
+        onEdit={async (machineData: any) => {
+          // 获取完整的设备详情用于编辑
+          const detail = await handleDetailMachine(machineData);
+          if (detail) {
+            setEditMachineDetail(detail);
+            setEditMachineId(machineData.machineId);
+            setModalMachineOpen(true);
+          }
+        }}
+        // 新增：删除回调函数
+        onDelete={async (machineData: any) => {
+          const success = await handleDelMachine(machineData);
+          if (success) {
+            await fetchMachineList(); // 刷新设备列表
+          }
+        }}
       />
     </Card>
   );
