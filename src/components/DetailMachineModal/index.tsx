@@ -128,7 +128,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                   <div>{`设备名称：${baseData?.machineName || ''}`}</div>
                   <div>{`设备类型：${baseData?.cateName || ''}`}</div>
                   <div>{`设备位置：${baseData?.address || ''}`}</div>
-                  <div>{`ICCID：${baseData?.iccid || ''}`}</div>
+                  <div>{`固件版本：${baseData?.version || 'V1.2.3'}`}</div>
                   <div>{`设备用途：${baseData?.application || ''}`}</div>
                 </div>
               </div>

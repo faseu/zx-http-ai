@@ -156,3 +156,25 @@ export async function getDialogueList(params?: { [key: string]: any }) {
     },
   });
 }
+
+/**
+ * 删除指令 - 删除单条
+ */
+export async function delDialogue(params?: { [key: string]: any }) {
+  return request('/admin/ai_log/del', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+
+/**
+ * 清空所有指令
+ */
+export async function clearAllDialogue() {
+  return request('/admin/ai_log/del', {
+    method: 'POST',
+    data: {}, // 不传id参数表示全部清除
+  });
+}

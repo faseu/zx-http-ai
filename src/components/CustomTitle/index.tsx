@@ -1,4 +1,3 @@
-// src/components/ThemeSwitchButton/index.tsx
 import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { Button, Checkbox, Input, Popconfirm } from 'antd';
@@ -13,7 +12,8 @@ interface CustomTitleProps {
   showEmpty?: boolean;
   showCheckbox?: boolean;
   onSubmit?: (inputValue: string) => void;
-  // 新增：全选相关props
+  onClear?: () => void; // 新增：清空回调函数
+  // 全选相关props
   isAllSelected?: boolean;
   onSelectAll?: (checked: boolean) => void;
   selectedCount?: number;
@@ -27,7 +27,8 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
   showEmpty,
   showCheckbox,
   onSubmit,
-  // 新增：全选相关props
+  onClear, // 新增参数
+  // 全选相关props
   isAllSelected = false,
   onSelectAll,
   selectedCount = 0,
@@ -35,7 +36,7 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
 }) => {
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
-  const [inputValue, setInputValue] = useState(''); // 👈 用来保存输入框内容
+  const [inputValue, setInputValue] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -43,18 +44,18 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
 
   const handleAddClick = () => {
     if (onSubmit) {
-      onSubmit(inputValue); // 点击时把输入框的值传给父组件
+      onSubmit(inputValue);
     }
   };
 
-  // 新增：全选checkbox变化处理
+  // 全选checkbox变化处理
   const handleSelectAllChange = (e: any) => {
     if (onSelectAll) {
       onSelectAll(e.target.checked);
     }
   };
 
-  // 新增：计算全选checkbox的状态
+  // 计算全选checkbox的状态
   const getCheckboxProps = () => {
     if (totalCount === 0) {
       return {
@@ -97,6 +98,7 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
     >
       <div className={styles.dot}></div>
       <div className={styles.title}>{title}</div>
+
       {addButtonText && (
         <>
           {showCheckbox && (
@@ -113,7 +115,6 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
               >
                 全选
               </Checkbox>
-              {/* 显示选中数量 */}
               {totalCount > 0 && (
                 <span
                   style={{
@@ -129,23 +130,25 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
           )}
           <Input
             style={{ width: '200px', marginRight: '8px' }}
-            placeholder={searchPlaceholder} // ✅ 用 props 里的
+            placeholder={searchPlaceholder}
             suffix={<SearchOutlined />}
-            value={inputValue} // 👈 受控组件
-            onChange={handleInputChange} // 👈 保存输入
+            value={inputValue}
+            onChange={handleInputChange}
           />
           <Button color="primary" variant="solid" onClick={handleAddClick}>
-            {addButtonText} {/* ✅ 用 props 里的 */}
+            {addButtonText}
           </Button>
         </>
       )}
+
       {showEmpty && (
         <>
           <Popconfirm
             title="清空指令"
-            description="清空后无法回复，确定清空指令?"
+            description="清空后无法恢复，确定清空指令?"
             okText="确定"
             cancelText="取消"
+            onConfirm={onClear} // 使用传入的清空回调
           >
             <div className={styles.empty}>
               <DeleteOutlined />

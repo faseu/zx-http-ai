@@ -1,3 +1,5 @@
+// src/pages/machine/index.tsx 的完整修改
+
 import AddDirectiveModal from '@/components/AddDirectiveModal';
 import AddMachineModal from '@/components/AddMachineModal';
 import AIBox from '@/components/AIBox';
@@ -7,7 +9,9 @@ import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
 import {
   addMachine,
-  addOta,
+  addOta, // 新增导入
+  clearAllDialogue,
+  delDialogue,
   delMachine,
   delOta,
   detailMachine,
@@ -16,6 +20,7 @@ import {
   editMachine,
   editOta,
   getCateList,
+  getDialogueList,
   getMachineList,
   getOtaList,
 } from '@/pages/machine/service';
@@ -91,6 +96,7 @@ const handleDetailMachine = async (fields: any) => {
     return false;
   }
 };
+
 /**
  * 设备详情2
  * @param fields
@@ -214,6 +220,41 @@ const handleDelOta = async (fields: any) => {
   }
 };
 
+/**
+ * 删除单条指令
+ * @param fields
+ */
+const handleDelDialogue = async (fields: any) => {
+  const hide = message.loading('正在删除');
+  try {
+    await delDialogue({ id: fields.id });
+    hide();
+    message.success('删除成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('删除失败，请重试');
+    return false;
+  }
+};
+
+/**
+ * 清空所有指令
+ */
+const handleClearAllDialogue = async () => {
+  const hide = message.loading('正在清空');
+  try {
+    await clearAllDialogue();
+    hide();
+    message.success('清空成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('清空失败，请重试');
+    return false;
+  }
+};
+
 interface DataType {
   key: React.Key;
   id: number;
@@ -239,24 +280,21 @@ export default () => {
   const [detailMachineOpen, setDetailMachineOpen] = useState(false);
   const [machineList, setMachineList] = useState<any[]>([]);
   const [directiveList, setDirectiveList] = useState([]);
+  const [dialogueList, setDialogueList] = useState([]); // 指令历史列表
   const [cateList, setCateList] = useState([]);
   const [editMachineId, setEditMachineId] = useState(0);
   const [editMachineDetail, setEditMachineDetail] = useState({});
   const [machineDetail, setMachineDetail] = useState({});
 
-  // 新增：协议编辑相关状态
+  // 协议编辑相关状态
   const [editOtaId, setEditOtaId] = useState(0);
   const [editOtaDetail, setEditOtaDetail] = useState({});
 
-  // 新增：管理选中状态的state
+  // 管理选中状态的state
   const [selectedMachineIds, setSelectedMachineIds] = useState<number[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
   console.log(isDark);
-  const data = [
-    'Racing car sprays burning fuel into crowd.',
-    'Japanese princess to wed commoner.',
-  ];
 
   const fetchMachineList = async () => {
     const { data } = await getMachineList({
@@ -272,6 +310,20 @@ export default () => {
       psize: 1000,
     });
     setDirectiveList(data);
+  };
+
+  // 获取指令历史列表
+  const fetchDialogueList = async () => {
+    try {
+      const { data } = await getDialogueList({
+        page: 1,
+        psize: 1000,
+      });
+      setDialogueList(data);
+    } catch (error) {
+      console.error('获取指令历史失败:', error);
+      message.error('获取指令历史失败');
+    }
   };
 
   const columns: TableColumnsType<DataType> = [
@@ -308,7 +360,6 @@ export default () => {
         <Space size="middle">
           <a
             onClick={async () => {
-              // 获取协议详情并打开编辑模态框
               const detail = await handleDetailOta(record);
               if (detail) {
                 setEditOtaDetail(detail);
@@ -327,7 +378,7 @@ export default () => {
             onConfirm={async () => {
               const success = await handleDelOta(record);
               if (success) {
-                await fetchOtaList(); // 刷新列表
+                await fetchOtaList();
               }
             }}
           >
@@ -348,36 +399,31 @@ export default () => {
     setModalDirectiveOpen(true);
   };
 
-  // 新增：全选/取消全选处理函数
+  // 全选/取消全选处理函数
   const handleSelectAll = (checked: boolean) => {
     setIsAllSelected(checked);
     if (checked) {
-      // 全选：选中所有设备ID
       const allMachineIds = machineList.map(
         (machine: any) => machine.machineId,
       );
       setSelectedMachineIds(allMachineIds);
     } else {
-      // 取消全选：清空选中列表
       setSelectedMachineIds([]);
     }
   };
 
-  // 新增：单个设备选中/取消选中处理函数
+  // 单个设备选中/取消选中处理函数
   const handleMachineCheck = (machineId: number, checked: boolean) => {
     let newSelectedIds: number[];
 
     if (checked) {
-      // 添加到选中列表
       newSelectedIds = [...selectedMachineIds, machineId];
     } else {
-      // 从选中列表移除
       newSelectedIds = selectedMachineIds.filter((id) => id !== machineId);
     }
 
     setSelectedMachineIds(newSelectedIds);
 
-    // 更新全选状态
     const allMachineIds = machineList.map((machine: any) => machine.machineId);
     setIsAllSelected(
       newSelectedIds.length === allMachineIds.length &&
@@ -385,7 +431,23 @@ export default () => {
     );
   };
 
-  // 新增：当设备列表变化时，重新计算全选状态
+  // 删除单条指令的处理函数
+  const onDelDialogue = async (id: number) => {
+    const success = await handleDelDialogue({ id });
+    if (success) {
+      await fetchDialogueList(); // 重新获取列表
+    }
+  };
+
+  // 清空所有指令的处理函数
+  const onClearAllDialogue = async () => {
+    const success = await handleClearAllDialogue();
+    if (success) {
+      await fetchDialogueList(); // 重新获取列表
+    }
+  };
+
+  // 当设备列表变化时，重新计算全选状态
   useEffect(() => {
     if (machineList.length > 0) {
       const allMachineIds = machineList.map(
@@ -395,12 +457,10 @@ export default () => {
         allMachineIds.includes(id),
       );
 
-      // 更新有效的选中列表
       if (currentValidSelected.length !== selectedMachineIds.length) {
         setSelectedMachineIds(currentValidSelected);
       }
 
-      // 更新全选状态
       setIsAllSelected(
         currentValidSelected.length === allMachineIds.length &&
           allMachineIds.length > 0,
@@ -414,6 +474,7 @@ export default () => {
   useEffect(() => {
     fetchMachineList();
     fetchOtaList();
+    fetchDialogueList(); // 获取指令历史
     fetchDict().then((res) => {
       const [cateList] = res;
       setCateList(cateList);
@@ -462,7 +523,6 @@ export default () => {
             searchPlaceholder="搜索设备..."
             addButtonText="新增设备"
             onSubmit={addMachineHandler}
-            // 新增：传递全选相关props
             isAllSelected={isAllSelected}
             onSelectAll={handleSelectAll}
             selectedCount={selectedMachineIds.length}
@@ -486,7 +546,6 @@ export default () => {
                   <MachineItem
                     detail={item}
                     text="这是设备信息"
-                    // 新增：传递选中状态和处理函数
                     isChecked={selectedMachineIds.includes(item.machineId)}
                     onCheckChange={(checked: boolean) =>
                       handleMachineCheck(item.machineId, checked)
@@ -512,14 +571,31 @@ export default () => {
             />
           </div>
 
-          <CustomTitle title="常用指令" showEmpty />
-          <List
-            rowKey="id"
-            dataSource={data}
-            renderItem={() => {
-              return <DirectiveItem text="指令历史" />;
-            }}
+          {/* 常用指令部分 */}
+          <CustomTitle
+            title="常用指令"
+            showEmpty
+            onClear={onClearAllDialogue} // 传递清空回调函数
           />
+          <div className={styles.hideScrollbar}>
+            <List
+              rowKey="id"
+              dataSource={dialogueList}
+              renderItem={(item: any) => {
+                return (
+                  <DirectiveItem
+                    text={item.content}
+                    detail={item}
+                    onDelete={() => onDelDialogue(item.id)} // 传递删除函数
+                  />
+                );
+              }}
+              locale={{
+                emptyText: '暂无指令历史',
+              }}
+            />
+          </div>
+
           <CustomTitle
             title="协议管理"
             searchPlaceholder="搜索协议..."
@@ -536,6 +612,7 @@ export default () => {
           />
         </div>
       </div>
+
       {modalMachineOpen && (
         <AddMachineModal
           cateList={cateList}
@@ -587,9 +664,7 @@ export default () => {
         data={machineDetail}
         open={detailMachineOpen}
         onCancel={() => setDetailMachineOpen(false)}
-        // 新增：编辑回调函数
         onEdit={async (machineData: any) => {
-          // 获取完整的设备详情用于编辑
           const detail = await handleDetailMachine(machineData);
           if (detail) {
             setEditMachineDetail(detail);
@@ -597,11 +672,10 @@ export default () => {
             setModalMachineOpen(true);
           }
         }}
-        // 新增：删除回调函数
         onDelete={async (machineData: any) => {
           const success = await handleDelMachine(machineData);
           if (success) {
-            await fetchMachineList(); // 刷新设备列表
+            await fetchMachineList();
           }
         }}
       />
