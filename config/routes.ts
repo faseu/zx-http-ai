@@ -31,7 +31,7 @@ export default [
     layout: false,
   },
   {
-    name: '设备管理',
+    name: '智能空间',
     path: '/machine',
     component: './machine',
     icon: 'fileText',

@@ -1,20 +1,12 @@
 import { Line } from '@ant-design/plots';
-import {
-  Button,
-  Flex,
-  Form,
-  Input,
-  Modal,
-  Table,
-  TableColumnsType,
-  Tag,
-} from 'antd';
+import { Button, Flex, Input, Modal, Table, TableColumnsType, Tag } from 'antd';
 import React from 'react';
 import styles from './index.less';
 const { TextArea } = Input;
 interface DetailMachineModalProps {
-  open?: boolean;
-  onOk?: (fieldsValue: any) => void;
+  open: boolean;
+  data: any;
+
   onCancel?: () => void;
 }
 
@@ -27,10 +19,9 @@ interface DataType {
 
 const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   open,
-  onOk,
+  data: { baseData },
   onCancel,
 }) => {
-  const [form] = Form.useForm();
   const columns: TableColumnsType<DataType> = [
     {
       title: '报警时间',
@@ -78,7 +69,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       data: '振动: 5.7mm/s',
     },
   ];
-  const data = [
+  const chartData = [
     { year: '1991', value: 3 },
     { year: '1992', value: 4 },
     { year: '1993', value: 3.5 },
@@ -91,7 +82,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   ];
 
   const config = {
-    data,
+    data: chartData,
     xField: 'year',
     yField: 'value',
     point: {
@@ -127,20 +118,22 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                 align="center"
                 style={{ width: '100px', height: '100px' }}
               >
-                <img src="/admin/machine.png" alt="" />
+                <img src={baseData?.img?.[0] || '/admin/machine.png'} alt="" />
               </Flex>
               <div>
-                <Tag color="#87d068">在线</Tag>
+                <Tag color={baseData?.isOnline ? '#87d068' : '#f50'}>
+                  {baseData?.isOnline ? '在线' : '离线'}
+                </Tag>
               </div>
             </Flex>
             <Flex justify="space-between">
               <div>
                 <div>
-                  <div>设备名称：未知设备名称1</div>
-                  <div>设备类型：传感器</div>
-                  <div>设备位置：A栋1楼502机房</div>
-                  <div>固件版本：V1.2.3</div>
-                  <div>设备用途：XXXX</div>
+                  <div>{`设备名称：${baseData?.machineName}`}</div>
+                  <div>{`设备类型：${baseData?.cateName}`}</div>
+                  <div>{`设备位置：${baseData?.address}`}</div>
+                  <div>{`ICCID：${baseData?.iccid}`}</div>
+                  <div>{`设备用途：${baseData?.application}`}</div>
                 </div>
               </div>
               <Flex vertical justify="flex-end">

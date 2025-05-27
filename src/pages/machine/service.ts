@@ -38,6 +38,18 @@ export async function detailMachine(params?: { [key: string]: any }) {
 }
 
 /**
+ * 设备详情
+ */
+export async function detailMachineData(params?: { [key: string]: any }) {
+  return request('/admin/machine_data/index', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+
+/**
  * 删除设备
  */
 export async function delMachine(params?: { [key: string]: any }) {

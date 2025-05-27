@@ -11,6 +11,7 @@ import {
   delMachine,
   delOta,
   detailMachine,
+  detailMachineData,
   detailOta,
   editMachine,
   editOta,
@@ -84,6 +85,33 @@ const handleDetailMachine = async (fields: any) => {
     hide();
     message.success('获取详情成功');
     return data;
+  } catch (error) {
+    hide();
+    message.error('获取详情失败请重试！');
+    return false;
+  }
+};
+/**
+ * 设备详情2
+ * @param fields
+ */
+const handleDetailMachine2 = async (fields: any) => {
+  const hide = message.loading('正在获取详情');
+  try {
+    const baseData = await detailMachine({
+      machineId: fields.machineId,
+    });
+    const errorData = await detailMachineData({
+      machineId: fields.machineId,
+      type: 'error',
+    });
+    const infoData = await detailMachineData({
+      machineId: fields.machineId,
+      type: 'info',
+    });
+    hide();
+    message.success('获取详情成功');
+    return { baseData, errorData, infoData };
   } catch (error) {
     hide();
     message.error('获取详情失败请重试！');
@@ -214,6 +242,7 @@ export default () => {
   const [cateList, setCateList] = useState([]);
   const [editMachineId, setEditMachineId] = useState(0);
   const [editMachineDetail, setEditMachineDetail] = useState({});
+  const [machineDetail, setMachineDetail] = useState({});
 
   // 新增：协议编辑相关状态
   const [editOtaId, setEditOtaId] = useState(0);
@@ -464,7 +493,7 @@ export default () => {
                     onEditMachine={async (item: any) => {
                       const data = await handleDetailMachine(item);
                       setEditMachineDetail(data);
-                      setEditMachineId(data.machineId);
+                      setEditMachineId(item.machineId);
                       setModalMachineOpen(true);
                     }}
                     onDelMachine={async (item: any) => {
@@ -472,7 +501,8 @@ export default () => {
                       await fetchMachineList();
                     }}
                     onGetDetail={async (item: any) => {
-                      await handleDetailMachine(item);
+                      const data = await handleDetailMachine2(item);
+                      setMachineDetail(data);
                       setDetailMachineOpen(true);
                     }}
                   />
@@ -551,6 +581,7 @@ export default () => {
         }}
       />
       <DetailMachineModal
+        data={machineDetail}
         open={detailMachineOpen}
         onCancel={() => setDetailMachineOpen(false)}
       />
