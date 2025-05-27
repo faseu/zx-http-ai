@@ -1,91 +1,73 @@
-import { uploadFile } from '@/components/UploadFile/service';
-import { ProFormUploadButton } from '@ant-design/pro-components';
-import type { ProFormFieldProps } from '@ant-design/pro-form';
-import { Upload } from 'antd';
-import React, { useEffect, useState } from 'react';
+import { normalizeUploadFileList } from '@/utils/common';
+import { UploadOutlined } from '@ant-design/icons';
+import type { UploadProps } from 'antd';
+import { Button, Upload, message } from 'antd';
+import type { RcFile } from 'antd/es/upload';
+import React from 'react';
 
-type WidthType = ProFormFieldProps['width'];
-
-interface UploadFileProps {
+interface UploadImageProps {
+  category?: string;
   label?: string;
   name: string;
   onSuccess?: (res: any) => void;
   colProps?: Record<string, any>;
-  width?: WidthType;
-  initialValue?: string[];
+  initialValue?: string | string[];
+  addDescription?: boolean;
   readonly?: boolean;
 }
 
-const UploadFile: React.FC<UploadFileProps> = ({
-  label = '上传',
+const UploadImage: React.FC<UploadImageProps> = ({
   onSuccess,
-  colProps = { md: 12, xl: 8 },
-  name = '',
-  width = 'lg',
-  initialValue = [],
-  readonly = false,
+  name,
+  initialValue,
 }) => {
-  const [fileList, setFileList] = useState<any[]>([]);
-  useEffect(() => {
-    if (initialValue && initialValue.length > 0) {
-      setFileList(
-        initialValue.map((url, index) => ({
-          uid: `${index}`,
-          name: `轨迹文件-${index}`,
-          status: 'done',
-          url,
-          description: '', // 初始描述为空
-        })),
-      );
-    }
-  }, [initialValue]);
+  console.log(initialValue);
+  const props: UploadProps = {
+    listType: 'text',
+    maxCount: 1,
+    name: name,
+    defaultFileList: normalizeUploadFileList(initialValue, '协议.bin'),
+    customRequest: async (options) => {
+      const { file, onSuccess: successCallback, onError } = options;
+      const formData = new FormData();
+      formData.append('file', file as RcFile); // 上传文件
+      formData.append('filename', 'file'); // 原始文件名作为额外参数传给后端
+      try {
+        const response = await fetch('/admin/upload/upfile', {
+          method: 'POST',
+          body: formData,
+        });
+        const res = await response.json();
+        const {
+          code,
+          data: { url },
+          msg,
+        } = res;
 
-  const beforeUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await uploadFile(formData);
-      const result = (await response.json?.()) || response;
-      console.log('上传成功:', result);
-      const url = result?.data?.file_url;
-      const newFile = {
-        uid: `${Date.now()}`,
-        name: file.name,
-        status: 'done',
-        url: url,
-        description: '',
-      };
-
-      const newList = [newFile];
-      setFileList(newList);
-      onSuccess?.(newList);
-    } catch (error) {
-      console.error('上传失败:', error);
-    }
-
-    return Upload.LIST_IGNORE;
+        if (code === 10000) {
+          message.success('上传成功');
+          successCallback?.(res);
+          onSuccess?.(url);
+        } else {
+          throw new Error(msg || '上传失败');
+        }
+      } catch (err: any) {
+        message.error(err.message || '上传出错');
+        onError?.(err);
+      }
+    },
+    onChange(info) {
+      if (info.fileList.length === 0) {
+        onSuccess?.(null); // 👈 文件被清空时通知父组件
+      }
+    },
   };
 
   return (
-    <ProFormUploadButton
-      name={name}
-      label={label}
-      colProps={colProps}
-      width={width}
-      max={1}
-      fieldProps={{
-        name: 'file',
-        listType: 'text',
-        beforeUpload,
-        fileList,
-        onChange: ({ fileList }) => {
-          if (readonly) return;
-          setFileList(fileList); // 确保 UI 同步更新
-        },
-      }}
-    />
+    <Upload {...props}>
+      <Button icon={<UploadOutlined />}>Upload</Button>
+    </Upload>
   );
 };
 
-export default UploadFile;
+export default UploadImage;

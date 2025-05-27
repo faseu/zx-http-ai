@@ -1,9 +1,11 @@
-import UploadImage from '@/components/UploadImage'; // 根据你的实际路径来引
+import UploadFile from '@/components/UploadFile'; // 使用文件上传组件
 import { Form, Input, Modal, Select } from 'antd';
 import { DefaultOptionType } from 'rc-select/es/Select';
 
 interface AddDirectiveModalProps {
   open: boolean;
+  detail?: any; // 新增：编辑时的详情数据
+  isEdit?: boolean; // 新增：是否为编辑模式
   cateList: DefaultOptionType[];
   onOk: (fieldsValue: any) => void;
   onCancel: () => void;
@@ -11,14 +13,17 @@ interface AddDirectiveModalProps {
 
 const AddDirectiveModal: React.FC<AddDirectiveModalProps> = ({
   open,
+  detail = {}, // 默认空对象
+  isEdit = false, // 默认为新增模式
   cateList,
   onOk,
   onCancel,
 }) => {
   const [form] = Form.useForm();
+
   return (
     <Modal
-      title="新增协议"
+      title={isEdit ? '编辑协议' : '新增协议'}
       style={{ position: 'fixed', top: 332, right: 146 }}
       open={open}
       onOk={() => {
@@ -26,34 +31,55 @@ const AddDirectiveModal: React.FC<AddDirectiveModalProps> = ({
           onOk(values);
         });
       }}
-      onCancel={onCancel}
+      onCancel={() => {
+        form.resetFields();
+        onCancel();
+      }}
+      destroyOnClose // 关闭时销毁表单，确保下次打开时数据正确
     >
       <Form
         form={form}
         labelCol={{ span: 4 }}
         wrapperCol={{ span: 20 }}
         layout="horizontal"
+        initialValues={isEdit ? { ...detail } : {}}
         style={{ maxWidth: 490, marginTop: 20 }}
       >
         <Form.Item
           label="协议名称："
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: '请输入协议名称' }]}
           name="otaName"
         >
-          <Input placeholder="请输入设备名称" />
+          <Input placeholder="请输入协议名称" />
         </Form.Item>
         <Form.Item
           label="硬件厂家："
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: '请输入硬件厂家' }]}
           name="reason"
         >
           <Input placeholder="请输入硬件厂家" />
         </Form.Item>
-        <Form.Item label="设备型号：" rules={[{ required: true }]} name="cate">
+        <Form.Item
+          label="设备型号："
+          rules={[{ required: true, message: '请选择设备类型' }]}
+          name="cate"
+        >
           <Select placeholder="请选择设备类型" options={cateList} />
         </Form.Item>
-        <Form.Item label="协议文件：" name="fileUrl">
-          <UploadImage name="" />
+        <Form.Item
+          label="协议文件："
+          name="fileUrl"
+          rules={[{ required: true, message: '请上传协议文件' }]}
+        >
+          <UploadFile
+            name="fileUrl"
+            label=""
+            initialValue={detail.fileUrl}
+            onSuccess={(value: any) => {
+              console.log(value);
+              form.setFieldValue('fileUrl', value);
+            }}
+          />
         </Form.Item>
       </Form>
     </Modal>
