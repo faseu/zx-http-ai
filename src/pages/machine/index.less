@@ -11,6 +11,15 @@
   background-image: url("../../assets/ai-bg.png") !important;
   background-size: 100% 100% !important;
 }
+.rightCard {
+  height: calc(100vh - 138px);
+  overflow-y: auto;
+}
+
+/* 隐藏滚动条，保留滚动行为 */
+.rightCard::-webkit-scrollbar {
+  display: none;
+}
 
 
 .hideScrollbar {

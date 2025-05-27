@@ -161,7 +161,6 @@ export default () => {
   const data = [
     'Racing car sprays burning fuel into crowd.',
     'Japanese princess to wed commoner.',
-    'Australian walks 100km after outback crash.',
   ];
 
   const fetchMachineList = async () => {
@@ -315,9 +314,10 @@ export default () => {
             width: '50%',
             padding: '0 50px',
           }}
+          className={styles.rightCard}
         >
           <CustomTitle
-            title="设备管理"
+            title="常用设备"
             showCheckbox
             searchPlaceholder="搜索设备..."
             addButtonText="新增设备"
@@ -371,7 +371,7 @@ export default () => {
             />
           </div>
 
-          <CustomTitle title="指令历史" showEmpty />
+          <CustomTitle title="常用指令" showEmpty />
           <List
             dataSource={data}
             renderItem={() => {

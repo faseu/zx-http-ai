@@ -32,7 +32,7 @@ const DirectiveItem: React.FC<DirectiveItemProps> = ({ text }) => {
           [styles.lightLog]: !isDark,
         })}
       >
-        yam镜像源设置方法yam镜像源设置方法yam镜像源设置方法yam镜像源设置方法yam镜像源设置方法...
+        写一个stm32控制LED的代码，LED在3号引脚，将生成的代码放到回复内容的最后，其它注意事项放到前面。
       </div>
     </div>
   );
