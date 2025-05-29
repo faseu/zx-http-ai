@@ -114,7 +114,11 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                 align="center"
                 style={{ width: '100px', height: '100px' }}
               >
-                <img src={baseData?.img?.[0] || '/admin/machine.png'} alt="" />
+                <img
+                  style={{ width: '100px', height: '100px' }}
+                  src={baseData?.img?.[0] || '/admin/machine.png'}
+                  alt=""
+                />
               </Flex>
               <div>
                 <Tag color={baseData?.isOnline ? '#87d068' : '#A40000'}>
