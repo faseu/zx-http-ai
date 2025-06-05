@@ -2,14 +2,14 @@
 
 import AddDirectiveModal from '@/components/AddDirectiveModal';
 import AddMachineModal from '@/components/AddMachineModal';
-import AIBox from '@/components/AIBox';
+import AIBox, { AIBoxRef } from '@/components/AIBox'; // 导入 AIBoxRef 类型
 import CustomTitle from '@/components/CustomTitle';
 import DetailMachineModal from '@/components/DetailMachineModal';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
 import {
   addMachine,
-  addOta, // 新增导入
+  addOta,
   clearAllDialogue,
   delDialogue,
   delMachine,
@@ -34,7 +34,7 @@ import {
   Table,
   TableColumnsType,
 } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './index.less';
 
 /**
@@ -294,6 +294,9 @@ export default () => {
   const [selectedMachineIds, setSelectedMachineIds] = useState<number[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
+  // 新增：AIBox 的 ref
+  const aiBoxRef = useRef<AIBoxRef>(null);
+
   console.log(isDark);
 
   const fetchMachineList = async () => {
@@ -447,6 +450,14 @@ export default () => {
     }
   };
 
+  // 新增：处理指令点击的函数
+  const handleDirectiveClick = (text: string) => {
+    if (aiBoxRef.current) {
+      aiBoxRef.current.fillInput(text);
+      message.success('指令已填充到输入框');
+    }
+  };
+
   // 当设备列表变化时，重新计算全选状态
   useEffect(() => {
     if (machineList.length > 0) {
@@ -507,7 +518,7 @@ export default () => {
             }}
             style={{ margin: 8, background: '#222020' }}
           >
-            <AIBox />
+            <AIBox ref={aiBoxRef} />
           </Card>
         </div>
         <div
@@ -587,6 +598,7 @@ export default () => {
                     text={item.content}
                     detail={item}
                     onDelete={() => onDelDialogue(item.id)} // 传递删除函数
+                    onDirectiveClick={handleDirectiveClick} // 新增：传递点击回调函数
                   />
                 );
               }}

@@ -3,10 +3,16 @@ import { Bubble, Sender, Suggestion, XRequest } from '@ant-design/x';
 import { Divider, Flex, Space } from 'antd';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
-// import 'highlight.js/styles/github.css'; // 你也可以用别的主题
 import MarkdownIt from 'markdown-it';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import EditCodeModal from './EditCodeModal'; // 引入编辑代码模态框组件
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import EditCodeModal from './EditCodeModal';
 import styles from './index.less';
 
 const BASE_URL =
@@ -18,8 +24,8 @@ const exampleRequest = XRequest({
   baseURL: BASE_URL,
   model: MODEL,
   dangerouslyApiKey: API_KEY,
-  /** 🔥🔥 Its dangerously! */
 });
+
 const md = new MarkdownIt({
   highlight: function (str, lang) {
     if (lang && hljs.getLanguage(lang)) {
@@ -32,7 +38,13 @@ const md = new MarkdownIt({
     return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
   },
 });
-export default () => {
+
+// 定义 ref 类型
+export interface AIBoxRef {
+  fillInput: (text: string) => void;
+}
+
+const AIBox = forwardRef<AIBoxRef>((props, ref) => {
   const [value, setValue] = useState('');
   const [status, setStatus] = useState<string>();
   const [lines, setLines] = useState([]);
@@ -48,6 +60,13 @@ export default () => {
   const [currentCodeBlock, setCurrentCodeBlock] = useState<HTMLElement | null>(
     null,
   );
+
+  // 暴露方法给父组件
+  useImperativeHandle(ref, () => ({
+    fillInput: (text: string) => {
+      setValue(text);
+    },
+  }));
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -229,116 +248,6 @@ export default () => {
     setCurrentCodeBlock(null);
   };
 
-  // 创建编辑模态框的函数
-  const createEditModal = (codeBlock, originalCode, onSave) => {
-    // 创建遮罩层
-    const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    overlay.style.zIndex = '1000';
-    overlay.style.display = 'flex';
-    overlay.style.justifyContent = 'center';
-    overlay.style.alignItems = 'center';
-
-    // 创建模态框
-    const modal = document.createElement('div');
-    modal.style.backgroundColor = '#fff';
-    modal.style.borderRadius = '8px';
-    modal.style.padding = '20px';
-    modal.style.width = '80%';
-    modal.style.maxWidth = '800px';
-    modal.style.maxHeight = '80%';
-    modal.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
-
-    // 创建标题
-    const title = document.createElement('h3');
-    title.textContent = '编辑代码';
-    title.style.margin = '0 0 16px 0';
-    title.style.color = '#333';
-
-    // 创建文本域
-    const textarea = document.createElement('textarea');
-    textarea.value = originalCode;
-    textarea.style.width = '100%';
-    textarea.style.height = '400px';
-    textarea.style.fontFamily = 'Monaco, Menlo, "Ubuntu Mono", monospace';
-    textarea.style.fontSize = '14px';
-    textarea.style.border = '1px solid #d9d9d9';
-    textarea.style.borderRadius = '6px';
-    textarea.style.padding = '12px';
-    textarea.style.resize = 'vertical';
-    textarea.style.outline = 'none';
-    textarea.style.backgroundColor = '#fafafa';
-
-    // 创建按钮容器
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.justifyContent = 'flex-end';
-    buttonContainer.style.gap = '12px';
-    buttonContainer.style.marginTop = '16px';
-
-    // 创建取消按钮
-    const cancelButton = document.createElement('button');
-    cancelButton.textContent = '取消';
-    cancelButton.style.padding = '8px 16px';
-    cancelButton.style.border = '1px solid #d9d9d9';
-    cancelButton.style.borderRadius = '6px';
-    cancelButton.style.backgroundColor = '#fff';
-    cancelButton.style.cursor = 'pointer';
-    cancelButton.onclick = () => {
-      document.body.removeChild(overlay);
-    };
-
-    // 创建保存按钮
-    const saveButton = document.createElement('button');
-    saveButton.textContent = '保存';
-    saveButton.style.padding = '8px 16px';
-    saveButton.style.border = 'none';
-    saveButton.style.borderRadius = '6px';
-    saveButton.style.backgroundColor = '#1890ff';
-    saveButton.style.color = '#fff';
-    saveButton.style.cursor = 'pointer';
-    saveButton.onclick = () => {
-      const newCode = textarea.value;
-      onSave(newCode);
-      document.body.removeChild(overlay);
-    };
-
-    // 组装模态框
-    buttonContainer.appendChild(cancelButton);
-    buttonContainer.appendChild(saveButton);
-    modal.appendChild(title);
-    modal.appendChild(textarea);
-    modal.appendChild(buttonContainer);
-    overlay.appendChild(modal);
-
-    // 添加到页面
-    document.body.appendChild(overlay);
-
-    // 聚焦到文本域
-    textarea.focus();
-
-    // 点击遮罩关闭
-    overlay.onclick = (e) => {
-      if (e.target === overlay) {
-        document.body.removeChild(overlay);
-      }
-    };
-
-    // ESC键关闭
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        document.body.removeChild(overlay);
-        document.removeEventListener('keydown', handleKeyDown);
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-  };
-
   const renderMarkdown = (content) => (
     <div
       dangerouslySetInnerHTML={{
@@ -348,6 +257,7 @@ export default () => {
       style={{ minHeight: '23px' }}
     />
   );
+
   const request = async (messages: { role: string; content: string }[]) => {
     setStatus('pending');
     setLines([]);
@@ -543,4 +453,6 @@ export default () => {
       />
     </Flex>
   );
-};
+});
+
+export default AIBox;
