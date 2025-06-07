@@ -1,17 +1,15 @@
-import { UserOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  PaperClipOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { Bubble, Sender, Suggestion, XRequest } from '@ant-design/x';
-import { Divider, Flex, Space } from 'antd';
+import type { UploadFile, UploadProps } from 'antd';
+import { Button, Divider, Flex, Space, Upload, message } from 'antd';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 import MarkdownIt from 'markdown-it';
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import EditCodeModal from './EditCodeModal';
 import styles from './index.less';
 
@@ -39,18 +37,13 @@ const md = new MarkdownIt({
   },
 });
 
-// 定义 ref 类型
-export interface AIBoxRef {
-  fillInput: (text: string) => void;
-}
-
-const AIBox = forwardRef<AIBoxRef>((props, ref) => {
+export default () => {
   const [value, setValue] = useState('');
   const [status, setStatus] = useState<string>();
   const [lines, setLines] = useState([]);
   const streamingContent = useMemo(() => lines.join(''), [lines]);
-
   const [messages, setMessages] = useState([]);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
   const linesRef = useRef<string[]>([]);
   const abortController = useRef<AbortController>(null);
 
@@ -61,18 +54,180 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
     null,
   );
 
-  // 暴露方法给父组件
-  useImperativeHandle(ref, () => ({
-    fillInput: (text: string) => {
-      setValue(text);
+  // 获取文件图标
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'js':
+      case 'ts':
+      case 'jsx':
+      case 'tsx':
+        return '📄';
+      case 'json':
+        return '📋';
+      case 'md':
+        return '📝';
+      case 'css':
+      case 'less':
+      case 'scss':
+        return '🎨';
+      case 'html':
+        return '🌐';
+      case 'py':
+        return '🐍';
+      case 'java':
+        return '☕';
+      case 'cpp':
+      case 'c':
+        return '⚙️';
+      case 'txt':
+      case 'log':
+        return '📃';
+      case 'csv':
+        return '📊';
+      case 'xml':
+        return '📑';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+        return '🖼️';
+      default:
+        return '📄';
+    }
+  };
+
+  // 格式化文件大小
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  };
+
+  // 文件上传配置
+  const uploadProps: UploadProps = {
+    multiple: true,
+    maxCount: 5,
+    fileList,
+    beforeUpload: (file) => {
+      // 检查文件类型
+      const allowedExtensions = [
+        '.txt',
+        '.md',
+        '.json',
+        '.csv',
+        '.js',
+        '.ts',
+        '.tsx',
+        '.jsx',
+        '.py',
+        '.java',
+        '.cpp',
+        '.c',
+        '.h',
+        '.xml',
+        '.html',
+        '.css',
+        '.less',
+        '.scss',
+        '.yaml',
+        '.yml',
+        '.ini',
+        '.conf',
+        '.log',
+      ];
+      const fileName = file.name.toLowerCase();
+      const isValidType =
+        allowedExtensions.some((ext) => fileName.endsWith(ext)) ||
+        file.type?.includes('text') ||
+        file.type?.includes('application/json') ||
+        file.type?.includes('image');
+
+      if (!isValidType) {
+        message.error(`不支持的文件类型: ${file.name}`);
+        return false;
+      }
+
+      // 检查文件大小
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        message.error('文件大小不能超过10MB');
+        return false;
+      }
+
+      return false; // 阻止自动上传
     },
-  }));
+    onChange: (info) => {
+      setFileList(info.fileList);
+    },
+    onRemove: (file) => {
+      setFileList((prev) => prev.filter((item) => item.uid !== file.uid));
+    },
+    showUploadList: false,
+  };
+
+  // 处理文件内容读取
+  const readFileContent = async (file: UploadFile): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        resolve(content);
+      };
+      reader.onerror = () => reject(new Error('文件读取失败'));
+
+      if (file.originFileObj) {
+        if (file.type?.startsWith('image/')) {
+          reader.readAsDataURL(file.originFileObj);
+        } else {
+          reader.readAsText(file.originFileObj, 'UTF-8');
+        }
+      }
+    });
+  };
+
+  // 处理附件信息
+  const processAttachments = async (fileList: UploadFile[]) => {
+    if (fileList.length === 0) return '';
+
+    let attachmentText = '\n\n=== 📎 附件信息 ===\n';
+
+    for (const file of fileList) {
+      try {
+        const content = await readFileContent(file);
+        attachmentText += `\n📄 文件名: ${file.name}\n`;
+        attachmentText += `🏷️ 文件类型: ${file.type || '未知'}\n`;
+        attachmentText += `📏 文件大小: ${((file.size || 0) / 1024).toFixed(
+          2,
+        )} KB\n`;
+
+        if (file.type?.startsWith('image/')) {
+          attachmentText += `🖼️ 图片内容: [Base64编码的图片数据，请分析图片内容]\n`;
+        } else {
+          // 限制文本内容长度，避免token超限
+          const maxLength = 3000;
+          if (content.length > maxLength) {
+            const truncatedContent = content.substring(0, maxLength);
+            attachmentText += `📝 文件内容:\n\`\`\`\n${truncatedContent}\n\`\`\`\n⚠️ 注意: 文件内容已截断，原文件共${content.length}字符\n`;
+          } else {
+            attachmentText += `📝 文件内容:\n\`\`\`\n${content}\n\`\`\`\n`;
+          }
+        }
+        attachmentText += '---\n';
+      } catch (error) {
+        attachmentText += `❌ 文件 ${file.name} 读取失败: ${error.message}\n---\n`;
+      }
+    }
+
+    return attachmentText;
+  };
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       const codeBlocks = document.querySelectorAll('.markdown-body pre');
       codeBlocks.forEach((block) => {
-        // 检查是否已经添加过按钮容器，避免重复添加
         if (
           block.querySelector('.copy-container') ||
           block.querySelector('.action-container')
@@ -119,8 +274,6 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         editButton.onclick = () => {
           const codeElement = block.querySelector('code');
           const originalCode = codeElement.innerText;
-
-          // 打开编辑模态框
           setCurrentCodeBlock(codeElement);
           setEditingCode(originalCode);
           setEditModalOpen(true);
@@ -132,10 +285,8 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         compileButton.textContent = '提交编译';
         compileButton.onclick = () => {
           const code = block.innerText;
-          // 这里可以添加您的编译逻辑
           console.log('提交编译:', code);
           compileButton.textContent = '编译中...';
-          // 模拟编译过程
           setTimeout(() => {
             compileButton.textContent = '编译完成';
             setTimeout(() => (compileButton.textContent = '提交编译'), 2000);
@@ -148,13 +299,11 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         upgradeButton.textContent = '一键升级';
         upgradeButton.onclick = () => {
           const code = block.innerText;
-          // 这里可以添加您的升级逻辑
           console.log('一键升级:', code);
           upgradeButton.textContent = '升级中...';
-          // 模拟升级过程
           setTimeout(() => {
             upgradeButton.textContent = '升级完成';
-            setTimeout(() => (upgradeButton.textContent = '一键升级'), 2000);
+            setTimeout(() => (upgradeButton.textContent = '一键升级'), 1500);
           }, 1500);
         };
 
@@ -226,10 +375,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
   // 处理编辑代码保存
   const handleEditCodeSave = (newCode: string) => {
     if (currentCodeBlock) {
-      // 更新代码块内容
       currentCodeBlock.innerHTML = hljs.highlightAuto(newCode).value;
-
-      // 找到对应的编辑按钮并显示保存状态
       const editButton = currentCodeBlock
         .closest('pre')
         ?.querySelector('.edit-btn') as HTMLButtonElement;
@@ -242,7 +388,6 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
     setCurrentCodeBlock(null);
   };
 
-  // 处理编辑模态框取消
   const handleEditCodeCancel = () => {
     setEditModalOpen(false);
     setCurrentCodeBlock(null);
@@ -271,7 +416,6 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
       {
         onSuccess: () => {
           setStatus('success');
-          // ✅ 成功后，把累积的内容加入消息流
           const assistantContent = linesRef.current.join('');
           setMessages((prev) => [
             ...prev,
@@ -286,33 +430,49 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         onUpdate: (chunk) => {
           try {
             const parsed = JSON.parse(chunk.data);
-            console.log(parsed);
             if (parsed === '[DONE]') {
-              console.log(parsed);
               setStatus('success');
             }
             const content = parsed.choices?.[0]?.delta?.content || '';
             if (content) {
               linesRef.current.push(content);
-              setLines([...linesRef.current]); // 显示更新 markdown
+              setLines([...linesRef.current]);
             }
           } catch (err) {
             console.error('解析 chunk 出错：', err, chunk);
           }
         },
         onStream: (controller) => {
-          console.log(controller);
           abortController.current = controller;
         },
       },
     );
   };
 
-  const handleSubmit = (value) => {
-    const newMessages = [...messages, { role: 'user', content: value }];
-    setMessages(newMessages);
-    setValue('');
-    request(newMessages);
+  const handleSubmit = async (value) => {
+    if (!value.trim() && fileList.length === 0) {
+      message.warning('请输入消息或选择附件');
+      return;
+    }
+
+    try {
+      // 处理附件内容
+      const attachmentContent = await processAttachments(fileList);
+      const finalContent = value + attachmentContent;
+
+      const newMessages = [
+        ...messages,
+        { role: 'user', content: finalContent },
+      ];
+      setMessages(newMessages);
+      setValue('');
+      setFileList([]); // 清空附件列表
+
+      await request(newMessages);
+    } catch (error) {
+      message.error('处理附件时出错，请重试');
+      console.error('附件处理错误:', error);
+    }
   };
 
   return (
@@ -374,6 +534,113 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         </div>
       )}
 
+      {/* 附件显示区域 */}
+      {fileList.length > 0 && (
+        <div
+          style={{
+            background: '#1f1f1f',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '8px',
+            border: '1px solid #333',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '12px',
+              color: '#888',
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <PaperClipOutlined />
+            <span>已选择 {fileList.length} 个附件 (最多5个)</span>
+          </div>
+
+          {fileList.map((file) => (
+            <div
+              key={file.uid}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '6px 8px',
+                background: '#2a2a2a',
+                borderRadius: '4px',
+                marginBottom: '4px',
+                border: '1px solid #404040',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flex: 1,
+                  overflow: 'hidden',
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>
+                  {getFileIcon(file.name)}
+                </span>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      fontSize: '13px',
+                      color: '#fff',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {file.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      color: '#888',
+                    }}
+                  >
+                    {formatFileSize(file.size || 0)}
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                type="text"
+                size="small"
+                icon={<DeleteOutlined />}
+                onClick={() => {
+                  const newFileList = fileList.filter(
+                    (item) => item.uid !== file.uid,
+                  );
+                  setFileList(newFileList);
+                }}
+                style={{
+                  color: '#ff4d4f',
+                  padding: '2px 4px',
+                  height: 'auto',
+                  minWidth: 'auto',
+                }}
+              />
+            </div>
+          ))}
+
+          <div
+            style={{
+              fontSize: '11px',
+              color: '#666',
+              marginTop: '4px',
+              textAlign: 'center',
+            }}
+          >
+            支持: .txt, .md, .json, .csv, .js, .ts, .py, .java 等
+          </div>
+        </div>
+      )}
+
       <Suggestion items={[{ label: 'Write a report', value: 'report' }]}>
         {({ onTrigger, onKeyDown }) => {
           return (
@@ -392,11 +659,31 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
               onKeyDown={onKeyDown}
               placeholder="发送消息..."
               actions={(node, info) => {
-                const { SendButton, LoadingButton, ClearButton, SpeechButton } =
-                  info.components;
-                console.log(node, info);
+                const { SendButton, SpeechButton } = info.components;
                 return (
                   <Space size="small">
+                    <Upload {...uploadProps}>
+                      <Button
+                        type="text"
+                        icon={<PaperClipOutlined />}
+                        disabled={fileList.length >= 5}
+                        style={{
+                          width: 42,
+                          height: 42,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#141414',
+                          borderRadius: '50%',
+                          opacity: fileList.length >= 5 ? 0.5 : 1,
+                        }}
+                        title={
+                          fileList.length >= 5
+                            ? '最多只能上传5个文件'
+                            : '添加附件'
+                        }
+                      />
+                    </Upload>
                     <SpeechButton
                       type="text"
                       icon={
@@ -453,6 +740,4 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
       />
     </Flex>
   );
-});
-
-export default AIBox;
+};
