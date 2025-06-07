@@ -1,3 +1,4 @@
+// src/components/AIBox/index.tsx
 import {
   DeleteOutlined,
   PaperClipOutlined,
@@ -9,7 +10,14 @@ import { Button, Divider, Flex, Space, Upload, message } from 'antd';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 import MarkdownIt from 'markdown-it';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import EditCodeModal from './EditCodeModal';
 import styles from './index.less';
 
@@ -37,7 +45,12 @@ const md = new MarkdownIt({
   },
 });
 
-export default () => {
+// 定义 ref 接口
+export interface AIBoxRef {
+  fillInput: (text: string) => void;
+}
+
+const AIBox = forwardRef<AIBoxRef>((props, ref) => {
   const [value, setValue] = useState('');
   const [status, setStatus] = useState<string>();
   const [lines, setLines] = useState([]);
@@ -53,6 +66,13 @@ export default () => {
   const [currentCodeBlock, setCurrentCodeBlock] = useState<HTMLElement | null>(
     null,
   );
+
+  // 暴露方法给父组件
+  useImperativeHandle(ref, () => ({
+    fillInput: (text: string) => {
+      setValue(text);
+    },
+  }));
 
   // 获取文件图标
   const getFileIcon = (fileName: string) => {
@@ -110,6 +130,8 @@ export default () => {
   const uploadProps: UploadProps = {
     multiple: true,
     maxCount: 5,
+    accept:
+      '.txt,.md,.json,.csv,.js,.ts,.tsx,.jsx,.py,.java,.cpp,.c,.h,.xml,.html,.css,.less,.scss,.yaml,.yml,.ini,.conf,.log',
     fileList,
     beforeUpload: (file) => {
       // 检查文件类型
@@ -283,14 +305,56 @@ export default () => {
         const compileButton = document.createElement('button');
         compileButton.className = 'compile-btn';
         compileButton.textContent = '提交编译';
-        compileButton.onclick = () => {
+        compileButton.onclick = async () => {
           const code = block.innerText;
           console.log('提交编译:', code);
           compileButton.textContent = '编译中...';
-          setTimeout(() => {
-            compileButton.textContent = '编译完成';
-            setTimeout(() => (compileButton.textContent = '提交编译'), 2000);
-          }, 1000);
+
+          try {
+            // 生成带时间戳的文件名
+            const now = new Date();
+            const timestamp =
+              now.getFullYear() +
+              String(now.getMonth() + 1).padStart(2, '0') +
+              String(now.getDate()).padStart(2, '0') +
+              String(now.getHours()).padStart(2, '0') +
+              String(now.getMinutes()).padStart(2, '0') +
+              String(now.getSeconds()).padStart(2, '0');
+            const filename = `main${timestamp}`;
+
+            // 创建文件对象
+            const blob = new Blob([code], { type: 'text/plain' });
+            const file = new File([blob], 'main.c', { type: 'text/plain' });
+            console.log(file);
+            // 创建 FormData
+            const formData = new FormData();
+            formData.append('filename', filename);
+            formData.append('file', file);
+
+            const result = await fetch('/admin/upload/upcode', {
+              method: 'POST',
+              body: formData,
+            });
+            // 发送请求
+            // const result = await request('/admin/upload/upcode', {
+            //   method: 'POST',
+            //   data: formData,
+            //   requestType: 'form', // 让 umi-request 处理 multipart/form-data
+            // });
+
+            if (result.code === 10000) {
+              compileButton.textContent = '编译完成';
+              message.success('代码提交成功');
+            } else {
+              throw new Error(result.msg || '编译失败');
+            }
+          } catch (error) {
+            console.error('编译错误:', error);
+            compileButton.textContent = '编译失败';
+            message.error(error.message || '编译失败，请重试');
+          }
+
+          setTimeout(() => (compileButton.textContent = '提交编译'), 2000);
         };
 
         // 一键升级按钮
@@ -403,7 +467,9 @@ export default () => {
     />
   );
 
-  const request = async (messages: { role: string; content: string }[]) => {
+  const requestMessages = async (
+    messages: { role: string; content: string }[],
+  ) => {
     setStatus('pending');
     setLines([]);
     linesRef.current = [];
@@ -468,7 +534,7 @@ export default () => {
       setValue('');
       setFileList([]); // 清空附件列表
 
-      await request(newMessages);
+      await requestMessages(newMessages);
     } catch (error) {
       message.error('处理附件时出错，请重试');
       console.error('附件处理错误:', error);
@@ -740,4 +806,6 @@ export default () => {
       />
     </Flex>
   );
-};
+});
+
+export default AIBox;
