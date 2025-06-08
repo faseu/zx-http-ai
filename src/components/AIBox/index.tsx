@@ -1,6 +1,7 @@
-// src/components/AIBox/index.tsx - 基于OpenAI SDK的文件上传
+// src/components/AIBox/index.tsx - 添加停止回复功能
 
 import {
+  BorderOutlined,
   CloudUploadOutlined,
   DeleteOutlined,
   DownOutlined,
@@ -74,7 +75,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
   const [messages, setMessages] = useState([]);
   const [fileList, setFileList] = useState<FileWithStatus[]>([]);
   const linesRef = useRef<string[]>([]);
-  const abortController = useRef<AbortController>(null);
+  const abortController = useRef<AbortController | null>(null); // 修改为可以为null
 
   // 编辑模态框相关状态
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -90,6 +91,28 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
       setValue(text);
     },
   }));
+
+  // 停止回复功能
+  const stopReply = () => {
+    if (abortController.current) {
+      abortController.current.abort();
+      abortController.current = null;
+    }
+    setStatus('stopped');
+
+    // 如果有流式内容，保存到历史消息中
+    if (linesRef.current.length > 0) {
+      const assistantContent = linesRef.current.join('');
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: `${assistantContent}\n\n[回复已停止]` },
+      ]);
+    }
+
+    setLines([]);
+    linesRef.current = [];
+    message.info('已停止回复');
+  };
 
   // 使用OpenAI SDK上传文件到阿里云百炼
   const uploadFileWithOpenAI = async (file: File): Promise<string> => {
@@ -127,6 +150,10 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
   // 使用OpenAI兼容接口进行聊天
   const chatWithOpenAI = async (messages: any[]) => {
     try {
+      // 创建新的AbortController
+      const controller = new AbortController();
+      abortController.current = controller;
+
       const response = await fetch(`${BASE_URL}/chat/completions`, {
         method: 'POST',
         headers: {
@@ -141,6 +168,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
             include_usage: true,
           },
         }),
+        signal: controller.signal, // 添加取消信号
       });
 
       if (!response.ok) {
@@ -176,6 +204,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                   ...prev,
                   { role: 'assistant', content: assistantContent },
                 ]);
+                abortController.current = null; // 清空控制器
                 return;
               }
 
@@ -194,11 +223,19 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         }
       } finally {
         reader.releaseLock();
+        abortController.current = null; // 确保清空控制器
       }
     } catch (error) {
+      // 检查是否是用户主动取消
+      if (error.name === 'AbortError') {
+        console.log('请求已被用户取消');
+        return; // 不显示错误消息，因为是用户主动取消
+      }
+
       console.error('聊天请求失败:', error);
       setStatus('error');
       message.error(`请求失败: ${error.message}`);
+      abortController.current = null; // 清空控制器
     }
   };
 
@@ -528,6 +565,12 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
 
   // 修改后的 handleSubmit 函数
   const handleSubmit = async (value: string) => {
+    // 如果正在回复中，禁止发送新消息
+    if (status === 'pending') {
+      message.warning('AI正在回复中，请等待回复完成或点击停止按钮');
+      return;
+    }
+
     if (!value.trim() && fileList.length === 0) {
       message.warning('请输入消息或选择附件');
       return;
@@ -819,6 +862,11 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
   };
 
   const clearConversation = () => {
+    // 如果正在回复中，先停止回复
+    if (status === 'pending') {
+      stopReply();
+    }
+
     setMessages([]);
     setFileList([]);
     setValue('');
@@ -1188,7 +1236,12 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                 onSubmit={handleSubmit}
                 autoSize={{ minRows: 2, maxRows: 6 }}
                 onKeyDown={onKeyDown}
-                placeholder="发送消息或上传长文档..."
+                placeholder={
+                  status === 'pending'
+                    ? 'AI正在回复中，请等待...'
+                    : '发送消息或上传长文档...'
+                }
+                // disabled={status === 'pending'} // 在回复时禁用输入框
                 actions={(node, info) => {
                   const { SendButton, SpeechButton } = info.components;
                   return (
@@ -1204,7 +1257,9 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                         <Button
                           type="text"
                           icon={<PaperClipOutlined />}
-                          disabled={fileList.length >= 100}
+                          disabled={
+                            fileList.length >= 100 || status === 'pending'
+                          }
                           style={{
                             width: 42,
                             height: 42,
@@ -1214,10 +1269,15 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                             background: '#141414',
                             fontSize: '16px',
                             borderRadius: '50%',
-                            opacity: fileList.length >= 100 ? 0.5 : 1,
+                            opacity:
+                              fileList.length >= 100 || status === 'pending'
+                                ? 0.5
+                                : 1,
                           }}
                           title={
-                            fileList.length >= 100
+                            status === 'pending'
+                              ? 'AI正在回复中，无法上传文件'
+                              : fileList.length >= 100
                               ? '最多只能上传100个文件'
                               : '上传长文档 (OpenAI SDK)'
                           }
@@ -1225,28 +1285,38 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                       </Upload>
                       <SpeechButton
                         type="text"
+                        disabled={status === 'pending'}
                         icon={
                           <img
                             src="/admin/speech.png"
                             width={42}
                             height={42}
                             alt=""
+                            style={{
+                              opacity: status === 'pending' ? 0.5 : 1,
+                            }}
                           />
                         }
                       />
                       <Divider type="vertical" />
                       {status === 'pending' ? (
-                        <SendButton
+                        // 显示停止按钮
+                        <Button
                           type="text"
-                          disabled
-                          icon={
-                            <img
-                              src="/admin/send1.png"
-                              width={42}
-                              height={42}
-                              alt=""
-                            />
-                          }
+                          onClick={stopReply}
+                          icon={<BorderOutlined />}
+                          style={{
+                            width: 42,
+                            height: 42,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#ff4d4f',
+                            fontSize: '16px',
+                            background: '#141414',
+                            borderRadius: '50%',
+                          }}
+                          title="停止回复"
                         />
                       ) : (
                         <SendButton
