@@ -1171,11 +1171,23 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                 item.role === 'user' ? (
                   { icon: <UserOutlined /> }
                 ) : (
-                  <img
-                    style={{ width: '32px', height: '32px' }}
-                    src="/admin/logo.png"
-                    alt=""
-                  />
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      background: '#141414',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '50%',
+                    }}
+                  >
+                    <img
+                      style={{ width: '18px', height: '18px' }}
+                      src="/admin/logo.png"
+                      alt=""
+                    />
+                  </div>
                 ),
               messageRender: renderMarkdown,
             })),
@@ -1186,11 +1198,23 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                     placement: 'start',
                     content: streamingContent,
                     avatar: (
-                      <img
-                        style={{ width: '32px', height: '32px' }}
-                        src="/admin/logo.png"
-                        alt=""
-                      />
+                      <div
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          background: '#141414',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '50%',
+                        }}
+                      >
+                        <img
+                          style={{ width: '18px', height: '18px' }}
+                          src="/admin/logo.png"
+                          alt=""
+                        />
+                      </div>
                     ),
                     messageRender: renderMarkdown,
                   },
