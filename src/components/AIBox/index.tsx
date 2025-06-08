@@ -10,8 +10,18 @@ import {
 } from '@ant-design/icons';
 import { Bubble, Sender, Suggestion } from '@ant-design/x';
 import { request } from '@umijs/max';
-import type { UploadFile, UploadProps } from 'antd';
-import { Button, Divider, Flex, message, Progress, Space, Upload } from 'antd';
+import {
+  Button,
+  Divider,
+  Flex,
+  message,
+  Popconfirm,
+  Progress,
+  Space,
+  Upload,
+  UploadFile,
+  UploadProps,
+} from 'antd';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 import MarkdownIt from 'markdown-it';
@@ -411,6 +421,8 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
 
   // 文件上传配置
   const uploadProps: UploadProps = {
+    accept:
+      '.txt,.docx,.pdf,.xlsx,.epub,.mobi,.md,.csv,.bmp,.png,.jpg,.jpeg,.gif',
     multiple: true,
     maxCount: 100, // 阿里云百炼支持最多100个文件
     fileList,
@@ -456,16 +468,17 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
     showUploadList: false,
   };
 
-  // 构建包含file-id的消息
+  // 构建包含file-id的消息修改 buildMessagesWithFiles 函数，让 AI 有记忆功能
   const buildMessagesWithFiles = (
     userInput: string,
     files: FileWithStatus[],
+    previousMessages: any[], // 新增：传入历史消息
   ) => {
     const messages: any[] = [
       { role: 'system', content: 'You are a helpful assistant.' },
     ];
 
-    // 添加file-id到system messages
+    // 添加file-id到system messages（只在第一次上传文件时添加）
     const successFiles = files.filter(
       (file) => file.fileId && file.uploadStatus === 'success',
     );
@@ -475,6 +488,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
       successFiles.map((f) => ({ name: f.name, fileId: f.fileId })),
     );
 
+    // 如果有新上传的文件，添加文件ID
     successFiles.forEach((file) => {
       console.log(`添加文件ID到消息: fileid://${file.fileId}`);
       messages.push({
@@ -483,7 +497,24 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
       });
     });
 
-    // 添加用户消息
+    // 添加所有历史消息（排除系统消息和文件ID消息）
+    previousMessages.forEach((msg) => {
+      // 过滤掉系统消息和文件ID消息，只保留真实的对话内容
+      if (msg.role !== 'system' && !msg.content.startsWith('fileid://')) {
+        // 清理显示用的附件信息，只保留纯文本内容
+        let cleanContent = msg.content;
+        if (msg.role === 'user') {
+          // 移除用户消息中的附件显示信息
+          cleanContent = cleanContent.replace(/\n\n📎 附件 \(\d+个\):.*$/, '');
+        }
+        messages.push({
+          role: msg.role,
+          content: cleanContent,
+        });
+      }
+    });
+
+    // 添加当前用户消息
     if (userInput.trim()) {
       messages.push({
         role: 'user',
@@ -491,10 +522,11 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
       });
     }
 
-    console.log('最终构建的消息:', messages);
+    console.log('最终构建的消息（包含历史）:', messages);
     return messages;
   };
 
+  // 修改后的 handleSubmit 函数
   const handleSubmit = async (value: string) => {
     if (!value.trim() && fileList.length === 0) {
       message.warning('请输入消息或选择附件');
@@ -539,10 +571,13 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
     );
 
     try {
-      // 构建包含file-id的消息
-      const apiMessages = buildMessagesWithFiles(value, fileList);
+      // 构建包含file-id和历史消息的消息数组
+      const apiMessages = buildMessagesWithFiles(value, fileList, messages); // 传入历史消息
 
-      console.log('发送的消息结构:', JSON.stringify(apiMessages, null, 2));
+      console.log(
+        '发送的消息结构（包含历史）:',
+        JSON.stringify(apiMessages, null, 2),
+      );
 
       // 添加到历史消息（显示用）
       const displayMessages = [...messages];
@@ -558,6 +593,9 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
 
       setMessages(displayMessages);
       setValue('');
+
+      // 清空文件列表（可选：如果希望文件只在当前对话中生效）
+      // setFileList([]);
 
       // 调用聊天API
       await chatWithOpenAI(apiMessages);
@@ -780,6 +818,16 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
     );
   };
 
+  const clearConversation = () => {
+    setMessages([]);
+    setFileList([]);
+    setValue('');
+    setLines([]);
+    linesRef.current = [];
+    setStatus(undefined);
+    message.success('对话已清空');
+  };
+
   // 代码块增强功能 - 只在流式传输结束后渲染
   useEffect(() => {
     // 只有在非流式传输状态或流式传输完成时才添加按钮
@@ -879,7 +927,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
               },
             });
             console.log('编译提交结果:', compileResult);
-
+            message.success('编译已提交');
             // 第三步：轮询查询编译结果
             let pollCount = 0;
             const maxPolls = 30; // 最多轮询30次（30秒）
@@ -1123,95 +1171,134 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
 
       {/* 文件列表显示 */}
       {renderFileList()}
-
-      <Suggestion items={[{ label: 'Write a report', value: 'report' }]}>
-        {({ onTrigger, onKeyDown }) => {
-          return (
-            <Sender
-              value={value}
-              onChange={(nextVal) => {
-                if (nextVal === '/') {
-                  onTrigger();
-                } else if (!nextVal) {
-                  onTrigger(false);
-                }
-                setValue(nextVal);
-              }}
-              onSubmit={handleSubmit}
-              autoSize={{ minRows: 6, maxRows: 6 }}
-              onKeyDown={onKeyDown}
-              placeholder="发送消息或上传长文档..."
-              actions={(node, info) => {
-                const { SendButton, SpeechButton } = info.components;
-                return (
-                  <Space size="small">
-                    <Upload {...uploadProps}>
-                      <Button
-                        type="text"
-                        icon={<PaperClipOutlined />}
-                        disabled={fileList.length >= 100}
-                        style={{
-                          width: 42,
-                          height: 42,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: '#141414',
-                          borderRadius: '50%',
-                          opacity: fileList.length >= 100 ? 0.5 : 1,
-                        }}
-                        title={
-                          fileList.length >= 100
-                            ? '最多只能上传100个文件'
-                            : '上传长文档 (OpenAI SDK)'
-                        }
-                      />
-                    </Upload>
-                    <SpeechButton
-                      type="text"
-                      icon={
-                        <img
-                          src="/admin/speech.png"
-                          width={42}
-                          height={42}
-                          alt=""
+      <div style={{ position: 'relative' }}>
+        <Suggestion items={[{ label: 'Write a report', value: 'report' }]}>
+          {({ onTrigger, onKeyDown }) => {
+            return (
+              <Sender
+                value={value}
+                onChange={(nextVal) => {
+                  if (nextVal === '/') {
+                    onTrigger();
+                  } else if (!nextVal) {
+                    onTrigger(false);
+                  }
+                  setValue(nextVal);
+                }}
+                onSubmit={handleSubmit}
+                autoSize={{ minRows: 2, maxRows: 6 }}
+                onKeyDown={onKeyDown}
+                placeholder="发送消息或上传长文档..."
+                actions={(node, info) => {
+                  const { SendButton, SpeechButton } = info.components;
+                  return (
+                    <Space
+                      size="small"
+                      style={{
+                        position: 'absolute',
+                        right: '16px',
+                        bottom: '8px',
+                      }}
+                    >
+                      <Upload {...uploadProps}>
+                        <Button
+                          type="text"
+                          icon={<PaperClipOutlined />}
+                          disabled={fileList.length >= 100}
+                          style={{
+                            width: 42,
+                            height: 42,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: '#141414',
+                            fontSize: '16px',
+                            borderRadius: '50%',
+                            opacity: fileList.length >= 100 ? 0.5 : 1,
+                          }}
+                          title={
+                            fileList.length >= 100
+                              ? '最多只能上传100个文件'
+                              : '上传长文档 (OpenAI SDK)'
+                          }
                         />
-                      }
-                    />
-                    <Divider type="vertical" />
-                    {status === 'pending' ? (
-                      <SendButton
+                      </Upload>
+                      <SpeechButton
                         type="text"
-                        disabled
                         icon={
                           <img
-                            src="/admin/send1.png"
+                            src="/admin/speech.png"
                             width={42}
                             height={42}
                             alt=""
                           />
                         }
                       />
-                    ) : (
-                      <SendButton
-                        type="text"
-                        icon={
-                          <img
-                            src="/admin/send1.png"
-                            width={42}
-                            height={42}
-                            alt=""
-                          />
-                        }
-                      />
-                    )}
-                  </Space>
-                );
-              }}
-            />
-          );
-        }}
-      </Suggestion>
+                      <Divider type="vertical" />
+                      {status === 'pending' ? (
+                        <SendButton
+                          type="text"
+                          disabled
+                          icon={
+                            <img
+                              src="/admin/send1.png"
+                              width={42}
+                              height={42}
+                              alt=""
+                            />
+                          }
+                        />
+                      ) : (
+                        <SendButton
+                          type="text"
+                          icon={
+                            <img
+                              src="/admin/send1.png"
+                              width={42}
+                              height={42}
+                              alt=""
+                            />
+                          }
+                        />
+                      )}
+                    </Space>
+                  );
+                }}
+              />
+            );
+          }}
+        </Suggestion>
+        <Popconfirm
+          title="清空对话"
+          description="确定要清空所有对话记录吗？此操作无法撤销。"
+          okText="确定"
+          cancelText="取消"
+          onConfirm={clearConversation}
+          placement="topLeft"
+        >
+          <Button
+            type="text"
+            icon={<DeleteOutlined />}
+            style={{
+              position: 'absolute',
+              bottom: '8px',
+              left: '8px',
+              zIndex: 10,
+              width: 42,
+              height: 42,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'inherit',
+              fontSize: '16px',
+              background: '#141414',
+              borderRadius: '50%',
+              backdropFilter: 'blur(4px)',
+            }}
+            title="清空对话"
+          />
+        </Popconfirm>
+      </div>
 
       {/* 编辑代码模态框 */}
       <EditCodeModal
