@@ -5,11 +5,13 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Bubble, Sender, Suggestion, XRequest } from '@ant-design/x';
+import { request } from '@umijs/max';
 import type { UploadFile, UploadProps } from 'antd';
 import { Button, Divider, Flex, Space, Upload, message } from 'antd';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 import MarkdownIt from 'markdown-it';
+
 import {
   forwardRef,
   useEffect,
@@ -320,7 +322,6 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
               String(now.getHours()).padStart(2, '0') +
               String(now.getMinutes()).padStart(2, '0') +
               String(now.getSeconds()).padStart(2, '0');
-            const filename = `main${timestamp}`;
 
             // 创建文件对象
             const blob = new Blob([code], { type: 'text/plain' });
@@ -328,26 +329,22 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
             console.log(file);
             // 创建 FormData
             const formData = new FormData();
-            formData.append('filename', filename);
+            formData.append('filename', 'file');
             formData.append('file', file);
 
-            const result = await fetch('/admin/upload/upcode', {
-              method: 'POST',
-              body: formData,
-            });
-            // 发送请求
-            // const result = await request('/admin/upload/upcode', {
+            // const result = await fetch('/admin/upload/upcode', {
             //   method: 'POST',
-            //   data: formData,
-            //   requestType: 'form', // 让 umi-request 处理 multipart/form-data
+            //   body: formData,
             // });
+            // 发送请求
+            const result = await request('/admin/upload/upcode', {
+              method: 'POST',
+              data: formData,
+              requestType: 'form', // 让 umi-request 处理 multipart/form-data
+            });
 
-            if (result.code === 10000) {
-              compileButton.textContent = '编译完成';
-              message.success('代码提交成功');
-            } else {
-              throw new Error(result.msg || '编译失败');
-            }
+            compileButton.textContent = '编译完成';
+            message.success('代码提交成功');
           } catch (error) {
             console.error('编译错误:', error);
             compileButton.textContent = '编译失败';
