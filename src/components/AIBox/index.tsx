@@ -852,36 +852,124 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
           const code = block.innerText;
           console.log('提交编译:', code);
           compileButton.textContent = '编译中...';
+          compileButton.disabled = true;
 
           try {
-            // 生成带时间戳的文件名
-            const now = new Date();
-            // 创建文件对象
+            // 第一步：上传代码文件
             const blob = new Blob([code], { type: 'text/plain' });
             const file = new File([blob], 'main.c', { type: 'text/plain' });
-            console.log(file);
-            // 创建 FormData
+
             const formData = new FormData();
             formData.append('filename', 'file');
             formData.append('file', file);
 
-            // 发送请求
-            const result = await request('/admin/upload/upcode', {
+            const uploadResult = await request('/admin/upload/upcode', {
               method: 'POST',
               data: formData,
-              requestType: 'form', // 让 umi-request 处理 multipart/form-data
+              requestType: 'form',
             });
-            console.log(result);
+            console.log('上传结果:', uploadResult);
 
-            compileButton.textContent = '编译完成';
-            message.success('代码提交成功');
+            // 第二步：提交编译
+            const compileResult = await request('/admin/Ai_Log/compiler', {
+              method: 'POST',
+              data: {
+                id: uploadResult.id,
+                url: uploadResult.url,
+              },
+            });
+            console.log('编译提交结果:', compileResult);
+
+            // 第三步：轮询查询编译结果
+            let pollCount = 0;
+            const maxPolls = 30; // 最多轮询30次（30秒）
+            const pollInterval = 1000; // 每秒轮询一次
+
+            const pollCompileResult = async () => {
+              try {
+                const statusResult = await request(
+                  '/admin/Ai_Log/get_compiler',
+                  {
+                    method: 'POST',
+                    data: {
+                      id: uploadResult.id,
+                      url: uploadResult.url,
+                    },
+                  },
+                );
+                console.log(
+                  `编译状态查询 (${pollCount + 1}/${maxPolls}):`,
+                  statusResult,
+                );
+
+                // 假设编译完成的条件是返回状态中有完成标识
+                // 根据实际API返回调整这个判断条件
+                if (
+                  statusResult &&
+                  (statusResult.status === 'completed' || statusResult.result)
+                ) {
+                  // 编译完成
+                  compileButton.textContent = '编译完成';
+                  compileButton.disabled = false;
+
+                  if (
+                    statusResult.success ||
+                    statusResult.result === 'success'
+                  ) {
+                    message.success('代码编译成功！');
+                  } else {
+                    message.warning(
+                      `编译完成，结果: ${
+                        statusResult.message || '请查看详细信息'
+                      }`,
+                    );
+                  }
+
+                  setTimeout(() => {
+                    compileButton.textContent = '提交编译';
+                  }, 3000);
+                  return;
+                }
+
+                // 继续轮询
+                pollCount++;
+                if (pollCount < maxPolls) {
+                  compileButton.textContent = `编译中... (${pollCount}/${maxPolls})`;
+                  setTimeout(pollCompileResult, pollInterval);
+                } else {
+                  // 轮询超时
+                  compileButton.textContent = '编译超时';
+                  compileButton.disabled = false;
+                  message.warning('编译查询超时，请稍后手动查看结果');
+
+                  setTimeout(() => {
+                    compileButton.textContent = '提交编译';
+                  }, 3000);
+                }
+              } catch (pollError) {
+                console.error('轮询编译状态失败:', pollError);
+                compileButton.textContent = '查询失败';
+                compileButton.disabled = false;
+                message.error('编译状态查询失败');
+
+                setTimeout(() => {
+                  compileButton.textContent = '提交编译';
+                }, 3000);
+              }
+            };
+
+            // 开始轮询
+            setTimeout(pollCompileResult, pollInterval);
           } catch (error) {
             console.error('编译错误:', error);
             compileButton.textContent = '编译失败';
+            compileButton.disabled = false;
             message.error(error.message || '编译失败，请重试');
-          }
 
-          setTimeout(() => (compileButton.textContent = '提交编译'), 2000);
+            setTimeout(() => {
+              compileButton.textContent = '提交编译';
+            }, 3000);
+          }
         };
 
         // 一键升级按钮
