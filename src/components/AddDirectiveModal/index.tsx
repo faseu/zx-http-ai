@@ -1,5 +1,5 @@
 import UploadFile from '@/components/UploadFile'; // 使用文件上传组件
-import { Form, Input, Modal, Select } from 'antd';
+import { Form, Input, Modal } from 'antd';
 import { DefaultOptionType } from 'rc-select/es/Select';
 
 interface AddDirectiveModalProps {
@@ -62,9 +62,9 @@ const AddDirectiveModal: React.FC<AddDirectiveModalProps> = ({
         <Form.Item
           label="设备型号："
           rules={[{ required: true, message: '请选择设备类型' }]}
-          name="cate"
+          name="cateName"
         >
-          <Select placeholder="请选择设备类型" options={cateList} />
+          <Input placeholder="请输入设备类型" />
         </Form.Item>
         <Form.Item
           label="协议文件："

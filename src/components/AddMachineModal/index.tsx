@@ -1,5 +1,5 @@
 import UploadImage from '@/components/UploadImage'; // 根据你的实际路径来引
-import { Form, Input, Modal, Select } from 'antd';
+import { Form, Input, Modal } from 'antd';
 import { DefaultOptionType } from 'rc-select/es/Select';
 
 interface AddMachineModalProps {
@@ -58,18 +58,19 @@ const AddMachineModal: React.FC<AddMachineModalProps> = ({
         <Form.Item label="序列号：" name="sn" rules={[{ required: true }]}>
           <Input placeholder="请输入设备序列号" />
         </Form.Item>
-        <Form.Item label="设备类型：" name="cate" rules={[{ required: true }]}>
-          <Select placeholder="请选择设备类型" options={cateList} />
+        <Form.Item
+          label="设备类型："
+          name="cateName"
+          rules={[{ required: true }]}
+        >
+          <Input placeholder="请输入设备类型" />
         </Form.Item>
         <Form.Item
           label="设备用途："
           name="application"
           rules={[{ required: true }]}
         >
-          <Select placeholder="请选择设备用途">
-            <Select.Option value="用途1">用途1</Select.Option>
-            <Select.Option value="用途2">用途2</Select.Option>
-          </Select>
+          <Input placeholder="请输入设备用途" />
         </Form.Item>
         <Form.Item
           label="设备位置："

@@ -876,6 +876,10 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
     message.success('对话已清空');
   };
 
+  const removeAnySuffix = (str, suffixes) => {
+    return str.slice(0, -suffixes.length);
+  };
+
   // 代码块增强功能 - 只在流式传输结束后渲染
   useEffect(() => {
     // 只有在非流式传输状态或流式传输完成时才添加按钮
@@ -945,7 +949,11 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         compileButton.className = 'compile-btn';
         compileButton.textContent = '提交编译';
         compileButton.onclick = async () => {
-          const code = block.innerText;
+          const rawCode = block.innerText;
+          const code = removeAnySuffix(
+            rawCode,
+            '复制\n编辑\n提交编译\n一键升级',
+          ); // 只删除末尾的UI代码
           console.log('提交编译:', code);
           compileButton.textContent = '编译中...';
           compileButton.disabled = true;
@@ -1000,27 +1008,11 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
 
                 // 假设编译完成的条件是返回状态中有完成标识
                 // 根据实际API返回调整这个判断条件
-                if (
-                  statusResult &&
-                  (statusResult.status === 'completed' || statusResult.result)
-                ) {
+                if (statusResult && statusResult === 'success') {
                   // 编译完成
                   compileButton.textContent = '编译完成';
                   compileButton.disabled = false;
-
-                  if (
-                    statusResult.success ||
-                    statusResult.result === 'success'
-                  ) {
-                    message.success('代码编译成功！');
-                  } else {
-                    message.warning(
-                      `编译完成，结果: ${
-                        statusResult.message || '请查看详细信息'
-                      }`,
-                    );
-                  }
-
+                  message.success('代码编译成功！');
                   setTimeout(() => {
                     compileButton.textContent = '提交编译';
                   }, 3000);
