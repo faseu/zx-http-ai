@@ -84,7 +84,7 @@ const Page = () => {
       <div className={styles.rightBox}>
         <img className={styles.rightBox_img} src="/admin/logo.png" alt="" />
         <div className={styles.titleBox}>
-          <div className={styles.rightBox_title1}>即插智联管理平台</div>
+          <div className={styles.rightBox_title1}>即插智联开放平台</div>
           <div className={styles.rightBox_title2}>自然语言编程智能体</div>
         </div>
       </div>

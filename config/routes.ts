@@ -34,6 +34,36 @@ export default [
     name: '智能空间',
     path: '/machine',
     component: './machine',
-    icon: 'fileText',
+    icon: 'menu-machine.png',
+  },
+  {
+    name: '设备管理',
+    path: '/device',
+    component: './machine',
+    icon: 'menu-device.png',
+  },
+  {
+    name: '协议管理',
+    path: '/directive',
+    component: './machine',
+    icon: 'menu-directive.png',
+  },
+  {
+    name: '升级管理',
+    path: '/ota',
+    component: './machine',
+    icon: 'menu-ota.png',
+  },
+  {
+    name: '指令管理',
+    path: '/dialogue',
+    component: './machine',
+    icon: 'menu-dialogue.png',
+  },
+  {
+    name: '用户中心',
+    path: '/user',
+    component: './machine',
+    icon: 'menu-user.png',
   },
 ];

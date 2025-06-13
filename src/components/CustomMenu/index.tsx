@@ -14,7 +14,7 @@ const CustomMenu: React.FC<HeaderProps> = (props) => {
           ?.map((item: any) => (
             <div className={styles.menuBox} key={item.key}>
               <img
-                src="/admin/menu-machine.png"
+                src={`/admin/${item.icon}`}
                 style={{ width: '28px', height: '28px', marginBottom: '8px' }}
                 alt=""
               />
