@@ -1228,7 +1228,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         >
           <img style={{ width: '305px' }} src="/admin/ai-prompt.png" alt="" />
           <div style={{ fontSize: '18px', marginTop: '32px' }}>
-            你好，我是即插智联，一款自然语言编程的小小智能体！
+            你好，我是即插智联，一款自然语言编程的智能体！
           </div>
         </div>
       )}

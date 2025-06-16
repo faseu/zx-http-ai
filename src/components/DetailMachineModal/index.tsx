@@ -116,7 +116,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
               >
                 <img
                   style={{ width: '100px', height: '100px' }}
-                  src={baseData?.img?.[0] || '/admin/machine.png'}
+                  src={baseData?.img || '/admin/machine.png'}
                   alt=""
                 />
               </Flex>
