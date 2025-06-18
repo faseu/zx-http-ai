@@ -387,6 +387,9 @@ export default () => {
           >
             <a style={{ color: 'red' }}>删除</a>
           </Popconfirm>
+          <a onClick={() => {}} style={{ color: 'red' }}>
+            AI解析
+          </a>
         </Space>
       ),
     },
