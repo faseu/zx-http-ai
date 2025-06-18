@@ -45,6 +45,7 @@ const BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 // 定义组件ref接口
 export interface AIBoxRef {
   fillInput: (text: string) => void;
+  addFile: (file: File) => Promise<void>; // 新增：添加文件的方法
 }
 
 // 定义文件状态接口
@@ -89,6 +90,77 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
   useImperativeHandle(ref, () => ({
     fillInput: (text: string) => {
       setValue(text);
+    },
+    // 新增：程序化添加文件的方法
+    addFile: async (file: File) => {
+      try {
+        // 验证文件
+        if (!validateFile(file)) {
+          throw new Error('文件验证失败');
+        }
+
+        // 创建文件对象
+        const fileWithStatus: FileWithStatus = {
+          uid: `programmatic-${Date.now()}-${Math.random()}`,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          originFileObj: file,
+          uploadStatus: 'uploading',
+          uploadProgress: 0,
+          status: 'uploading',
+        };
+
+        // 添加到文件列表
+        setFileList((prev) => [...prev, fileWithStatus]);
+
+        // 模拟上传进度
+        let progressValue = 0;
+        const progressInterval = setInterval(() => {
+          progressValue += 10;
+          if (progressValue <= 90) {
+            setFileList((prev) =>
+              prev.map((item) =>
+                item.uid === fileWithStatus.uid
+                  ? { ...item, uploadProgress: progressValue }
+                  : item,
+              ),
+            );
+          }
+        }, 100);
+
+        // 执行实际上传
+        const fileId = await uploadFileWithOpenAI(file);
+
+        clearInterval(progressInterval);
+
+        // 更新文件状态为成功
+        setFileList((prev) =>
+          prev.map((item) =>
+            item.uid === fileWithStatus.uid
+              ? {
+                  ...item,
+                  uploadStatus: 'success',
+                  uploadProgress: 100,
+                  fileId: fileId,
+                  status: 'done',
+                }
+              : item,
+          ),
+        );
+
+        console.log('程序化添加文件成功:', file.name, 'File ID:', fileId);
+        message.success(`文件 ${file.name} 已成功添加到AI对话中`);
+      } catch (error) {
+        console.error('程序化添加文件失败:', error);
+        message.error(`添加文件失败: ${error.message}`);
+
+        // 移除失败的文件
+        setFileList((prev) =>
+          prev.filter((item) => item.originFileObj !== file),
+        );
+        throw error;
+      }
     },
   }));
 

@@ -30,6 +30,7 @@ import {
   List,
   message,
   Popconfirm,
+  Popover,
   Space,
   Table,
   TableColumnsType,
@@ -329,10 +330,152 @@ export default () => {
     }
   };
 
+  /**
+   * 下载文件并转换为 File 对象
+   * @param url 文件URL
+   * @param filename 文件名
+   * @returns Promise<File>
+   */
+  const downloadFileAsFile = async (
+    url: string,
+    filename: string,
+  ): Promise<File> => {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: '*/*',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`下载失败: ${response.status} ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+
+      // 根据文件扩展名设置正确的 MIME 类型
+      const extension = filename.split('.').pop()?.toLowerCase();
+      let mimeType = blob.type;
+
+      if (!mimeType || mimeType === 'application/octet-stream') {
+        switch (extension) {
+          case 'txt':
+            mimeType = 'text/plain';
+            break;
+          case 'json':
+            mimeType = 'application/json';
+            break;
+          case 'xml':
+            mimeType = 'application/xml';
+            break;
+          case 'pdf':
+            mimeType = 'application/pdf';
+            break;
+          case 'docx':
+            mimeType =
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            break;
+          case 'xlsx':
+            mimeType =
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            break;
+          case 'bin':
+          case 'dat':
+            mimeType = 'application/octet-stream';
+            break;
+          default:
+            mimeType = 'text/plain'; // 默认作为文本处理
+        }
+      }
+
+      return new File([blob], filename, { type: mimeType });
+    } catch (error) {
+      console.error('下载文件失败:', error);
+      throw new Error(`下载文件失败`);
+    }
+  };
+
+  /**
+   * AI 解析协议文件
+   * @param record 协议记录
+   */
+  const handleAiAnalysis = async (record: DataType) => {
+    if (!record.fileUrl) {
+      message.error('该协议没有文件可以解析');
+      return;
+    }
+
+    const loadingMessage = message.loading('正在下载文件并准备AI解析...', 0);
+
+    try {
+      // 1. 从 URL 中提取文件名，或使用默认文件名
+      const urlParts = record.fileUrl.split('/');
+      const fileNameFromUrl = urlParts[urlParts.length - 1];
+      const fileName = fileNameFromUrl || `${record.otaName}_protocol.bin`;
+
+      console.log('开始下载文件:', record.fileUrl);
+
+      // 2. 下载文件
+      const file = await downloadFileAsFile(record.fileUrl, fileName);
+      console.log('文件下载成功:', file.name, file.size, 'bytes');
+
+      loadingMessage();
+
+      // 4. 检查 AI 组件引用是否存在
+      if (!aiBoxRef.current) {
+        message.error('AI 组件未准备就绪，请稍后重试');
+        return;
+      }
+
+      // 5. 模拟文件上传到 AIBox
+      // 注意：这里我们需要通过 AIBox 组件的方法来添加文件
+      // 由于 AIBox 组件内部管理文件列表，我们需要扩展其功能
+
+      message.success('文件已下载，正在发送给AI进行解析...');
+
+      // 6. 将文件和提示词发送给 AI
+      // 这里需要调用 AIBox 的方法来添加文件和发送消息
+      // 由于当前 AIBox 的 ref 只暴露了 fillInput 方法，我们需要扩展它
+
+      // 临时解决方案：先填充提示词，然后提示用户上传文件
+      // aiBoxRef.current.fillInput(analysisPrompt);
+      //
+      // message.info(
+      //   'AI解析提示已填充到输入框，请手动上传刚下载的协议文件进行完整分析',
+      //   6,
+      // );
+      aiBoxRef.current.addFile(file);
+      // TODO: 理想情况下，应该直接将下载的文件添加到 AIBox 的文件列表中
+      // 这需要扩展 AIBox 的 ref 接口来支持程序化添加文件
+    } catch (error) {
+      loadingMessage();
+      console.error('AI解析失败:', error);
+      message.error(`AI解析失败: ${error.message}`);
+    }
+  };
+
   const columns: TableColumnsType<DataType> = [
     {
       title: '协议名称',
       dataIndex: 'otaName',
+      width: 150,
+      render: (text) => {
+        return (
+          <Popover content={text}>
+            <div
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                width: '100%',
+              }}
+            >
+              {text}
+            </div>
+          </Popover>
+        );
+      },
     },
     {
       title: '硬件厂家',
@@ -387,7 +530,11 @@ export default () => {
           >
             <a style={{ color: 'red' }}>删除</a>
           </Popconfirm>
-          <a onClick={() => {}} style={{ color: 'red' }}>
+          <a
+            onClick={() => handleAiAnalysis(record)}
+            style={{ color: '#1890ff' }}
+            title="使用AI分析协议文件内容"
+          >
             AI解析
           </a>
         </Space>
