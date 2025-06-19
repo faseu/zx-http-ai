@@ -1,4 +1,4 @@
-// src/components/AIBox/index.tsx - 添加停止回复功能
+// src/components/AIBox/index.tsx - 添加编译完成遮罩功能
 
 import {
   BorderOutlined,
@@ -55,6 +55,11 @@ interface FileWithStatus extends UploadFile {
   uploadProgress?: number;
 }
 
+// 添加 props 接口，接收编译完成回调
+interface AIBoxProps {
+  onCompileSuccess?: () => void; // 编译成功回调
+}
+
 const md = new MarkdownIt({
   highlight: function (str, lang) {
     if (lang && hljs.getLanguage(lang)) {
@@ -68,7 +73,7 @@ const md = new MarkdownIt({
   },
 });
 
-const AIBox = forwardRef<AIBoxRef>((props, ref) => {
+const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   const [value, setValue] = useState('');
   const [status, setStatus] = useState<string>();
   const [lines, setLines] = useState([]);
@@ -992,10 +997,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         copyButton.textContent = '复制';
         copyButton.onclick = async () => {
           const rawCode = block.innerText;
-          const code = removeAnySuffix(
-            rawCode,
-            '\n复制\n编辑\n提交编译\n一键升级',
-          ); // 只删除末尾的UI代码
+          const code = removeAnySuffix(rawCode, '\n复制\n编辑\n提交编译'); // 只删除末尾的UI代码
           try {
             await navigator.clipboard.writeText(code);
             copyButton.textContent = '已复制';
@@ -1020,16 +1022,13 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
           setEditModalOpen(true);
         };
 
-        // 提交编译按钮
+        // 提交编译按钮 - 修改这里添加编译完成回调
         const compileButton = document.createElement('button');
         compileButton.className = 'compile-btn';
         compileButton.textContent = '提交编译';
         compileButton.onclick = async () => {
           const rawCode = block.innerText;
-          const code = removeAnySuffix(
-            rawCode,
-            '复制\n编辑\n提交编译\n一键升级',
-          ); // 只删除末尾的UI代码
+          const code = removeAnySuffix(rawCode, '复制\n编辑\n提交编译'); // 只删除末尾的UI代码
           console.log('提交编译:', code);
           compileButton.textContent = '编译中...';
           compileButton.disabled = true;
@@ -1060,6 +1059,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
             });
             console.log('编译提交结果:', compileResult);
             message.success('编译已提交');
+
             // 第三步：轮询查询编译结果
             let pollCount = 0;
             const maxPolls = 30; // 最多轮询30次（30秒）
@@ -1089,6 +1089,12 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                   compileButton.textContent = '编译完成';
                   compileButton.disabled = false;
                   message.success('代码编译成功！');
+
+                  // 🎯 关键修改：编译成功后触发遮罩层显示
+                  if (onCompileSuccess) {
+                    onCompileSuccess();
+                  }
+
                   setTimeout(() => {
                     compileButton.textContent = '提交编译';
                   }, 3000);
@@ -1213,7 +1219,7 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
     }, 200); // 稍微增加延时，确保DOM完全渲染
 
     return () => clearTimeout(timeoutId);
-  }, [messages, status]); // 监听messages和status变化，但在status为pending时不执行
+  }, [messages, status, onCompileSuccess]); // 添加 onCompileSuccess 到依赖数组
 
   const renderMarkdown = (content) => (
     <div
@@ -1333,7 +1339,6 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
                     ? 'AI正在回复中，请等待...'
                     : '发送消息或上传长文档...'
                 }
-                // disabled={status === 'pending'} // 在回复时禁用输入框
                 actions={(node, info) => {
                   const { SendButton, SpeechButton } = info.components;
                   return (

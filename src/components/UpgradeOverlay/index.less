@@ -1,0 +1,167 @@
+/* src/components/UpgradeOverlay/index.less */
+.upgradeOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* 让遮罩本身不阻止事件，只有特定区域可点击 */
+}
+
+.overlayBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
+  //pointer-events: auto; /* 背景可以接收点击事件 */
+}
+
+.deviceHighlight {
+  position: fixed;
+  top: 56px; /* 根据header高度调整 */
+  right: 50px; /* 右侧设备区域 */
+  width: calc(50% - 100px); /* 设备区域宽度 */
+  height: 400px;
+  background: transparent;
+  border: 3px solid #1890ff;
+  border-radius: 12px;
+  box-shadow:
+          0 0 0 9999px rgba(0, 0, 0, 0.8),
+          0 0 30px rgba(24, 144, 255, 0.6),
+          inset 0 0 30px rgba(24, 144, 255, 0.1);
+  pointer-events: none; /* 不阻止设备区域的交互 */
+  padding: 20px;
+  z-index: 10001;
+}
+
+.promptText {
+  position: absolute;
+  top: -80px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  pointer-events: none;
+}
+
+.promptTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #52c41a;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.promptSubtitle {
+  font-size: 16px;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.selectAllContainer {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.selectAllContainer .ant-checkbox-wrapper {
+  color: white;
+  font-weight: 500;
+}
+
+.actionButtons {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 16px 24px;
+  border-radius: 25px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.arrowPointer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10002;
+}
+
+.arrow {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 30px solid #1890ff;
+  margin-bottom: 10px;
+  animation: bounce 1.5s infinite ease-in-out;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.arrowText {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  background: rgba(24, 144, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(24, 144, 255, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .deviceHighlight {
+    right: 20px;
+    width: calc(100% - 40px);
+    max-width: none;
+  }
+
+  .promptTitle {
+    font-size: 20px;
+  }
+
+  .promptSubtitle {
+    font-size: 14px;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

@@ -1,4 +1,4 @@
-// src/pages/machine/index.tsx 的完整修改
+// src/pages/machine/index.tsx - 添加升级遮罩功能
 
 import AddDirectiveModal from '@/components/AddDirectiveModal';
 import AddMachineModal from '@/components/AddMachineModal';
@@ -7,6 +7,7 @@ import CustomTitle from '@/components/CustomTitle';
 import DetailMachineModal from '@/components/DetailMachineModal';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
+import UpgradeOverlay from '@/components/UpgradeOverlay'; // 新增：导入升级遮罩组件
 import {
   addMachine,
   addOta,
@@ -294,6 +295,9 @@ export default () => {
   // 管理选中状态的state
   const [selectedMachineIds, setSelectedMachineIds] = useState<number[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
+
+  // 新增：升级遮罩层状态
+  const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false);
 
   // 新增：AIBox 的 ref
   const aiBoxRef = useRef<AIBoxRef>(null);
@@ -609,6 +613,20 @@ export default () => {
     }
   };
 
+  // 新增：编译成功回调函数
+  const handleCompileSuccess = () => {
+    console.log('编译成功，显示升级遮罩层');
+    setShowUpgradeOverlay(true);
+  };
+
+  // 新增：关闭升级遮罩层
+  const handleCloseUpgradeOverlay = () => {
+    setShowUpgradeOverlay(false);
+    // 可选：清空选中状态
+    // setSelectedMachineIds([]);
+    // setIsAllSelected(false);
+  };
+
   // 当设备列表变化时，重新计算全选状态
   useEffect(() => {
     if (machineList.length > 0) {
@@ -644,204 +662,221 @@ export default () => {
   }, []);
 
   return (
-    <Card
-      styles={{
-        body: {
-          padding: '0',
-        },
-      }}
-      style={{ borderRadius: 0 }}
-    >
-      <div style={{ display: 'flex' }}>
-        <div
-          style={{
-            display: 'flex',
-            width: '50%',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Card
-            className={styles.aiBoxCard}
-            styles={{
-              body: {
-                height: '100%',
-              },
+    <>
+      <Card
+        styles={{
+          body: {
+            padding: '0',
+          },
+        }}
+        style={{ borderRadius: 0 }}
+      >
+        <div style={{ display: 'flex' }}>
+          <div
+            style={{
+              display: 'flex',
+              width: '50%',
+              justifyContent: 'space-between',
             }}
-            style={{ margin: 8, background: '#222020' }}
           >
-            <AIBox ref={aiBoxRef} />
-          </Card>
-        </div>
-        <div
-          style={{
-            width: '50%',
-            padding: '0 50px',
-          }}
-          className={styles.rightCard}
-        >
-          <CustomTitle
-            title="常用设备"
-            showCheckbox
-            searchPlaceholder="搜索设备..."
-            addButtonText="新增设备"
-            onSubmit={addMachineHandler}
-            isAllSelected={isAllSelected}
-            onSelectAll={handleSelectAll}
-            selectedCount={selectedMachineIds.length}
-            totalCount={machineList.length}
-          />
-          <div className={styles.hideScrollbar}>
-            <List
-              rowKey="machineId"
-              grid={{
-                gutter: 10,
-                xs: 1,
-                sm: 1,
-                md: 1,
-                lg: 2,
-                xl: 2,
-                xxl: 3,
+            <Card
+              className={styles.aiBoxCard}
+              styles={{
+                body: {
+                  height: '100%',
+                },
               }}
-              dataSource={machineList}
-              renderItem={(item) => {
-                return (
-                  <MachineItem
-                    detail={item}
-                    text="这是设备信息"
-                    isChecked={selectedMachineIds.includes(item.machineId)}
-                    onCheckChange={(checked: boolean) =>
-                      handleMachineCheck(item.machineId, checked)
-                    }
-                    onEditMachine={async (item: any) => {
-                      const data = await handleDetailMachine(item);
-                      setEditMachineDetail(data);
-                      setEditMachineId(item.machineId);
-                      setModalMachineOpen(true);
-                    }}
-                    onDelMachine={async (item: any) => {
-                      await handleDelMachine(item);
-                      await fetchMachineList();
-                    }}
-                    onGetDetail={async (item: any) => {
-                      const data = await handleDetailMachine2(item);
-                      setMachineDetail(data);
-                      setDetailMachineOpen(true);
-                    }}
-                  />
-                );
-              }}
+              style={{ margin: 8, background: '#222020' }}
+            >
+              {/* 新增：传递编译成功回调 */}
+              <AIBox ref={aiBoxRef} onCompileSuccess={handleCompileSuccess} />
+            </Card>
+          </div>
+          <div
+            style={{
+              width: '50%',
+              padding: '0 50px',
+            }}
+            className={styles.rightCard}
+          >
+            <CustomTitle
+              title="常用设备"
+              showCheckbox
+              searchPlaceholder="搜索设备..."
+              addButtonText="新增设备"
+              onSubmit={addMachineHandler}
+              isAllSelected={isAllSelected}
+              onSelectAll={handleSelectAll}
+              selectedCount={selectedMachineIds.length}
+              totalCount={machineList.length}
+            />
+            <div className={styles.hideScrollbar}>
+              <List
+                rowKey="machineId"
+                grid={{
+                  gutter: 10,
+                  xs: 1,
+                  sm: 1,
+                  md: 1,
+                  lg: 2,
+                  xl: 2,
+                  xxl: 3,
+                }}
+                dataSource={machineList}
+                renderItem={(item) => {
+                  return (
+                    <MachineItem
+                      detail={item}
+                      text="这是设备信息"
+                      isChecked={selectedMachineIds.includes(item.machineId)}
+                      onCheckChange={(checked: boolean) =>
+                        handleMachineCheck(item.machineId, checked)
+                      }
+                      onEditMachine={async (item: any) => {
+                        const data = await handleDetailMachine(item);
+                        setEditMachineDetail(data);
+                        setEditMachineId(item.machineId);
+                        setModalMachineOpen(true);
+                      }}
+                      onDelMachine={async (item: any) => {
+                        await handleDelMachine(item);
+                        await fetchMachineList();
+                      }}
+                      onGetDetail={async (item: any) => {
+                        const data = await handleDetailMachine2(item);
+                        setMachineDetail(data);
+                        setDetailMachineOpen(true);
+                      }}
+                    />
+                  );
+                }}
+              />
+            </div>
+
+            {/* 常用指令部分 */}
+            <CustomTitle
+              title="常用指令"
+              showEmpty
+              onClear={onClearAllDialogue} // 传递清空回调函数
+            />
+            <div className={styles.hideScrollbar}>
+              <List
+                rowKey="id"
+                dataSource={dialogueList}
+                renderItem={(item: any) => {
+                  return (
+                    <DirectiveItem
+                      text={item.content}
+                      detail={item}
+                      onDelete={() => onDelDialogue(item.id)} // 传递删除函数
+                      onDirectiveClick={handleDirectiveClick} // 新增：传递点击回调函数
+                    />
+                  );
+                }}
+                locale={{
+                  emptyText: '暂无指令历史',
+                }}
+              />
+            </div>
+
+            <CustomTitle
+              title="协议管理"
+              searchPlaceholder="搜索协议..."
+              addButtonText="新增协议"
+              onSubmit={addDirective}
+            />
+            <Table<DataType>
+              key="id"
+              scroll={{ y: 200 }}
+              pagination={false}
+              columns={columns}
+              dataSource={directiveList}
+              size="small"
             />
           </div>
-
-          {/* 常用指令部分 */}
-          <CustomTitle
-            title="常用指令"
-            showEmpty
-            onClear={onClearAllDialogue} // 传递清空回调函数
-          />
-          <div className={styles.hideScrollbar}>
-            <List
-              rowKey="id"
-              dataSource={dialogueList}
-              renderItem={(item: any) => {
-                return (
-                  <DirectiveItem
-                    text={item.content}
-                    detail={item}
-                    onDelete={() => onDelDialogue(item.id)} // 传递删除函数
-                    onDirectiveClick={handleDirectiveClick} // 新增：传递点击回调函数
-                  />
-                );
-              }}
-              locale={{
-                emptyText: '暂无指令历史',
-              }}
-            />
-          </div>
-
-          <CustomTitle
-            title="协议管理"
-            searchPlaceholder="搜索协议..."
-            addButtonText="新增协议"
-            onSubmit={addDirective}
-          />
-          <Table<DataType>
-            key="id"
-            scroll={{ y: 200 }}
-            pagination={false}
-            columns={columns}
-            dataSource={directiveList}
-            size="small"
-          />
         </div>
-      </div>
 
-      {modalMachineOpen && (
-        <AddMachineModal
-          cateList={cateList}
-          isEdit={!!editMachineId}
-          detail={editMachineDetail}
-          open={modalMachineOpen}
-          onOk={async (values: any) => {
-            console.log(values);
-            const success = editMachineId
-              ? await handleEditMachine({ machineId: editMachineId, ...values })
-              : await handleAddMachine(values);
-            if (success) {
-              setEditMachineId(0);
+        {modalMachineOpen && (
+          <AddMachineModal
+            cateList={cateList}
+            isEdit={!!editMachineId}
+            detail={editMachineDetail}
+            open={modalMachineOpen}
+            onOk={async (values: any) => {
+              console.log(values);
+              const success = editMachineId
+                ? await handleEditMachine({
+                    machineId: editMachineId,
+                    ...values,
+                  })
+                : await handleAddMachine(values);
+              if (success) {
+                setEditMachineId(0);
+                setModalMachineOpen(false);
+                setEditMachineDetail({});
+                await fetchMachineList();
+              }
+            }}
+            onCancel={() => {
               setModalMachineOpen(false);
               setEditMachineDetail({});
-              await fetchMachineList();
+              setEditMachineId(0);
+            }}
+          />
+        )}
+        <AddDirectiveModal
+          cateList={cateList}
+          isEdit={!!editOtaId}
+          detail={editOtaDetail}
+          open={modalDirectiveOpen}
+          onOk={async (values: any) => {
+            const success = editOtaId
+              ? await handleEditOta({ id: editOtaId, ...values })
+              : await handleAddOta(values);
+            if (success) {
+              setModalDirectiveOpen(false);
+              setEditOtaDetail({});
+              setEditOtaId(0);
+              await fetchOtaList();
             }
           }}
           onCancel={() => {
-            setModalMachineOpen(false);
-            setEditMachineDetail({});
-            setEditMachineId(0);
-          }}
-        />
-      )}
-      <AddDirectiveModal
-        cateList={cateList}
-        isEdit={!!editOtaId}
-        detail={editOtaDetail}
-        open={modalDirectiveOpen}
-        onOk={async (values: any) => {
-          const success = editOtaId
-            ? await handleEditOta({ id: editOtaId, ...values })
-            : await handleAddOta(values);
-          if (success) {
             setModalDirectiveOpen(false);
             setEditOtaDetail({});
             setEditOtaId(0);
-            await fetchOtaList();
-          }
-        }}
-        onCancel={() => {
-          setModalDirectiveOpen(false);
-          setEditOtaDetail({});
-          setEditOtaId(0);
-        }}
+          }}
+        />
+        <DetailMachineModal
+          data={machineDetail}
+          open={detailMachineOpen}
+          onCancel={() => setDetailMachineOpen(false)}
+          onEdit={async (machineData: any) => {
+            const detail = await handleDetailMachine(machineData);
+            if (detail) {
+              setEditMachineDetail(detail);
+              setEditMachineId(machineData.machineId);
+              setModalMachineOpen(true);
+            }
+          }}
+          onDelete={async (machineData: any) => {
+            const success = await handleDelMachine(machineData);
+            if (success) {
+              await fetchMachineList();
+            }
+          }}
+        />
+      </Card>
+
+      {/* 新增：升级遮罩层 */}
+      <UpgradeOverlay
+        visible={showUpgradeOverlay}
+        machineList={machineList}
+        selectedMachineIds={selectedMachineIds}
+        onCancel={handleCloseUpgradeOverlay}
+        onMachineCheck={handleMachineCheck}
+        onSelectAll={handleSelectAll}
+        isAllSelected={isAllSelected}
       />
-      <DetailMachineModal
-        data={machineDetail}
-        open={detailMachineOpen}
-        onCancel={() => setDetailMachineOpen(false)}
-        onEdit={async (machineData: any) => {
-          const detail = await handleDetailMachine(machineData);
-          if (detail) {
-            setEditMachineDetail(detail);
-            setEditMachineId(machineData.machineId);
-            setModalMachineOpen(true);
-          }
-        }}
-        onDelete={async (machineData: any) => {
-          const success = await handleDelMachine(machineData);
-          if (success) {
-            await fetchMachineList();
-          }
-        }}
-      />
-    </Card>
+    </>
   );
 };
