@@ -502,6 +502,7 @@ export default () => {
     {
       title: '操作',
       key: 'action',
+      width: 150,
       render: (_, record) => (
         <Space size="middle">
           <a

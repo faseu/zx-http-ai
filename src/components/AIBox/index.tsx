@@ -991,7 +991,11 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         copyButton.className = 'copy-btn';
         copyButton.textContent = '复制';
         copyButton.onclick = async () => {
-          const code = block.innerText;
+          const rawCode = block.innerText;
+          const code = removeAnySuffix(
+            rawCode,
+            '\n复制\n编辑\n提交编译\n一键升级',
+          ); // 只删除末尾的UI代码
           try {
             await navigator.clipboard.writeText(code);
             copyButton.textContent = '已复制';
@@ -1133,18 +1137,18 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         };
 
         // 一键升级按钮
-        const upgradeButton = document.createElement('button');
-        upgradeButton.className = 'upgrade-btn';
-        upgradeButton.textContent = '一键升级';
-        upgradeButton.onclick = () => {
-          const code = block.innerText;
-          console.log('一键升级:', code);
-          upgradeButton.textContent = '升级中...';
-          setTimeout(() => {
-            upgradeButton.textContent = '升级完成';
-            setTimeout(() => (upgradeButton.textContent = '一键升级'), 1500);
-          }, 1500);
-        };
+        // const upgradeButton = document.createElement('button');
+        // upgradeButton.className = 'upgrade-btn';
+        // upgradeButton.textContent = '一键升级';
+        // upgradeButton.onclick = () => {
+        //   const code = block.innerText;
+        //   console.log('一键升级:', code);
+        //   upgradeButton.textContent = '升级中...';
+        //   setTimeout(() => {
+        //     upgradeButton.textContent = '升级完成';
+        //     setTimeout(() => (upgradeButton.textContent = '一键升级'), 1500);
+        //   }, 1500);
+        // };
 
         // 通用按钮样式
         const buttonStyle = {
@@ -1173,10 +1177,10 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
           color: '#fff',
         });
 
-        Object.assign(upgradeButton.style, buttonStyle, {
-          background: '#F39800',
-          color: '#fff',
-        });
+        // Object.assign(upgradeButton.style, buttonStyle, {
+        //   background: '#F39800',
+        //   color: '#fff',
+        // });
 
         // 添加悬停效果
         const addHoverEffect = (button, hoverColor) => {
@@ -1193,13 +1197,13 @@ const AIBox = forwardRef<AIBoxRef>((props, ref) => {
         addHoverEffect(copyButton, '#40a9ff');
         addHoverEffect(editButton, '#73d13d');
         addHoverEffect(compileButton, '#4091ED');
-        addHoverEffect(upgradeButton, '#ffa940');
+        // addHoverEffect(upgradeButton, '#ffa940');
 
         // 将按钮添加到对应容器
         copyContainer.appendChild(copyButton);
         actionContainer.appendChild(editButton);
         actionContainer.appendChild(compileButton);
-        actionContainer.appendChild(upgradeButton);
+        // actionContainer.appendChild(upgradeButton);
 
         // 设置代码块样式并添加按钮容器
         block.style.position = 'relative';
