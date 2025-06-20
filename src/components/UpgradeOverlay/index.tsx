@@ -1,6 +1,6 @@
 // src/components/UpgradeOverlay/index.tsx
 import { request } from '@umijs/max';
-import { Button, Checkbox, message } from 'antd';
+import { Button, message } from 'antd';
 import React from 'react';
 import styles from './index.less';
 
@@ -96,32 +96,47 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
   return (
     <div className={styles.upgradeOverlay}>
       {/* 遮罩背景 */}
-      <div className={styles.overlayBackground} />
+      <div className={styles.overlayBackground1} />
+      <div
+        className={styles.overlayBackground2}
+        style={{
+          height:
+            machineList.length > 3
+              ? 'calc(100% - 440px)'
+              : 'calc(100% - 300px)',
+        }}
+      />
 
       {/* 设备区域高亮 */}
-      <div className={styles.deviceHighlight}>
+      <div
+        className={styles.deviceHighlight}
+        style={{ height: machineList.length > 3 ? '380px' : '240px' }}
+      >
         {/* 提示文本 */}
-        <div className={styles.promptText}>
-          <div className={styles.promptTitle}>🎉 代码编译成功！</div>
-          <div className={styles.promptSubtitle}>请选择需要升级的设备</div>
+        {/*<div className={styles.promptText}>*/}
+        {/*  <div className={styles.promptTitle}>🎉 代码编译成功！</div>*/}
+        {/*  <div className={styles.promptSubtitle}>请选择需要升级的设备</div>*/}
+        {/*</div>*/}
+        {/* 操作提示箭头 */}
+        <div className={styles.arrowPointer}>
+          <div className={styles.arrowText}>请在此区域选择设备</div>
+          <div className={styles.arrow} />
         </div>
-
         {/* 全选控制 */}
-        <div className={styles.selectAllContainer}>
-          <Checkbox
-            checked={isAllSelected}
-            indeterminate={selectedMachineIds.length > 0 && !isAllSelected}
-            onChange={(e) => onSelectAll(e.target.checked)}
-            disabled={upgrading}
-          >
-            全选设备 ({selectedMachineIds.length}/{machineList.length})
-          </Checkbox>
-        </div>
+        {/*<div className={styles.selectAllContainer}>*/}
+        {/*  <Checkbox*/}
+        {/*    checked={isAllSelected}*/}
+        {/*    indeterminate={selectedMachineIds.length > 0 && !isAllSelected}*/}
+        {/*    onChange={(e) => onSelectAll(e.target.checked)}*/}
+        {/*    disabled={upgrading}*/}
+        {/*  >*/}
+        {/*    全选设备 ({selectedMachineIds.length}/{machineList.length})*/}
+        {/*  </Checkbox>*/}
+        {/*</div>*/}
 
         {/* 操作按钮 */}
         <div className={styles.actionButtons}>
           <Button
-            size="large"
             onClick={onCancel}
             disabled={upgrading}
             style={{ marginRight: '12px' }}
@@ -130,7 +145,6 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
           </Button>
           <Button
             type="primary"
-            size="large"
             loading={upgrading}
             disabled={selectedMachineIds.length === 0}
             onClick={handleUpgrade}
@@ -140,12 +154,6 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
               : `一键升级 (${selectedMachineIds.length}台)`}
           </Button>
         </div>
-      </div>
-
-      {/* 操作提示箭头 */}
-      <div className={styles.arrowPointer}>
-        <div className={styles.arrow} />
-        <div className={styles.arrowText}>请在此区域选择设备</div>
       </div>
     </div>
   );

@@ -1084,21 +1084,25 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
 
                 // 假设编译完成的条件是返回状态中有完成标识
                 // 根据实际API返回调整这个判断条件
-                if (statusResult && statusResult === 'success') {
-                  // 编译完成
-                  compileButton.textContent = '编译完成';
-                  compileButton.disabled = false;
-                  message.success('代码编译成功！');
+                if (statusResult) {
+                  if (statusResult === 'success') {
+                    // 编译完成
+                    compileButton.textContent = '编译完成';
+                    compileButton.disabled = false;
+                    message.success('代码编译成功！');
 
-                  // 🎯 关键修改：编译成功后触发遮罩层显示
-                  if (onCompileSuccess) {
-                    onCompileSuccess();
+                    setTimeout(() => {
+                      // 🎯 关键修改：编译成功后触发遮罩层显示
+                      if (onCompileSuccess) {
+                        onCompileSuccess({ url: uploadResult.url });
+                      }
+                    }, 1000);
+
+                    setTimeout(() => {
+                      compileButton.textContent = '提交编译';
+                    }, 3000);
+                    return;
                   }
-
-                  setTimeout(() => {
-                    compileButton.textContent = '提交编译';
-                  }, 3000);
-                  return;
                 }
 
                 // 继续轮询
