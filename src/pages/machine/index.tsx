@@ -298,6 +298,7 @@ export default () => {
 
   // 新增：升级遮罩层状态
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false);
+  const [upgradeUrl, setUpgradeUrl] = useState('');
 
   // 新增：AIBox 的 ref
   const aiBoxRef = useRef<AIBoxRef>(null);
@@ -614,8 +615,9 @@ export default () => {
   };
 
   // 新增：编译成功回调函数
-  const handleCompileSuccess = () => {
-    console.log('编译成功，显示升级遮罩层');
+  const handleCompileSuccess = (e: any) => {
+    console.log(e);
+    setUpgradeUrl(e.url);
     setShowUpgradeOverlay(true);
   };
 
@@ -876,6 +878,7 @@ export default () => {
         onMachineCheck={handleMachineCheck}
         onSelectAll={handleSelectAll}
         isAllSelected={isAllSelected}
+        upgradeUrl={upgradeUrl}
       />
     </>
   );

@@ -1,5 +1,5 @@
 // src/components/UpgradeOverlay/index.tsx
-import { request } from '@umijs/max';
+import { upgrade } from '@/pages/machine/service';
 import { Button, message } from 'antd';
 import React from 'react';
 import styles from './index.less';
@@ -12,6 +12,7 @@ interface UpgradeOverlayProps {
   onMachineCheck: (machineId: number, checked: boolean) => void;
   onSelectAll: (checked: boolean) => void;
   isAllSelected: boolean;
+  upgradeUrl: string;
 }
 
 const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
@@ -22,6 +23,7 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
   onMachineCheck,
   onSelectAll,
   isAllSelected,
+  upgradeUrl,
 }) => {
   const [upgrading, setUpgrading] = React.useState(false);
 
@@ -38,15 +40,12 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
     try {
       // 遍历选中的设备，调用升级接口
       const upgradePromises = selectedMachineIds.map(async (machineId) => {
+        console.log(machineId);
         try {
           // 调用升级接口，这里使用你提供的接口地址
-          const result = await request('/admin/machine/upgrade', {
-            method: 'POST',
-            data: {
-              machineId,
-              // 可以根据实际需要添加更多参数，比如固件版本等
-              // version: 'latest'
-            },
+          const result = await upgrade({
+            machineId: machineId,
+            url: upgradeUrl,
           });
 
           console.log(`设备 ${machineId} 升级成功:`, result);
