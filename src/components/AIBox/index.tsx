@@ -1094,7 +1094,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                     setTimeout(() => {
                       // 🎯 关键修改：编译成功后触发遮罩层显示
                       if (onCompileSuccess) {
-                        onCompileSuccess({ url: uploadResult.url });
+                        onCompileSuccess({ url: compileResult });
                       }
                     }, 1000);
 
