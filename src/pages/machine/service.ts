@@ -178,11 +178,23 @@ export async function clearAllDialogue() {
     data: {}, // 不传id参数表示全部清除
   });
 }
+
 /**
  * 清空所有指令
  */
 export async function upgrade(params?: { [key: string]: any }) {
   return request('/admin/ota/upgrade', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+/**
+ * 清空所有指令
+ */
+export async function sendControl(params?: { [key: string]: any }) {
+  return request('/admin/machine/control', {
     method: 'POST',
     data: {
       ...params,

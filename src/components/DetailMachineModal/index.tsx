@@ -1,8 +1,10 @@
+import { sendControl } from '@/pages/machine/service';
 import { Line } from '@ant-design/plots';
 import {
   Button,
   Flex,
   Input,
+  message,
   Modal,
   Popconfirm,
   Table,
@@ -23,6 +25,24 @@ interface DetailMachineModalProps {
   onDelete?: (machineData: any) => void;
 }
 
+/**
+ * 删除单条指令
+ * @param fields
+ */
+const handleSendControl = async (e: any) => {
+  const hide = message.loading('正在发送');
+  try {
+    await sendControl({ ...e });
+    hide();
+    message.success('发送成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('发送失败，请重试');
+    return false;
+  }
+};
+
 const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   open,
   data: { baseData, alarmList },
@@ -30,6 +50,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const [controlValue, setControlValue] = React.useState('');
   const columns: TableColumnsType<any> = [
     {
       title: '报警时间',
@@ -220,8 +241,22 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
               <div className={styles.title}>调试控制台</div>
             </Flex>
             <Flex vertical justify="space-between" style={{ height: '194px' }}>
-              <TextArea rows={7} />
-              <Button type="primary" size="small" block>
+              <TextArea
+                rows={7}
+                value={controlValue}
+                onChange={(e) => setControlValue(e.target.value)}
+              />
+              <Button
+                type="primary"
+                size="small"
+                block
+                onClick={() =>
+                  handleSendControl({
+                    machineId: baseData.machineId,
+                    control: controlValue,
+                  })
+                }
+              >
                 发送
               </Button>
             </Flex>
