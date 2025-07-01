@@ -16,7 +16,9 @@ import {
   delMachine,
   delOta,
   detailMachine,
+  detailMachineChartData,
   detailMachineData,
+  detailMachineLastData,
   detailOta,
   editMachine,
   editOta,
@@ -117,9 +119,27 @@ const handleDetailMachine2 = async (fields: any) => {
       machineId: fields.machineId,
       type: 'info',
     });
+    const lastData = await detailMachineLastData({
+      machineId: fields.machineId,
+    });
+    const now = new Date();
+
+    // 获取昨天 0 点
+    const endTime = new Date(now);
+    endTime.setHours(0, 0, 0, 0);
+
+    // 获取前天 0 点
+    const startTime = new Date(endTime);
+    startTime.setDate(startTime.getDate() - 1);
+
+    const chartData = await detailMachineChartData({
+      machineId: 38,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+    });
     hide();
     message.success('获取详情成功');
-    return { baseData, alarmList, infoData };
+    return { baseData, alarmList, infoData, lastData, chartData };
   } catch (error) {
     hide();
     message.error('获取详情失败请重试！');

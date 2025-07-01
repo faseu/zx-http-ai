@@ -50,6 +50,29 @@ export async function detailMachineData(params?: { [key: string]: any }) {
 }
 
 /**
+ * 设备详情
+ */
+export async function detailMachineLastData(params?: { [key: string]: any }) {
+  return request('/admin/machine/getLastData', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+/**
+ * 设备详情
+ */
+export async function detailMachineChartData(params?: { [key: string]: any }) {
+  return request('/admin/machine/getParams', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+
+/**
  * 删除设备
  */
 export async function delMachine(params?: { [key: string]: any }) {

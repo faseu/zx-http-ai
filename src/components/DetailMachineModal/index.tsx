@@ -45,7 +45,7 @@ const handleSendControl = async (e: any) => {
 
 const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   open,
-  data: { baseData, alarmList },
+  data: { baseData, alarmList, lastData, chartData },
   onCancel,
   onEdit,
   onDelete,
@@ -68,21 +68,24 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
     },
   ];
 
-  const chartData = [
-    { year: '1991', value: 3 },
-    { year: '1992', value: 4 },
-    { year: '1993', value: 3.5 },
-    { year: '1994', value: 5 },
-    { year: '1995', value: 4.9 },
-    { year: '1996', value: 6 },
-    { year: '1997', value: 7 },
-    { year: '1998', value: 9 },
-    { year: '1999', value: 13 },
-  ];
+  // const chartData = [
+  //   { year: '1991', value: 3 },
+  //   { year: '1992', value: 4 },
+  //   { year: '1993', value: 3.5 },
+  //   { year: '1994', value: 5 },
+  //   { year: '1995', value: 4.9 },
+  //   { year: '1996', value: 6 },
+  //   { year: '1997', value: 7 },
+  //   { year: '1998', value: 9 },
+  //   { year: '1999', value: 13 },
+  // ];
 
   const config = {
-    data: chartData,
-    xField: 'year',
+    data: chartData?.map((item: any) => ({
+      time: item?.time.split(' ')[1],
+      value: JSON.parse(item?.content)?.Temperature,
+    })),
+    xField: 'time',
     yField: 'value',
     point: {
       shapeField: 'square',
@@ -220,19 +223,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                   fontFamily: 'monospace', // 可选：设定等宽字体
                 }}
               >
-                <code>
-                  {`void loop() {
-  for (int brightness = 0; brightness <= 255; brightness++) {
-    analogWrite(ledPin, brightness);
-    delay(10);
-  }
-
-  for (int brightness = 255; brightness >= 0; brightness--) {
-    analogWrite(ledPin, brightness);
-    delay(10);
-  }
-}`}
-                </code>
+                <code>{lastData}</code>
               </pre>
             </div>
           </div>
