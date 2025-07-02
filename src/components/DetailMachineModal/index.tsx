@@ -223,7 +223,9 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                   fontFamily: 'monospace', // 可选：设定等宽字体
                 }}
               >
-                <code>{lastData}</code>
+                <code>{lastData?.map((item) =>
+                    `${item.time} ${item.content}`).join('\n')
+                  }</code>
               </pre>
             </div>
           </div>

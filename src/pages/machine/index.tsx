@@ -133,9 +133,7 @@ const handleDetailMachine2 = async (fields: any) => {
     startTime.setDate(startTime.getDate() - 1);
 
     const chartData = await detailMachineChartData({
-      machineId: 38,
-      startTime: startTime.toISOString(),
-      endTime: endTime.toISOString(),
+      machineId: fields.machineId,
     });
     hide();
     message.success('获取详情成功');
