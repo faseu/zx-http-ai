@@ -6,6 +6,7 @@ import styles from './index.less';
 
 const CustomMenu: React.FC<HeaderProps> = (props) => {
   // 你可以根据 props.menuData 自定义渲染菜单结构
+  console.log(props);
   return (
     <aside className={styles.aside}>
       <Flex vertical align="center">
