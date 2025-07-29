@@ -39,7 +39,7 @@ import EditCodeModal from './EditCodeModal';
 import styles from './index.less';
 
 // 使用OpenAI SDK配置
-const API_KEY = 'sk-b423f6e1b3ad43e1a4da384ab19f2577'; // 替换为你的实际API Key
+const API_KEY = 'sk-27b6793c7f634c038eb344a0d2bd39c9'; // 替换为你的实际API Key
 const BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
 // 定义组件ref接口
