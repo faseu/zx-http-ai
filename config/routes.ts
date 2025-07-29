@@ -13,7 +13,7 @@
 export default [
   {
     path: '/',
-    redirect: '/machine',
+    redirect: '/device',
     hideInMenu: true,
   },
   {
@@ -39,7 +39,7 @@ export default [
   {
     name: '设备管理',
     path: '/device',
-    component: './machine',
+    component: './device',
     icon: 'menu-device.png',
   },
   {
