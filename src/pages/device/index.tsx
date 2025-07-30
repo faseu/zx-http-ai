@@ -1,16 +1,15 @@
 import MachineItem from '@/components/MachineItem';
-import CustomTitle from '@/components/CustomTitle';
 import { useModel } from '@umijs/max';
-import { List, message } from 'antd';
+import { message } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
 import {
   addDevice,
   delDevice,
   detailDevice,
+  detailDeviceChartData,
   detailDeviceData,
   detailDeviceLastData,
-  detailDeviceChartData,
   editDevice,
   getDeviceList,
 } from './service';
@@ -63,7 +62,7 @@ const handleDetailDevice = async (fields: any) => {
   const hide = message.loading('正在获取详情');
   try {
     const data = await detailDevice({
-      deviceId: fields.deviceId,
+      machineId: fields.machineId,
     });
     hide();
     message.success('获取详情成功');
@@ -83,22 +82,22 @@ const handleDetailDevice2 = async (fields: any) => {
   const hide = message.loading('正在获取详情');
   try {
     const baseData = await detailDevice({
-      deviceId: fields.deviceId,
+      machineId: fields.machineId,
     });
     const { data: alarmList } = await detailDeviceData({
-      deviceId: fields.deviceId,
+      machineId: fields.machineId,
       type: 'error',
     });
     const infoData = await detailDeviceData({
-      deviceId: fields.deviceId,
+      machineId: fields.machineId,
       type: 'info',
     });
     const lastData = await detailDeviceLastData({
-      deviceId: fields.deviceId,
+      machineId: fields.machineId,
     });
 
     const chartData = await detailDeviceChartData({
-      deviceId: fields.deviceId,
+      machineId: fields.machineId,
     });
     hide();
     message.success('获取详情成功');
@@ -117,7 +116,7 @@ const handleDetailDevice2 = async (fields: any) => {
 const handleDelDevice = async (fields: any) => {
   const hide = message.loading('正在删除');
   try {
-    await delDevice({ deviceId: fields.deviceId });
+    await delDevice({ machineId: fields.machineId });
     hide();
     message.success('删除成功');
     return true;
@@ -158,9 +157,7 @@ export default () => {
   const handleSelectAll = (checked: boolean) => {
     setIsAllSelected(checked);
     if (checked) {
-      const allDeviceIds = deviceList.map(
-        (device: any) => device.deviceId,
-      );
+      const allDeviceIds = deviceList.map((device: any) => device.machineId);
       setSelectedDeviceIds(allDeviceIds);
     } else {
       setSelectedDeviceIds([]);
@@ -168,30 +165,27 @@ export default () => {
   };
 
   // 单个设备选中/取消选中处理函数
-  const handleDeviceCheck = (deviceId: number, checked: boolean) => {
+  const handleDeviceCheck = (machineId: number, checked: boolean) => {
     let newSelectedIds: number[];
 
     if (checked) {
-      newSelectedIds = [...selectedDeviceIds, deviceId];
+      newSelectedIds = [...selectedDeviceIds, machineId];
     } else {
-      newSelectedIds = selectedDeviceIds.filter((id) => id !== deviceId);
+      newSelectedIds = selectedDeviceIds.filter((id) => id !== machineId);
     }
 
     setSelectedDeviceIds(newSelectedIds);
 
-    const allDeviceIds = deviceList.map((device: any) => device.deviceId);
+    const allDeviceIds = deviceList.map((device: any) => device.machineId);
     setIsAllSelected(
-      newSelectedIds.length === allDeviceIds.length &&
-        allDeviceIds.length > 0,
+      newSelectedIds.length === allDeviceIds.length && allDeviceIds.length > 0,
     );
   };
 
   // 当设备列表变化时，重新计算全选状态
   useEffect(() => {
     if (deviceList.length > 0) {
-      const allDeviceIds = deviceList.map(
-        (device: any) => device.deviceId,
-      );
+      const allDeviceIds = deviceList.map((device: any) => device.machineId);
       const currentValidSelected = selectedDeviceIds.filter((id) =>
         allDeviceIds.includes(id),
       );
@@ -220,58 +214,48 @@ export default () => {
         <div className={styles.titleText}>设备管理</div>
       </div>
       <div className={styles.contentCard}>
-        <CustomTitle
-          title="设备列表"
-          showCheckbox
-          searchPlaceholder="搜索设备..."
-          addButtonText="新增设备"
-          onSubmit={addDeviceHandler}
-          isAllSelected={isAllSelected}
-          onSelectAll={handleSelectAll}
-          selectedCount={selectedDeviceIds.length}
-          totalCount={deviceList.length}
-        />
-        <div className={styles.hideScrollbar}>
-          <List
-            rowKey="deviceId"
-            grid={{
-              gutter: 10,
-              xs: 1,
-              sm: 1,
-              md: 1,
-              lg: 2,
-              xl: 2,
-              xxl: 3,
-            }}
-            dataSource={deviceList}
-            renderItem={(item) => {
-              return (
-                <MachineItem
-                  detail={item}
-                  text="这是设备信息"
-                  isChecked={selectedDeviceIds.includes(item.deviceId)}
-                  onCheckChange={(checked: boolean) =>
-                    handleDeviceCheck(item.deviceId, checked)
-                  }
-                  onEditMachine={async (item: any) => {
-                    const data = await handleDetailDevice(item);
-                    setEditDeviceDetail(data);
-                    setEditDeviceId(item.deviceId);
-                    setModalDeviceOpen(true);
-                  }}
-                  onDelMachine={async (item: any) => {
-                    await handleDelDevice(item);
-                    await fetchDeviceList();
-                  }}
-                  onGetDetail={async (item: any) => {
-                    const data = await handleDetailDevice2(item);
-                    setDeviceDetail(data);
-                    setDetailDeviceOpen(true);
-                  }}
-                />
-              );
-            }}
-          />
+        <div className={styles.machineList}>
+          {[
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+            ...deviceList,
+          ].map((item) => (
+            <MachineItem
+              key={item.machineId}
+              detail={item}
+              text="这是设备信息"
+              isChecked={selectedDeviceIds.includes(item.machineId)}
+              onCheckChange={(checked: boolean) =>
+                handleDeviceCheck(item.machineId, checked)
+              }
+              onEditMachine={async (item: any) => {
+                const data = await handleDetailDevice(item);
+                setEditDeviceDetail(data);
+                setEditDeviceId(item.machineId);
+                setModalDeviceOpen(true);
+              }}
+              onDelMachine={async (item: any) => {
+                await handleDelDevice(item);
+                await fetchDeviceList();
+              }}
+              onGetDetail={async (item: any) => {
+                const data = await handleDetailDevice2(item);
+                setDeviceDetail(data);
+                setDetailDeviceOpen(true);
+              }}
+            />
+          ))}
         </div>
       </div>
     </div>

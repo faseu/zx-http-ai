@@ -89,7 +89,7 @@ export async function delDevice(params?: { [key: string]: any }) {
  * 设备列表
  */
 export async function getDeviceList(params?: { [key: string]: any }) {
-  return request('/admin/device/index', {
+  return request('/admin/machine/index', {
     method: 'POST',
     params: {
       ...params,

@@ -45,7 +45,7 @@ export default [
   {
     name: '协议管理',
     path: '/directive',
-    component: './machine',
+    component: './agreement',
     icon: 'menu-directive.png',
   },
   {
