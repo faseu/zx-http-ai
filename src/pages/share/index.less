@@ -11,8 +11,8 @@
   padding: 20px;
   box-sizing: border-box;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   .titleText {
     font-size: 26px;
     color: #ffffff;
@@ -55,4 +55,38 @@
 /* 隐藏滚动条，保留滚动行为 */
 .hideScrollbar::-webkit-scrollbar {
   display: none;
+}
+:global {
+  .ant-tabs-tab {
+    margin-top: 12px !important;
+    min-height: 40px !important;
+    margin-left: 12px !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    background: #3F3F46 !important;
+
+    .ant-tabs-tab-btn {
+      color: #fff !important;
+    }
+  }
+
+  .ant-tabs-nav {
+    margin-bottom: 0 !important;
+
+  }
+
+  .ant-tabs-tab-active {
+    background: #007AFF !important;
+    
+    .ant-tabs-tab-btn {
+      color: #fff !important;
+    }
+  }
+
+  .ant-tabs-nav::before {
+    border-bottom: none !important;
+  }
+  .ant-tabs-ink-bar{
+    display: none !important;
+  }
 }

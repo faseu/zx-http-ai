@@ -1,0 +1,201 @@
+.container {
+  height: calc(100vh - 56px);
+}
+
+.titleCard {
+  margin-top: 12px;
+  margin-left: 8px;
+  width: calc(100% - 16px);
+  height: 88px;
+  background: linear-gradient(315deg, rgba(47, 85, 118, 0.3) 0%, rgba(72, 71, 119, 0.3) 100%);
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .titleText {
+    font-size: 26px;
+    color: #ffffff;
+  }
+}
+
+.contentBase {
+  margin-top: 12px;
+  margin-left: 8px;
+  width: calc(100% - 16px);
+  height: 167px;
+  background: #141414;
+  padding: 28px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  .avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .userInfo {
+    color: #ffffff;
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .userName {
+      font-size: 28px;
+    }
+
+    .userType {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      width: 100px;
+      height: 30px;
+      color: #000;
+      background: #FFFFFF;
+      border-radius: 16px 16px 16px 16px;
+    }
+  }
+
+  .userId {
+    margin-top: 18px;
+    font-size: 16px;
+    color: #676767;
+  }
+}
+
+.subInfo {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 8px;
+  width: calc(100% - 16px);
+  margin-top: 12px;
+  .infoContainer {
+    height: 236px;
+    width: 100%;
+    background: #141414;
+    padding: 28px;
+  }
+
+  .infoHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .headerIcon {
+    width: 24px;
+    height: 18px;
+  }
+
+  .headerTitle {
+    color: #FFFFFF;
+  }
+
+  .infoItem {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .infoLabel {
+    color: #676767;
+  }
+
+  .infoContent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .infoText {
+    color: #FFFFFF;
+  }
+
+  .copyIcon {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .btnList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .btnItem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .btnText {
+    color: #FFFFFF;
+    font-size: 14px;
+  }
+}
+
+.other {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 8px;
+  width: calc(100% - 16px);
+  margin-top: 12px;
+  box-sizing: border-box;
+
+  .otherItem {
+    padding:  0 28px 28px 28px;
+    box-sizing: border-box;
+    background: #141414;
+    height: calc(100vh - 607px);
+  }
+}
+
+
+
+.hideScrollbar {
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE & Edge */
+}
+
+/* 隐藏滚动条，保留滚动行为 */
+.hideScrollbar::-webkit-scrollbar {
+  display: none;
+}
