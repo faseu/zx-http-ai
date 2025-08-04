@@ -1,4 +1,5 @@
 import AddDirectiveModal from '@/components/AddDirectiveModal';
+import UpgradeLogModal from '@/components/UpgradeLogModal';
 import {
   addOta,
   delOta,
@@ -7,10 +8,11 @@ import {
   getCateList,
   getOtaList,
 } from '@/pages/machine/service';
+import { SearchOutlined } from '@ant-design/icons';
 import {
   Button,
+  Input,
   message,
-  Popconfirm,
   Popover,
   Space,
   Table,
@@ -114,6 +116,7 @@ const fetchDict = async () => {
 export default () => {
   const [editOtaId, setEditOtaId] = useState(0);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
+  const [modalUpgradeLogOpen, setModalUpgradeLogOpen] = useState(false);
   const [directiveList, setDirectiveList] = useState([]);
   const [cateList, setCateList] = useState([]);
 
@@ -142,7 +145,7 @@ export default () => {
 
   const columns: TableColumnsType<DataType> = [
     {
-      title: '协议名称',
+      title: '固件版本',
       dataIndex: 'otaName',
       width: 150,
       render: (text) => {
@@ -163,29 +166,33 @@ export default () => {
       },
     },
     {
-      title: '设备场景',
+      title: '固件类型',
       dataIndex: 'reason',
     },
     {
-      title: '设备型号',
+      title: '发布时间',
       dataIndex: 'cateName',
     },
     {
-      title: '上传时间',
+      title: '固件描述',
       dataIndex: 'cateName',
     },
     {
-      title: '发布者',
+      title: '固件升级',
       dataIndex: 'cateName',
     },
     {
-      title: '协议文件',
+      title: '升级日志',
       dataIndex: 'fileUrl',
       render: (fileUrl: string) => {
         if (fileUrl) {
           return (
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-              下载文件
+            <a
+              onClick={() => {
+                setModalUpgradeLogOpen(true);
+              }}
+            >
+              查看
             </a>
           );
         }
@@ -208,22 +215,8 @@ export default () => {
               }
             }}
           >
-            编辑
+            下载
           </a>
-          <Popconfirm
-            title="删除协议"
-            description="删除后无法恢复，确定删除协议?"
-            okText="确定"
-            cancelText="取消"
-            onConfirm={async () => {
-              const success = await handleDelOta(record);
-              if (success) {
-                await fetchOtaList();
-              }
-            }}
-          >
-            <a style={{ color: 'red' }}>删除</a>
-          </Popconfirm>
         </Space>
       ),
     },
@@ -232,15 +225,22 @@ export default () => {
   return (
     <div className={styles.container}>
       <div className={styles.titleCard}>
-        <div className={styles.titleText}>协议管理</div>
-        <Button
-          color="primary"
-          variant="solid"
-          size="large"
-          onClick={handleAddClick}
-        >
-          新增协议
-        </Button>
+        <div className={styles.titleText}>升级管理</div>
+        <div className={styles.rightContent}>
+          <Input
+            style={{ width: '320px', height: '40px', marginRight: '8px' }}
+            placeholder="搜索固件..."
+            suffix={<SearchOutlined />}
+          />
+          <Button
+            color="primary"
+            variant="solid"
+            size="large"
+            onClick={handleAddClick}
+          >
+            新增协议
+          </Button>
+        </div>
       </div>
       <div className={styles.contentCard}>
         <Table<DataType>
@@ -272,6 +272,15 @@ export default () => {
           setModalDirectiveOpen(false);
           setEditOtaDetail({});
           setEditOtaId(0);
+        }}
+      />
+      <UpgradeLogModal
+        open={modalUpgradeLogOpen}
+        onOk={() => {
+          setModalUpgradeLogOpen(false);
+        }}
+        onCancel={() => {
+          setModalUpgradeLogOpen(false);
         }}
       />
     </div>

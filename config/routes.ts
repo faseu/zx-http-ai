@@ -13,7 +13,7 @@
 export default [
   {
     path: '/',
-    redirect: '/device',
+    redirect: '/user',
     hideInMenu: true,
   },
   {
@@ -35,35 +35,41 @@ export default [
     path: '/machine',
     component: './machine',
     icon: 'menu-machine.png',
+    activeIcon: 'menu-machine-s.png',
   },
   {
     name: '设备管理',
     path: '/device',
     component: './device',
     icon: 'menu-device.png',
+    activeIcon: 'menu-device-s.png',
   },
   {
     name: '协议管理',
-    path: '/directive',
+    path: '/agreement',
     component: './agreement',
     icon: 'menu-directive.png',
+    activeIcon: 'menu-directive-s.png',
   },
   {
     name: '升级管理',
     path: '/ota',
-    component: './machine',
+    component: './ota',
     icon: 'menu-ota.png',
+    activeIcon: 'menu-ota-s.png',
   },
   {
-    name: '指令管理',
+    name: '共创星球',
     path: '/dialogue',
-    component: './machine',
+    component: './share',
     icon: 'menu-dialogue.png',
+    activeIcon: 'menu-dialogue-s.png',
   },
   {
     name: '用户中心',
     path: '/user',
-    component: './machine',
+    component: './user',
     icon: 'menu-user.png',
+    activeIcon: 'menu-user-s.png',
   },
 ];
