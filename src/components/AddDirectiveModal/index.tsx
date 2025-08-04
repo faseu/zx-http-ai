@@ -9,7 +9,6 @@ interface AddDirectiveModalProps {
   cateList: DefaultOptionType[];
   onOk: (fieldsValue: any) => void;
   onCancel: () => void;
-  styles?: any;
 }
 
 const AddDirectiveModal: React.FC<AddDirectiveModalProps> = ({
@@ -19,14 +18,13 @@ const AddDirectiveModal: React.FC<AddDirectiveModalProps> = ({
   cateList,
   onOk,
   onCancel,
-  styles,
 }) => {
   const [form] = Form.useForm();
 
   return (
     <Modal
       title={isEdit ? '编辑协议' : '新增协议'}
-      style={styles ? styles : { position: 'fixed', top: 332, right: 146 }}
+      style={{ position: 'fixed', top: 332, right: 146 }}
       open={open}
       onOk={() => {
         form.validateFields().then((values: any) => {

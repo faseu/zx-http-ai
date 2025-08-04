@@ -1,7 +1,6 @@
 import MachineItem from '@/components/MachineItem';
-import { SearchOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
-import { Button, Input, message, Select } from 'antd';
+import { message } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
 import {
@@ -213,22 +212,6 @@ export default () => {
     <div className={styles.container}>
       <div className={styles.titleCard}>
         <div className={styles.titleText}>设备管理</div>
-        <div className={styles.rightContent}>
-          <Input
-            style={{ width: '320px', height: '40px', marginRight: '8px' }}
-            placeholder="搜索设备ID、名称或用途..."
-            suffix={<SearchOutlined />}
-          />
-          <Select
-            size="large"
-            style={{ width: '150px', height: '40px', marginRight: '8px' }}
-          >
-            <Select.Option value="sample">Sample</Select.Option>
-          </Select>
-          <Button color="primary" variant="solid" size="large">
-            新增设备
-          </Button>
-        </div>
       </div>
       <div className={styles.contentCard}>
         <div className={styles.machineList}>

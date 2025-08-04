@@ -1,41 +1,28 @@
-import AddDirectiveModal from '@/components/AddDirectiveModal';
-import {
-  addOta,
-  delOta,
-  detailOta,
-  editOta,
-  getCateList,
-  getOtaList,
-} from '@/pages/machine/service';
-import {
-  Button,
-  message,
-  Popconfirm,
-  Popover,
-  Space,
-  Table,
-  TableColumnsType,
-} from 'antd';
-import React, { useEffect, useState } from 'react';
+import MachineItem from '@/components/MachineItem';
+import { useModel } from '@umijs/max';
+import { message, Space, Table, TableProps, Tag } from 'antd';
+import { Key, useEffect, useState } from 'react';
 import styles from './index.less';
-interface DataType {
-  key: React.Key;
-  id: number;
-  otaName: string;
-  reason: string;
-  cateName: string;
-  cateId: number;
-  fileUrl?: string;
-}
+import {
+  addDevice,
+  delDevice,
+  detailDevice,
+  detailDeviceChartData,
+  detailDeviceData,
+  detailDeviceLastData,
+  editDevice,
+  getDeviceList,
+} from './service';
+import { DataType } from 'csstype';
 
 /**
- * 新增协议
+ * 新增设备
  * @param fields
  */
-const handleAddOta = async (fields: any) => {
+const handleAddDevice = async (fields: any) => {
   const hide = message.loading('正在新增');
   try {
-    await addOta({
+    await addDevice({
       ...fields,
     });
     hide();
@@ -49,13 +36,13 @@ const handleAddOta = async (fields: any) => {
 };
 
 /**
- * 编辑协议
+ * 编辑设备
  * @param fields
  */
-const handleEditOta = async (fields: any) => {
+const handleEditDevice = async (fields: any) => {
   const hide = message.loading('正在更新');
   try {
-    await editOta({
+    await editDevice({
       ...fields,
     });
     hide();
@@ -69,16 +56,17 @@ const handleEditOta = async (fields: any) => {
 };
 
 /**
- * 协议详情
+ * 设备详情
  * @param fields
  */
-const handleDetailOta = async (fields: any) => {
+const handleDetailDevice = async (fields: any) => {
   const hide = message.loading('正在获取详情');
   try {
-    const data = await detailOta({
-      id: fields.id,
+    const data = await detailDevice({
+      machineId: fields.machineId,
     });
     hide();
+    message.success('获取详情成功');
     return data;
   } catch (error) {
     hide();
@@ -88,13 +76,48 @@ const handleDetailOta = async (fields: any) => {
 };
 
 /**
- *  删除协议
+ * 设备详情2
  * @param fields
  */
-const handleDelOta = async (fields: any) => {
+const handleDetailDevice2 = async (fields: any) => {
+  const hide = message.loading('正在获取详情');
+  try {
+    const baseData = await detailDevice({
+      machineId: fields.machineId,
+    });
+    const { data: alarmList } = await detailDeviceData({
+      machineId: fields.machineId,
+      type: 'error',
+    });
+    const infoData = await detailDeviceData({
+      machineId: fields.machineId,
+      type: 'info',
+    });
+    const lastData = await detailDeviceLastData({
+      machineId: fields.machineId,
+    });
+
+    const chartData = await detailDeviceChartData({
+      machineId: fields.machineId,
+    });
+    hide();
+    message.success('获取详情成功');
+    return { baseData, alarmList, infoData, lastData, chartData };
+  } catch (error) {
+    hide();
+    message.error('获取详情失败请重试！');
+    return false;
+  }
+};
+
+/**
+ *  删除设备
+ * @param fields
+ */
+const handleDelDevice = async (fields: any) => {
   const hide = message.loading('正在删除');
   try {
-    await delOta({ id: fields.id });
+    await delDevice({ machineId: fields.machineId });
     hide();
     message.success('删除成功');
     return true;
@@ -105,175 +128,168 @@ const handleDelOta = async (fields: any) => {
   }
 };
 
-const fetchDict = async () => {
-  const [cateList] = await Promise.all([getCateList()]);
-  return [
-    cateList.map((item: any) => ({ label: item.cateName, value: item.id })),
-  ];
-};
 export default () => {
-  const [editOtaId, setEditOtaId] = useState(0);
-  const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
-  const [directiveList, setDirectiveList] = useState([]);
-  const [cateList, setCateList] = useState([]);
+  const { initialState } = useModel('@@initialState');
+  const isDark = initialState?.settings?.navTheme === 'realDark';
+  const [modalDeviceOpen, setModalDeviceOpen] = useState(false);
+  const [detailDeviceOpen, setDetailDeviceOpen] = useState(false);
+  const [deviceList, setDeviceList] = useState<any[]>([]);
+  const [editDeviceId, setEditDeviceId] = useState(0);
+  const [editDeviceDetail, setEditDeviceDetail] = useState({});
+  const [deviceDetail, setDeviceDetail] = useState({});
 
-  const [editOtaDetail, setEditOtaDetail] = useState({});
-  const fetchOtaList = async () => {
-    const { data } = await getOtaList({
+  // 管理选中状态的state
+  const [selectedDeviceIds, setSelectedDeviceIds] = useState<number[]>([]);
+  const [isAllSelected, setIsAllSelected] = useState(false);
+
+  const fetchDeviceList = async () => {
+    const { data } = await getDeviceList({
       page: 1,
       psize: 1000,
     });
-    setDirectiveList(data);
+    setDeviceList(data);
   };
+
+  const addDeviceHandler = () => {
+    setModalDeviceOpen(true);
+  };
+
+  // 全选/取消全选处理函数
+  const handleSelectAll = (checked: boolean) => {
+    setIsAllSelected(checked);
+    if (checked) {
+      const allDeviceIds = deviceList.map((device: any) => device.machineId);
+      setSelectedDeviceIds(allDeviceIds);
+    } else {
+      setSelectedDeviceIds([]);
+    }
+  };
+
+  // 单个设备选中/取消选中处理函数
+  const handleDeviceCheck = (machineId: number, checked: boolean) => {
+    let newSelectedIds: number[];
+
+    if (checked) {
+      newSelectedIds = [...selectedDeviceIds, machineId];
+    } else {
+      newSelectedIds = selectedDeviceIds.filter((id) => id !== machineId);
+    }
+
+    setSelectedDeviceIds(newSelectedIds);
+
+    const allDeviceIds = deviceList.map((device: any) => device.machineId);
+    setIsAllSelected(
+      newSelectedIds.length === allDeviceIds.length && allDeviceIds.length > 0,
+    );
+  };
+
+  // 当设备列表变化时，重新计算全选状态
+  useEffect(() => {
+    if (deviceList.length > 0) {
+      const allDeviceIds = deviceList.map((device: any) => device.machineId);
+      const currentValidSelected = selectedDeviceIds.filter((id) =>
+        allDeviceIds.includes(id),
+      );
+
+      if (currentValidSelected.length !== selectedDeviceIds.length) {
+        setSelectedDeviceIds(currentValidSelected);
+      }
+
+      setIsAllSelected(
+        currentValidSelected.length === allDeviceIds.length &&
+          allDeviceIds.length > 0,
+      );
+    } else {
+      setSelectedDeviceIds([]);
+      setIsAllSelected(false);
+    }
+  }, [deviceList]);
 
   useEffect(() => {
-    fetchOtaList();
-
-    fetchDict().then((res) => {
-      const [cateList] = res;
-      setCateList(cateList);
-    });
+    fetchDeviceList();
   }, []);
-  const handleAddClick = () => {
-    setEditOtaDetail({});
-    setEditOtaId(0);
-    setModalDirectiveOpen(true);
-  };
 
-  const columns: TableColumnsType<DataType> = [
+  const columns = [
     {
-      title: '协议名称',
-      dataIndex: 'otaName',
-      width: 150,
-      render: (text) => {
-        return (
-          <Popover content={text}>
-            <div
-              style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                width: '100%',
-              }}
-            >
-              {text}
-            </div>
-          </Popover>
-        );
-      },
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text) => <a>{text}</a>,
     },
     {
-      title: '设备场景',
-      dataIndex: 'reason',
+      title: 'Age',
+      dataIndex: 'age',
+      key: 'age',
     },
     {
-      title: '设备型号',
-      dataIndex: 'cateName',
+      title: 'Address',
+      dataIndex: 'address',
+      key: 'address',
     },
     {
-      title: '上传时间',
-      dataIndex: 'cateName',
+      title: 'Tags',
+      key: 'tags',
+      dataIndex: 'tags',
+      render: (_, { tags }) => (
+        <>
+          {tags.map((tag: Key | null | undefined) => {
+            let color = tag.length > 5 ? 'geekblue' : 'green';
+            if (tag === 'loser') {
+              color = 'volcano';
+            }
+            return (
+              <Tag color={color} key={tag}>
+                {tag.toUpperCase()}
+              </Tag>
+            );
+          })}
+        </>
+      ),
     },
     {
-      title: '发布者',
-      dataIndex: 'cateName',
-    },
-    {
-      title: '协议文件',
-      dataIndex: 'fileUrl',
-      render: (fileUrl: string) => {
-        if (fileUrl) {
-          return (
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-              下载文件
-            </a>
-          );
-        }
-        return '-';
-      },
-    },
-    {
-      title: '操作',
+      title: 'Action',
       key: 'action',
-      width: 150,
       render: (_, record) => (
         <Space size="middle">
-          <a
-            onClick={async () => {
-              const detail = await handleDetailOta(record);
-              if (detail) {
-                setEditOtaDetail(detail);
-                setEditOtaId(record.id);
-                setModalDirectiveOpen(true);
-              }
-            }}
-          >
-            编辑
-          </a>
-          <Popconfirm
-            title="删除协议"
-            description="删除后无法恢复，确定删除协议?"
-            okText="确定"
-            cancelText="取消"
-            onConfirm={async () => {
-              const success = await handleDelOta(record);
-              if (success) {
-                await fetchOtaList();
-              }
-            }}
-          >
-            <a style={{ color: 'red' }}>删除</a>
-          </Popconfirm>
+          <a>Invite {record.name}</a>
+          <a>Delete</a>
         </Space>
       ),
+    },
+  ];
+
+  const data = [
+    {
+      key: '1',
+      name: 'John Brown',
+      age: 32,
+      address: 'New York No. 1 Lake Park',
+      tags: ['nice', 'developer'],
+    },
+    {
+      key: '2',
+      name: 'Jim Green',
+      age: 42,
+      address: 'London No. 1 Lake Park',
+      tags: ['loser'],
+    },
+    {
+      key: '3',
+      name: 'Joe Black',
+      age: 32,
+      address: 'Sydney No. 1 Lake Park',
+      tags: ['cool', 'teacher'],
     },
   ];
 
   return (
     <div className={styles.container}>
       <div className={styles.titleCard}>
-        <div className={styles.titleText}>协议管理</div>
-        <Button
-          color="primary"
-          variant="solid"
-          size="large"
-          onClick={handleAddClick}
-        >
-          新增协议
-        </Button>
+        <div className={styles.titleText}>设备管理</div>
       </div>
       <div className={styles.contentCard}>
-        <Table<DataType>
-          rowSelection={{ type: 'checkbox' }}
-          key="id"
-          columns={columns}
-          dataSource={directiveList}
-          size="large"
-        />
+        <Table columns={columns} dataSource={data} />;
       </div>
-      <AddDirectiveModal
-        cateList={cateList}
-        isEdit={!!editOtaId}
-        detail={editOtaDetail}
-        open={modalDirectiveOpen}
-        styles={{}}
-        onOk={async (values: any) => {
-          const success = editOtaId
-            ? await handleEditOta({ id: editOtaId, ...values })
-            : await handleAddOta(values);
-          if (success) {
-            setModalDirectiveOpen(false);
-            setEditOtaDetail({});
-            setEditOtaId(0);
-            await fetchOtaList();
-          }
-        }}
-        onCancel={() => {
-          setModalDirectiveOpen(false);
-          setEditOtaDetail({});
-          setEditOtaId(0);
-        }}
-      />
     </div>
   );
 };

@@ -1,12 +1,10 @@
 import type { HeaderProps } from '@ant-design/pro-layout';
-import { history, useLocation } from '@umijs/max'; // 添加 useLocation
+import { history } from '@umijs/max'; // 添加这行导入
 import { Flex } from 'antd';
 import React from 'react';
 import styles from './index.less';
 
 const CustomMenu: React.FC<HeaderProps> = (props) => {
-  const { pathname } = useLocation(); // 获取当前路径
-
   const handleMenuClick = (path: string) => {
     history.push(path);
   };
@@ -23,9 +21,7 @@ const CustomMenu: React.FC<HeaderProps> = (props) => {
               onClick={() => handleMenuClick(item.path)}
             >
               <img
-                src={`/admin/${
-                  pathname === item.path ? item.activeIcon : item.icon
-                }`}
+                src={`/admin/${item.icon}`}
                 style={{ width: '28px', height: '28px', marginBottom: '8px' }}
                 alt=""
               />
