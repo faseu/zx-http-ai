@@ -10,92 +10,6 @@ import { SearchOutlined } from '@ant-design/icons';
 import { Button, Card, Input, List, message, Tabs } from 'antd';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
-interface DataType {
-  key: React.Key;
-  id: number;
-  otaName: string;
-  reason: string;
-  cateName: string;
-  cateId: number;
-  fileUrl?: string;
-}
-
-/**
- * 新增协议
- * @param fields
- */
-const handleAddOta = async (fields: any) => {
-  const hide = message.loading('正在新增');
-  try {
-    await addOta({
-      ...fields,
-    });
-    hide();
-    message.success('新增成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('新增失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 编辑协议
- * @param fields
- */
-const handleEditOta = async (fields: any) => {
-  const hide = message.loading('正在更新');
-  try {
-    await editOta({
-      ...fields,
-    });
-    hide();
-    message.success('更新成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('更新失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 协议详情
- * @param fields
- */
-const handleDetailOta = async (fields: any) => {
-  const hide = message.loading('正在获取详情');
-  try {
-    const data = await detailOta({
-      id: fields.id,
-    });
-    hide();
-    return data;
-  } catch (error) {
-    hide();
-    message.error('获取详情失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除协议
- * @param fields
- */
-const handleDelOta = async (fields: any) => {
-  const hide = message.loading('正在删除');
-  try {
-    await delOta({ id: fields.id });
-    hide();
-    message.success('删除成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
 
 const fetchDict = async () => {
   const [cateList] = await Promise.all([getCateList()]);
@@ -116,7 +30,6 @@ const tabs = [
 export default () => {
   const [editOtaId, setEditOtaId] = useState(0);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
-  const [modalUpgradeLogOpen, setModalUpgradeLogOpen] = useState(false);
   const [directiveList, setDirectiveList] = useState([]);
   const [cateList, setCateList] = useState([]);
 
@@ -173,16 +86,32 @@ export default () => {
           grid={{
             gutter: 16,
             xs: 1,
-            sm: 2,
-            md: 4,
-            lg: 4,
-            xl: 6,
+            sm: 1,
+            md: 2,
+            lg: 2,
+            xl: 2,
             xxl: 3,
           }}
           dataSource={directiveList}
           renderItem={(item) => (
             <List.Item>
-              <Card title={item.title}>Card content</Card>
+              <div className={styles.shareItem}>
+                <img className={styles.shareImage} src="http://temp.im/500x186" alt="" />
+                <div className={styles.shareHeader}>
+                  <div className={styles.shareTitle}>智能灯光控制</div>
+                  <div className={styles.shareStatus}>审核中</div>
+                </div>
+                <div className={styles.shareDescription}>
+                  通过语音或手机APP控制智能灯泡的开关和亮度
+                </div>
+                <div className={styles.shareTags}>
+                  <div className={styles.shareTag}>#自动化</div>
+                  <div className={styles.shareTag}>#物联网</div>
+                  <div className={styles.shareTag}>#语音控制</div>
+                </div>
+                <Button className={styles.btn} type='link'>查看详情</Button>
+              </div>
+
             </List.Item>
           )}
         />

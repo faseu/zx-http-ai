@@ -27,23 +27,80 @@
   margin-top: 12px;
   margin-left: 8px;
   width: calc(100% - 16px);
-  height: calc(100vh - 180px);
-  background: linear-gradient(315deg, rgba(47, 85, 118, 0.3) 0%, rgba(72, 71, 119, 0.3) 100%);
+  height: calc(100vh - 240px);
+  //background: linear-gradient(315deg, rgba(47, 85, 118, 0.3) 0%, rgba(72, 71, 119, 0.3) 100%);
   padding: 20px;
   box-sizing: border-box;
   overflow-y: auto;
-  .machineList {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 260px); // 设置固定宽度为260px
-    gap: 16px;
+
+  .shareItem {
+    position: relative;
+    color: #FFFFFF;
+    background: #1f1f1f;
+    border-radius: 8px;
     padding: 16px;
-    place-items: center; // 使网格项在水平和垂直方向上都居中
-    justify-content: center; // 网格整体水平居中
-    align-content: start; // 添加此行，使内容从顶部开始排列，而不是均匀分布
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s;
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
   }
 
+  .shareImage {
+    width: 100%;
+    height: 186px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+
+  .shareHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .shareTitle {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .shareStatus {
+    padding: 4px 8px;
+    background: #fff7e6;
+    color: #d48806;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .shareDescription {
+    color: #8c8c8c;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .shareTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .shareTag {
+    padding: 4px 8px;
+    background: #f0f0f0;
+    color: #595959;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .btn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+  }
 }
 
 .hideScrollbar {

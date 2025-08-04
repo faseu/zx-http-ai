@@ -75,7 +75,7 @@ export default () => {
       </div>
       <div className={styles.contentBase}>
         <div className={styles.avatar}>
-          <img src="https://temp.im/110x110" alt="用户头像" />
+          <img src="http://temp.im/110x110" alt="用户头像" />
         </div>
         <div className={styles.userInfo}>
           <div className={styles.user}>
@@ -89,7 +89,7 @@ export default () => {
         <div className={styles.infoContainer}>
           <div className={styles.infoHeader}>
             <img
-              src="https://temp.im/24x18"
+              src="http://temp.im/24x18"
               alt=""
               className={styles.headerIcon}
             />
@@ -100,7 +100,7 @@ export default () => {
             <div className={styles.infoContent}>
               <div className={styles.infoText}>138 123 5678</div>
               <img
-                src="https://temp.im/16x16"
+                src="http://temp.im/16x16"
                 alt=""
                 className={styles.copyIcon}
               />
@@ -111,7 +111,7 @@ export default () => {
             <div className={styles.infoContent}>
               <div className={styles.infoText}>zhang.mingyuan@example.com</div>
               <img
-                src="https://temp.im/16x16"
+                src="http://temp.im/16x16"
                 alt=""
                 className={styles.copyIcon}
               />
@@ -121,7 +121,7 @@ export default () => {
         <div className={styles.infoContainer}>
           <div className={styles.infoHeader}>
             <img
-              src="https://temp.im/24x18"
+              src="http://temp.im/24x18"
               alt=""
               className={styles.headerIcon}
             />
@@ -143,7 +143,7 @@ export default () => {
         <div className={styles.infoContainer}>
           <div className={styles.infoHeader}>
             <img
-              src="https://temp.im/24x18"
+              src="http://temp.im/24x18"
               alt=""
               className={styles.headerIcon}
             />
@@ -151,23 +151,23 @@ export default () => {
           </div>
           <div className={styles.btnList}>
             <div className={styles.btnItem}>
-              <img src="https://temp.im/16x16" alt="" className={styles.icon} />
+              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
               <div className={styles.btnText}>修改密码</div>
             </div>
             <div className={styles.btnItem}>
-              <img src="https://temp.im/16x16" alt="" className={styles.icon} />
+              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
               <div className={styles.btnText}>更换邮箱</div>
             </div>
             <div className={styles.btnItem}>
-              <img src="https://temp.im/16x16" alt="" className={styles.icon} />
+              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
               <div className={styles.btnText}>更换手机</div>
             </div>
             <div className={styles.btnItem}>
-              <img src="https://temp.im/16x16" alt="" className={styles.icon} />
+              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
               <div className={styles.btnText}>编辑资料</div>
             </div>
             <div className={styles.btnItem}>
-              <img src="https://temp.im/16x16" alt="" className={styles.icon} />
+              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
               <div className={styles.btnText}>退出登录</div>
             </div>
           </div>
