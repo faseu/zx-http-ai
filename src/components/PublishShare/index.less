@@ -1,0 +1,44 @@
+.content {
+  max-height: 702px;
+  overflow-y: auto;
+}
+.coverContainer {
+  margin: 16px 0;
+}
+
+.coverTitle {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.coverImage {
+  width: 120px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.divider {
+  color: #666;
+  font-size: 14px;
+  margin: 16px 0;
+}
+.content {
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE & Edge */
+}
+
+/* 隐藏滚动条，保留滚动行为 */
+.content::-webkit-scrollbar {
+  display: none;
+}

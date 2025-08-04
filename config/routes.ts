@@ -13,7 +13,7 @@
 export default [
   {
     path: '/',
-    redirect: '/user',
+    redirect: '/machine',
     hideInMenu: true,
   },
   {

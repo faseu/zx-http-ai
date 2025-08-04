@@ -29,9 +29,10 @@
   width: calc(100% - 16px);
   height: calc(100vh - 240px);
   //background: linear-gradient(315deg, rgba(47, 85, 118, 0.3) 0%, rgba(72, 71, 119, 0.3) 100%);
-  padding: 20px;
+  //padding: 20px;
   box-sizing: border-box;
   overflow-y: auto;
+  overflow-x: hidden;
 
   .shareItem {
     position: relative;
@@ -103,14 +104,14 @@
   }
 }
 
-.hideScrollbar {
+.contentCard {
   /* 隐藏滚动条 */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE & Edge */
 }
 
 /* 隐藏滚动条，保留滚动行为 */
-.hideScrollbar::-webkit-scrollbar {
+.contentCard::-webkit-scrollbar {
   display: none;
 }
 :global {

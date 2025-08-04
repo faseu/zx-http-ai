@@ -1,14 +1,8 @@
-import {
-  addOta,
-  delOta,
-  detailOta,
-  editOta,
-  getCateList,
-  getOtaList,
-} from '@/pages/machine/service';
+import PublishShare from '@/components/PublishShare';
+import { getCateList, getOtaList } from '@/pages/machine/service';
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Card, Input, List, message, Tabs } from 'antd';
-import React, { useEffect, useState } from 'react';
+import { Button, Input, List, Tabs } from 'antd';
+import { useEffect, useState } from 'react';
 import styles from './index.less';
 
 const fetchDict = async () => {
@@ -29,8 +23,8 @@ const tabs = [
 ];
 export default () => {
   const [editOtaId, setEditOtaId] = useState(0);
-  const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
-  const [directiveList, setDirectiveList] = useState([]);
+  const [modalAddOpen, setModalAddOpen] = useState(false);
+  const [directiveList, setAddList] = useState([]);
   const [cateList, setCateList] = useState([]);
 
   const [editOtaDetail, setEditOtaDetail] = useState({});
@@ -39,7 +33,7 @@ export default () => {
       page: 1,
       psize: 1000,
     });
-    setDirectiveList(data);
+    setAddList(data);
   };
 
   useEffect(() => {
@@ -53,7 +47,7 @@ export default () => {
   const handleAddClick = () => {
     setEditOtaDetail({});
     setEditOtaId(0);
-    setModalDirectiveOpen(true);
+    setModalAddOpen(true);
   };
 
   return (
@@ -96,7 +90,11 @@ export default () => {
           renderItem={(item) => (
             <List.Item>
               <div className={styles.shareItem}>
-                <img className={styles.shareImage} src="http://temp.im/500x186" alt="" />
+                <img
+                  className={styles.shareImage}
+                  src="http://temp.im/500x186"
+                  alt=""
+                />
                 <div className={styles.shareHeader}>
                   <div className={styles.shareTitle}>智能灯光控制</div>
                   <div className={styles.shareStatus}>审核中</div>
@@ -109,13 +107,23 @@ export default () => {
                   <div className={styles.shareTag}>#物联网</div>
                   <div className={styles.shareTag}>#语音控制</div>
                 </div>
-                <Button className={styles.btn} type='link'>查看详情</Button>
+                <Button className={styles.btn} type="link">
+                  查看详情
+                </Button>
               </div>
-
             </List.Item>
           )}
         />
       </div>
+      <PublishShare
+        open={modalAddOpen}
+        onOk={() => {
+          setModalAddOpen(false);
+        }}
+        onCancel={() => {
+          setModalAddOpen(false);
+        }}
+      />
     </div>
   );
 };
