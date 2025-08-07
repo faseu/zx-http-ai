@@ -5,7 +5,7 @@ import { request } from '@umijs/max';
  * 新增设备
  */
 export async function addDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/save', {
+  return request('/admin/machine/save', {
     method: 'POST',
     data: {
       ...params,
@@ -17,7 +17,7 @@ export async function addDevice(params?: { [key: string]: any }) {
  * 编辑设备
  */
 export async function editDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/save', {
+  return request('/admin/machine/save', {
     method: 'POST',
     data: {
       ...params,
@@ -29,7 +29,7 @@ export async function editDevice(params?: { [key: string]: any }) {
  * 设备详情
  */
 export async function detailDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/getInfo', {
+  return request('/admin/machine/getInfo', {
     method: 'POST',
     data: {
       ...params,
@@ -41,7 +41,7 @@ export async function detailDevice(params?: { [key: string]: any }) {
  * 设备详情
  */
 export async function detailDeviceData(params?: { [key: string]: any }) {
-  return request('/admin/device_data/index', {
+  return request('/admin/machine_data/index', {
     method: 'POST',
     data: {
       ...params,
@@ -53,7 +53,7 @@ export async function detailDeviceData(params?: { [key: string]: any }) {
  * 设备详情
  */
 export async function detailDeviceLastData(params?: { [key: string]: any }) {
-  return request('/admin/device/getLastData', {
+  return request('/admin/machine/getLastData', {
     method: 'POST',
     data: {
       ...params,
@@ -65,7 +65,7 @@ export async function detailDeviceLastData(params?: { [key: string]: any }) {
  * 设备详情
  */
 export async function detailDeviceChartData(params?: { [key: string]: any }) {
-  return request('/admin/device/getParams', {
+  return request('/admin/machine/getParams', {
     method: 'POST',
     data: {
       ...params,
@@ -77,7 +77,7 @@ export async function detailDeviceChartData(params?: { [key: string]: any }) {
  * 删除设备
  */
 export async function delDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/del', {
+  return request('/admin/machine/del', {
     method: 'POST',
     data: {
       ...params,

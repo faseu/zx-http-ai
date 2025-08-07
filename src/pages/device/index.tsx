@@ -232,22 +232,7 @@ export default () => {
       </div>
       <div className={styles.contentCard}>
         <div className={styles.machineList}>
-          {[
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-            ...deviceList,
-          ].map((item) => (
+          {[...deviceList].map((item) => (
             <MachineItem
               key={item.machineId}
               detail={item}
