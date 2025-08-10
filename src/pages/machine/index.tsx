@@ -318,6 +318,7 @@ export default () => {
     const { data } = await getMachineList({
       page: 1,
       psize: 1000,
+      isGroup: 1,
     });
     setMachineList(data);
   };

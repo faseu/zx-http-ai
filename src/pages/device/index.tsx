@@ -129,6 +129,7 @@ const handleDelDevice = async (fields: any) => {
     return false;
   }
 };
+
 /**
  *  添加设备到智能空间
  * @param fields
@@ -136,7 +137,7 @@ const handleDelDevice = async (fields: any) => {
 const handleSetDeviceGroup = async (fields: any) => {
   const hide = message.loading('正在添加');
   try {
-    await setDeviceGroup({ machineIds: fields.machineIds, isGroup: 1 });
+    await setDeviceGroup({ machineId: fields.machineIds[0], isGroup: 1 });
     hide();
     message.success('添加成功');
     return true;
@@ -185,6 +186,21 @@ export default () => {
       setPageSize(nextPageSize);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 新增：批量添加选中设备到智能空间
+  const addSelectedToGroup = async () => {
+    if (!selectedDeviceIds.length) return;
+    console.log(selectedDeviceIds);
+    const success = await handleSetDeviceGroup({
+      machineIds: selectedDeviceIds,
+    });
+    if (success) {
+      // 成功后清空选择并刷新当前页
+      setSelectedDeviceIds([]);
+      setIsAllSelected(false);
+      await fetchDeviceList(page, pageSize);
     }
   };
 
@@ -264,7 +280,7 @@ export default () => {
             <Select.Option value="sample">Sample</Select.Option>
           </Select>
           {selectedDeviceIds.length > 0 && (
-            <Button variant="solid" size="large" onClick={addDeviceHandler}>
+            <Button variant="solid" size="large" onClick={addSelectedToGroup}>
               添加至智能空间
             </Button>
           )}
