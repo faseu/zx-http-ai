@@ -1,12 +1,10 @@
 import UploadFile from '@/components/UploadFile'; // 使用文件上传组件
 import { Form, Input, Modal } from 'antd';
-import { DefaultOptionType } from 'rc-select/es/Select';
 
 interface AddDirectiveModalProps {
   open: boolean;
   detail?: any; // 新增：编辑时的详情数据
   isEdit?: boolean; // 新增：是否为编辑模式
-  cateList: DefaultOptionType[];
   onOk: (fieldsValue: any) => void;
   onCancel: () => void;
   styles?: any;
@@ -16,7 +14,6 @@ const AddDirectiveModal: React.FC<AddDirectiveModalProps> = ({
   open,
   detail = {}, // 默认空对象
   isEdit = false, // 默认为新增模式
-  cateList,
   onOk,
   onCancel,
   styles,

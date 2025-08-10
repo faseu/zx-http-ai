@@ -4,7 +4,6 @@ import {
   delOta,
   detailOta,
   editOta,
-  getCateList,
   getOtaList,
 } from '@/pages/machine/service';
 import {
@@ -105,18 +104,10 @@ const handleDelOta = async (fields: any) => {
   }
 };
 
-const fetchDict = async () => {
-  const [cateList] = await Promise.all([getCateList()]);
-  return [
-    cateList.map((item: any) => ({ label: item.cateName, value: item.id })),
-  ];
-};
 export default () => {
   const [editOtaId, setEditOtaId] = useState(0);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
   const [directiveList, setDirectiveList] = useState([]);
-  const [cateList, setCateList] = useState([]);
-
   const [editOtaDetail, setEditOtaDetail] = useState({});
   const fetchOtaList = async () => {
     const { data } = await getOtaList({
@@ -128,11 +119,6 @@ export default () => {
 
   useEffect(() => {
     fetchOtaList();
-
-    fetchDict().then((res) => {
-      const [cateList] = res;
-      setCateList(cateList);
-    });
   }, []);
   const handleAddClick = () => {
     setEditOtaDetail({});
@@ -163,19 +149,11 @@ export default () => {
       },
     },
     {
-      title: '设备场景',
+      title: '硬件厂家',
       dataIndex: 'reason',
     },
     {
       title: '设备型号',
-      dataIndex: 'cateName',
-    },
-    {
-      title: '上传时间',
-      dataIndex: 'cateName',
-    },
-    {
-      title: '发布者',
       dataIndex: 'cateName',
     },
     {
@@ -244,36 +222,42 @@ export default () => {
       </div>
       <div className={styles.contentCard}>
         <Table<DataType>
-          rowSelection={{ type: 'checkbox' }}
+          rowSelection={{
+            type: 'checkbox',
+            onChange: (selectedRowKeys) => {
+              console.log('Selected Row Keys:', selectedRowKeys);
+            },
+          }}
           key="id"
           columns={columns}
           dataSource={directiveList}
           size="large"
         />
       </div>
-      <AddDirectiveModal
-        cateList={cateList}
-        isEdit={!!editOtaId}
-        detail={editOtaDetail}
-        open={modalDirectiveOpen}
-        styles={{}}
-        onOk={async (values: any) => {
-          const success = editOtaId
-            ? await handleEditOta({ id: editOtaId, ...values })
-            : await handleAddOta(values);
-          if (success) {
+      {modalDirectiveOpen && (
+        <AddDirectiveModal
+          isEdit={!!editOtaId}
+          detail={editOtaDetail}
+          open={modalDirectiveOpen}
+          styles={{}}
+          onOk={async (values: any) => {
+            const success = editOtaId
+              ? await handleEditOta({ id: editOtaId, ...values })
+              : await handleAddOta(values);
+            if (success) {
+              setModalDirectiveOpen(false);
+              setEditOtaDetail({});
+              setEditOtaId(0);
+              await fetchOtaList();
+            }
+          }}
+          onCancel={() => {
             setModalDirectiveOpen(false);
             setEditOtaDetail({});
             setEditOtaId(0);
-            await fetchOtaList();
-          }
-        }}
-        onCancel={() => {
-          setModalDirectiveOpen(false);
-          setEditOtaDetail({});
-          setEditOtaId(0);
-        }}
-      />
+          }}
+        />
+      )}
     </div>
   );
 };
