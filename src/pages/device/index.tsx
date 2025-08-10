@@ -139,16 +139,35 @@ export default () => {
   const [editDeviceDetail, setEditDeviceDetail] = useState({});
   const [deviceDetail, setDeviceDetail] = useState({});
 
+  // 分页相关
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+
   // 管理选中状态的state
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<number[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
-  const fetchDeviceList = async () => {
-    const { data } = await getDeviceList({
-      page: 1,
-      psize: 10,
-    });
-    setDeviceList(data);
+  // 获取设备列表（带分页）
+  const fetchDeviceList = async (
+    nextPage: number = page,
+    nextPageSize: number = pageSize,
+  ) => {
+    try {
+      setLoading(true);
+      const res = await getDeviceList({
+        page: nextPage,
+        psize: nextPageSize,
+      });
+      // 接口返回：{ data: [...], total: 12 }
+      setDeviceList(res?.data || []);
+      setTotal(res?.total || 0);
+      setPage(nextPage);
+      setPageSize(nextPageSize);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addDeviceHandler = () => {
@@ -207,7 +226,7 @@ export default () => {
   }, [deviceList]);
 
   useEffect(() => {
-    fetchDeviceList();
+    fetchDeviceList(1, pageSize);
   }, []);
 
   return (
@@ -254,8 +273,14 @@ export default () => {
                 setModalDeviceOpen(true);
               }}
               onDelMachine={async (item: any) => {
-                await handleDelDevice(item);
-                await fetchDeviceList();
+                const success = await handleDelDevice(item);
+                if (success) {
+                  // 删除后，如果当前页数据被清空且不是第1页，回退一页
+                  const isLastItemOnPage = deviceList.length === 1;
+                  const nextPage =
+                    isLastItemOnPage && page > 1 ? page - 1 : page;
+                  await fetchDeviceList(nextPage, pageSize);
+                }
               }}
               onGetDetail={async (item: any) => {
                 const data = await handleDetailDevice2(item);
@@ -265,7 +290,21 @@ export default () => {
             />
           ))}
         </div>
-        <Pagination align="end" defaultCurrent={1} total={50} />
+        <Pagination
+          align="end"
+          current={page}
+          pageSize={pageSize}
+          total={total}
+          showSizeChanger
+          showTotal={(t) => `共 ${t} 条`}
+          onChange={(p, ps) => {
+            fetchDeviceList(p, ps);
+          }}
+          onShowSizeChange={(_, ps) => {
+            // 切换每页数量时回到第1页
+            fetchDeviceList(1, ps);
+          }}
+        />
       </div>
       {modalDeviceOpen && (
         <AddMachineModal
@@ -274,7 +313,6 @@ export default () => {
           detail={editDeviceDetail}
           open={modalDeviceOpen}
           onOk={async (values: any) => {
-            console.log(values);
             const success = editDeviceId
               ? await handleEditDevice({
                   machineId: editDeviceId,
@@ -285,7 +323,7 @@ export default () => {
               setEditDeviceId(0);
               setModalDeviceOpen(false);
               setEditDeviceDetail({});
-              await fetchDeviceList();
+              await fetchDeviceList(page, pageSize);
             }
           }}
           onCancel={() => {
