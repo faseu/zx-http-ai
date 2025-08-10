@@ -245,6 +245,11 @@ export default () => {
           >
             <Select.Option value="sample">Sample</Select.Option>
           </Select>
+          {selectedDeviceIds.length > 0 && (
+            <Button variant="solid" size="large" onClick={addDeviceHandler}>
+              添加至智能空间
+            </Button>
+          )}
           <Button
             color="primary"
             variant="solid"
