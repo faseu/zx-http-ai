@@ -831,27 +831,29 @@ export default () => {
             }}
           />
         )}
-        <AddDirectiveModal
-          isEdit={!!editOtaId}
-          detail={editOtaDetail}
-          open={modalDirectiveOpen}
-          onOk={async (values: any) => {
-            const success = editOtaId
-              ? await handleEditOta({ id: editOtaId, ...values })
-              : await handleAddOta(values);
-            if (success) {
+        {modalDirectiveOpen && (
+          <AddDirectiveModal
+            isEdit={!!editOtaId}
+            detail={editOtaDetail}
+            open={modalDirectiveOpen}
+            onOk={async (values: any) => {
+              const success = editOtaId
+                ? await handleEditOta({ id: editOtaId, ...values })
+                : await handleAddOta(values);
+              if (success) {
+                setModalDirectiveOpen(false);
+                setEditOtaDetail({});
+                setEditOtaId(0);
+                await fetchOtaList();
+              }
+            }}
+            onCancel={() => {
               setModalDirectiveOpen(false);
               setEditOtaDetail({});
               setEditOtaId(0);
-              await fetchOtaList();
-            }
-          }}
-          onCancel={() => {
-            setModalDirectiveOpen(false);
-            setEditOtaDetail({});
-            setEditOtaId(0);
-          }}
-        />
+            }}
+          />
+        )}
         <DetailMachineModal
           data={machineDetail}
           open={detailMachineOpen}

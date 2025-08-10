@@ -1,4 +1,5 @@
 import AddMachineModal from '@/components/AddMachineModal';
+import DetailMachineModal from '@/components/DetailMachineModal';
 import MachineItem from '@/components/MachineItem';
 import { SearchOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
@@ -148,6 +149,13 @@ const handleSetDeviceGroup = async (fields: any) => {
   }
 };
 
+// 规范化筛选值：只接受 '0'/'1'，其他一律视为未筛选
+const normalizeIsGroup = (v: any): '0' | '1' | undefined => {
+  if (v === '0' || v === 0) return '0';
+  if (v === '1' || v === 1) return '1';
+  return undefined;
+};
+
 export default () => {
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
@@ -168,16 +176,23 @@ export default () => {
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<number[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
-  // 获取设备列表（带分页）
+  // 新增：筛选状态
+  const [isGroupFilter, setIsGroupFilter] = useState<'0' | '1' | undefined>(
+    undefined,
+  );
+
+  // 获取设备列表（带分页 + isGroup 筛选）
   const fetchDeviceList = async (
     nextPage: number = page,
     nextPageSize: number = pageSize,
+    rawIsGroup?: string | number | null,
   ) => {
     try {
       setLoading(true);
       const res = await getDeviceList({
         page: nextPage,
         psize: nextPageSize,
+        isGroup: rawIsGroup,
       });
       // 接口返回：{ data: [...], total: 12 }
       setDeviceList(res?.data || []);
@@ -259,8 +274,11 @@ export default () => {
     }
   }, [deviceList]);
 
+  // 初始加载时也显式带上当前筛选（默认 undefined，不会传 isGroup）
   useEffect(() => {
-    fetchDeviceList(1, pageSize);
+    fetchDeviceList(1, pageSize, isGroupFilter);
+    // 仅在首次加载调用
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -276,8 +294,17 @@ export default () => {
           <Select
             size="large"
             style={{ width: '150px', height: '40px', marginRight: '8px' }}
+            placeholder="是否添加智能空间"
+            allowClear
+            value={isGroupFilter}
+            onChange={(val) => {
+              // val 可能是 '0' | '1' | '' | null | undefined
+              const norm = normalizeIsGroup(val);
+              setIsGroupFilter(norm);
+              fetchDeviceList(1, pageSize, norm);
+            }}
           >
-            <Select.Option value="0">未添加智能空间</Select.Option>
+            {/*<Select.Option value="0">未添加智能空间</Select.Option>*/}
             <Select.Option value="1">已添加智能空间</Select.Option>
           </Select>
           {selectedDeviceIds.length > 0 && (
@@ -330,6 +357,7 @@ export default () => {
             />
           ))}
         </div>
+        {/* 分页时显式传入当前筛选值，避免使用到旧的默认参数 */}
         <Pagination
           align="end"
           current={page}
@@ -338,11 +366,10 @@ export default () => {
           showSizeChanger
           showTotal={(t) => `共 ${t} 条`}
           onChange={(p, ps) => {
-            fetchDeviceList(p, ps);
+            fetchDeviceList(p, ps, isGroupFilter);
           }}
           onShowSizeChange={(_, ps) => {
-            // 切换每页数量时回到第1页
-            fetchDeviceList(1, ps);
+            fetchDeviceList(1, ps, isGroupFilter);
           }}
         />
       </div>
@@ -353,6 +380,7 @@ export default () => {
           detail={editDeviceDetail}
           open={modalDeviceOpen}
           onOk={async (values: any) => {
+            console.log(values);
             const success = editDeviceId
               ? await handleEditDevice({
                   machineId: editDeviceId,
@@ -373,6 +401,25 @@ export default () => {
           }}
         />
       )}
+      <DetailMachineModal
+        data={deviceDetail}
+        open={detailDeviceOpen}
+        onCancel={() => setDetailDeviceOpen(false)}
+        onEdit={async (deviceData: any) => {
+          const detail = await handleDetailDevice(deviceData);
+          if (detail) {
+            setEditDeviceDetail(detail);
+            setEditDeviceId(deviceData.deviceId);
+            setModalDeviceOpen(true);
+          }
+        }}
+        onDelete={async (deviceData: any) => {
+          const success = await handleDelDevice(deviceData);
+          if (success) {
+            await fetchDeviceList();
+          }
+        }}
+      />
     </div>
   );
 };

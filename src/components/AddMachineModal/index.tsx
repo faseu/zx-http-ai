@@ -37,7 +37,7 @@ const AddMachineModal: React.FC<AddMachineModalProps> = ({
         labelAlign="left"
         wrapperCol={{ span: 20 }}
         layout="horizontal"
-        initialValues={isEdit ? { ...detail, img: detail.img[0] } : {}}
+        initialValues={isEdit ? { ...detail, img: detail.img } : {}}
         style={{ maxWidth: 490, marginTop: 20 }}
       >
         <Form.Item
