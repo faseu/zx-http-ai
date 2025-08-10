@@ -22,7 +22,6 @@ import {
   detailOta,
   editMachine,
   editOta,
-  getCateList,
   getDialogueList,
   getMachineList,
   getOtaList,
@@ -285,13 +284,6 @@ interface DataType {
   fileUrl?: string;
 }
 
-const fetchDict = async () => {
-  const [cateList] = await Promise.all([getCateList()]);
-  return [
-    cateList.map((item: any) => ({ label: item.cateName, value: item.id })),
-  ];
-};
-
 export default () => {
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
@@ -301,7 +293,6 @@ export default () => {
   const [machineList, setMachineList] = useState<any[]>([]);
   const [directiveList, setDirectiveList] = useState([]);
   const [dialogueList, setDialogueList] = useState([]); // 指令历史列表
-  const [cateList, setCateList] = useState([]);
   const [editMachineId, setEditMachineId] = useState(0);
   const [editMachineDetail, setEditMachineDetail] = useState({});
   const [machineDetail, setMachineDetail] = useState({});
@@ -675,10 +666,6 @@ export default () => {
     fetchMachineList();
     fetchOtaList();
     fetchDialogueList(); // 获取指令历史
-    fetchDict().then((res) => {
-      const [cateList] = res;
-      setCateList(cateList);
-    });
   }, []);
 
   return (
@@ -818,7 +805,6 @@ export default () => {
 
         {modalMachineOpen && (
           <AddMachineModal
-            cateList={cateList}
             isEdit={!!editMachineId}
             detail={editMachineDetail}
             open={modalMachineOpen}
@@ -845,7 +831,6 @@ export default () => {
           />
         )}
         <AddDirectiveModal
-          cateList={cateList}
           isEdit={!!editOtaId}
           detail={editOtaDetail}
           open={modalDirectiveOpen}

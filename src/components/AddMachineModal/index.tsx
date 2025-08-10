@@ -1,29 +1,28 @@
 import UploadImage from '@/components/UploadImage'; // 根据你的实际路径来引
 import { Form, Input, Modal } from 'antd';
-import { DefaultOptionType } from 'rc-select/es/Select';
 
 interface AddMachineModalProps {
   open: boolean;
   detail: any;
   isEdit: any;
-  cateList: DefaultOptionType[];
   onOk: (fieldsValue: any) => void;
   onCancel: () => void;
+  styles: any;
 }
 
 const AddMachineModal: React.FC<AddMachineModalProps> = ({
   open,
   isEdit,
   detail,
-  cateList,
   onOk,
   onCancel,
+  styles,
 }) => {
   const [form] = Form.useForm();
   return (
     <Modal
       title={isEdit ? '编辑设备' : '新增设备'}
-      style={{ position: 'fixed', top: 132, right: 146 }}
+      style={styles ? styles : { position: 'fixed', top: 132, right: 146 }}
       open={open}
       onOk={() => {
         form.validateFields().then((values: any) => {

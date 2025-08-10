@@ -34,10 +34,11 @@
   overflow-y: auto;
   .machineList {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 32px);
     display: grid;
     grid-template-columns: repeat(auto-fill, 260px); // 设置固定宽度为260px
-    gap: 16px;
+    overflow-y: auto;
+    gap: 0;
     padding: 16px;
     place-items: center; // 使网格项在水平和垂直方向上都居中
     justify-content: center; // 网格整体水平居中
@@ -46,13 +47,13 @@
 
 }
 
-.hideScrollbar {
+.machineList {
   /* 隐藏滚动条 */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE & Edge */
 }
 
 /* 隐藏滚动条，保留滚动行为 */
-.hideScrollbar::-webkit-scrollbar {
+.machineList::-webkit-scrollbar {
   display: none;
 }

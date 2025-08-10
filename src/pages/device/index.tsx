@@ -1,7 +1,8 @@
+import AddMachineModal from '@/components/AddMachineModal';
 import MachineItem from '@/components/MachineItem';
 import { SearchOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
-import { Button, Input, message, Select } from 'antd';
+import { Button, Input, message, Pagination, Select } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
 import {
@@ -145,7 +146,7 @@ export default () => {
   const fetchDeviceList = async () => {
     const { data } = await getDeviceList({
       page: 1,
-      psize: 1000,
+      psize: 10,
     });
     setDeviceList(data);
   };
@@ -225,7 +226,12 @@ export default () => {
           >
             <Select.Option value="sample">Sample</Select.Option>
           </Select>
-          <Button color="primary" variant="solid" size="large">
+          <Button
+            color="primary"
+            variant="solid"
+            size="large"
+            onClick={addDeviceHandler}
+          >
             新增设备
           </Button>
         </div>
@@ -238,9 +244,9 @@ export default () => {
               detail={item}
               text="这是设备信息"
               isChecked={selectedDeviceIds.includes(item.machineId)}
-              onCheckChange={(checked: boolean) =>
-                handleDeviceCheck(item.machineId, checked)
-              }
+              onCheckChange={(checked: boolean) => {
+                handleDeviceCheck(item.machineId, checked);
+              }}
               onEditMachine={async (item: any) => {
                 const data = await handleDetailDevice(item);
                 setEditDeviceDetail(data);
@@ -259,7 +265,36 @@ export default () => {
             />
           ))}
         </div>
+        <Pagination align="end" defaultCurrent={1} total={50} />
       </div>
+      {modalDeviceOpen && (
+        <AddMachineModal
+          styles={{}}
+          isEdit={!!editDeviceId}
+          detail={editDeviceDetail}
+          open={modalDeviceOpen}
+          onOk={async (values: any) => {
+            console.log(values);
+            const success = editDeviceId
+              ? await handleEditDevice({
+                  machineId: editDeviceId,
+                  ...values,
+                })
+              : await handleAddDevice(values);
+            if (success) {
+              setEditDeviceId(0);
+              setModalDeviceOpen(false);
+              setEditDeviceDetail({});
+              await fetchDeviceList();
+            }
+          }}
+          onCancel={() => {
+            setModalDeviceOpen(false);
+            setEditDeviceDetail({});
+            setEditDeviceId(0);
+          }}
+        />
+      )}
     </div>
   );
 };
