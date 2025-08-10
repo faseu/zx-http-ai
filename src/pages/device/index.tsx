@@ -14,6 +14,7 @@ import {
   detailDeviceLastData,
   editDevice,
   getDeviceList,
+  setDeviceGroup,
 } from './service';
 
 /**
@@ -125,6 +126,23 @@ const handleDelDevice = async (fields: any) => {
   } catch (error) {
     hide();
     message.error('删除失败，请重试');
+    return false;
+  }
+};
+/**
+ *  添加设备到智能空间
+ * @param fields
+ */
+const handleSetDeviceGroup = async (fields: any) => {
+  const hide = message.loading('正在添加');
+  try {
+    await setDeviceGroup({ machineIds: fields.machineIds, isGroup: 1 });
+    hide();
+    message.success('添加成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('添加失败，请重试');
     return false;
   }
 };
