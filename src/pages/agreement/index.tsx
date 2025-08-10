@@ -107,19 +107,40 @@ const handleDelOta = async (fields: any) => {
 export default () => {
   const [editOtaId, setEditOtaId] = useState(0);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
-  const [directiveList, setDirectiveList] = useState([]);
+  const [directiveList, setDirectiveList] = useState<DataType[]>([]);
   const [editOtaDetail, setEditOtaDetail] = useState({});
-  const fetchOtaList = async () => {
-    const { data } = await getOtaList({
-      page: 1,
-      psize: 1000,
-    });
-    setDirectiveList(data);
+
+  // 分页状态
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // 获取协议列表（带分页）
+  const fetchOtaList = async (
+    nextPage: number = page,
+    nextPageSize: number = pageSize,
+  ) => {
+    try {
+      setLoading(true);
+      const res = await getOtaList({
+        page: nextPage,
+        psize: nextPageSize,
+      });
+      // 接口返回：{ data: [...], total: 12 }
+      setDirectiveList(res?.data || []);
+      setTotal(res?.total ?? 0);
+      setPage(nextPage);
+      setPageSize(nextPageSize);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchOtaList();
+    fetchOtaList(1, pageSize);
   }, []);
+
   const handleAddClick = () => {
     setEditOtaDetail({});
     setEditOtaId(0);
@@ -196,7 +217,10 @@ export default () => {
             onConfirm={async () => {
               const success = await handleDelOta(record);
               if (success) {
-                await fetchOtaList();
+                // 若当前页删到空且不是第1页，则回退一页
+                const isLastItemOnPage = directiveList.length === 1;
+                const nextPage = isLastItemOnPage && page > 1 ? page - 1 : page;
+                await fetchOtaList(nextPage, pageSize);
               }
             }}
           >
@@ -222,16 +246,28 @@ export default () => {
       </div>
       <div className={styles.contentCard}>
         <Table<DataType>
+          rowKey="id"
           rowSelection={{
             type: 'checkbox',
             onChange: (selectedRowKeys) => {
               console.log('Selected Row Keys:', selectedRowKeys);
             },
           }}
-          key="id"
+          loading={loading}
           columns={columns}
           dataSource={directiveList}
           size="large"
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 条`,
+          }}
+          onChange={(pagination) => {
+            const { current = 1, pageSize: ps = 10 } = pagination;
+            fetchOtaList(current, ps);
+          }}
         />
       </div>
       {modalDirectiveOpen && (
@@ -248,7 +284,8 @@ export default () => {
               setModalDirectiveOpen(false);
               setEditOtaDetail({});
               setEditOtaId(0);
-              await fetchOtaList();
+              // 新增/编辑后刷新当前页
+              await fetchOtaList(page, pageSize);
             }
           }}
           onCancel={() => {
