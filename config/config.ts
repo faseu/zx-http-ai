@@ -23,6 +23,8 @@ export default defineConfig({
   },
   routes,
   npmClient: 'yarn',
+  jsMinifier: 'esbuild',
+  esbuildMinifyIIFE: true,
   // base: '/admin/',
   // publicPath: '/admin/',
 });
