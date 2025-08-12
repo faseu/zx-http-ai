@@ -1,25 +1,7 @@
-import AddDirectiveModal from '@/components/AddDirectiveModal';
-import UpgradeLogModal from '@/components/UpgradeLogModal';
-import {
-  addOta,
-  delOta,
-  detailOta,
-  editOta,
-  getCateList,
-  getOtaList,
-} from '@/pages/machine/service';
-import { SearchOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Input,
-  message,
-  Popover,
-  Space,
-  Table,
-  TableColumnsType,
-} from 'antd';
+import { Popover, Space, Table, TableColumnsType } from 'antd';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
+import { getOtaList } from './service';
 interface DataType {
   key: React.Key;
   id: number;
@@ -30,122 +12,44 @@ interface DataType {
   fileUrl?: string;
 }
 
-/**
- * 新增协议
- * @param fields
- */
-const handleAddOta = async (fields: any) => {
-  const hide = message.loading('正在新增');
-  try {
-    await addOta({
-      ...fields,
-    });
-    hide();
-    message.success('新增成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('新增失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 编辑协议
- * @param fields
- */
-const handleEditOta = async (fields: any) => {
-  const hide = message.loading('正在更新');
-  try {
-    await editOta({
-      ...fields,
-    });
-    hide();
-    message.success('更新成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('更新失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 协议详情
- * @param fields
- */
-const handleDetailOta = async (fields: any) => {
-  const hide = message.loading('正在获取详情');
-  try {
-    const data = await detailOta({
-      id: fields.id,
-    });
-    hide();
-    return data;
-  } catch (error) {
-    hide();
-    message.error('获取详情失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除协议
- * @param fields
- */
-const handleDelOta = async (fields: any) => {
-  const hide = message.loading('正在删除');
-  try {
-    await delOta({ id: fields.id });
-    hide();
-    message.success('删除成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
-
-const fetchDict = async () => {
-  const [cateList] = await Promise.all([getCateList()]);
-  return [
-    cateList.map((item: any) => ({ label: item.cateName, value: item.id })),
-  ];
-};
 export default () => {
-  const [editOtaId, setEditOtaId] = useState(0);
-  const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
-  const [modalUpgradeLogOpen, setModalUpgradeLogOpen] = useState(false);
-  const [directiveList, setDirectiveList] = useState([]);
-  const [cateList, setCateList] = useState([]);
-
+  const [directiveList, setDirectiveList] = useState<DataType[]>([]);
   const [editOtaDetail, setEditOtaDetail] = useState({});
-  const fetchOtaList = async () => {
-    const { data } = await getOtaList({
-      page: 1,
-      psize: 1000,
-    });
-    setDirectiveList(data);
+
+  // 分页状态
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // 获取协议列表（带分页）
+  const fetchOtaList = async (
+    nextPage: number = page,
+    nextPageSize: number = pageSize,
+  ) => {
+    try {
+      setLoading(true);
+      const res = await getOtaList({
+        page: nextPage,
+        psize: nextPageSize,
+      });
+      // 接口返回：{ data: [...], total: 12 }
+      setDirectiveList(res?.data || []);
+      setTotal(res?.total ?? 0);
+      setPage(nextPage);
+      setPageSize(nextPageSize);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchOtaList();
-
-    fetchDict().then((res) => {
-      const [cateList] = res;
-      setCateList(cateList);
-    });
+    fetchOtaList(1, pageSize);
   }, []);
-  const handleAddClick = () => {
-    setEditOtaDetail({});
-    setEditOtaId(0);
-    setModalDirectiveOpen(true);
-  };
 
   const columns: TableColumnsType<DataType> = [
     {
-      title: '固件版本',
+      title: '固件名称',
       dataIndex: 'otaName',
       width: 150,
       render: (text) => {
@@ -167,32 +71,24 @@ export default () => {
     },
     {
       title: '固件类型',
-      dataIndex: 'reason',
+      dataIndex: 'type',
     },
     {
       title: '发布时间',
-      dataIndex: 'cateName',
+      dataIndex: 'regTime',
     },
     {
       title: '固件描述',
-      dataIndex: 'cateName',
+      dataIndex: 'remark',
     },
     {
-      title: '固件升级',
-      dataIndex: 'cateName',
-    },
-    {
-      title: '升级日志',
+      title: '协议文件',
       dataIndex: 'fileUrl',
       render: (fileUrl: string) => {
         if (fileUrl) {
           return (
-            <a
-              onClick={() => {
-                setModalUpgradeLogOpen(true);
-              }}
-            >
-              查看
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+              下载文件
             </a>
           );
         }
@@ -205,18 +101,7 @@ export default () => {
       width: 150,
       render: (_, record) => (
         <Space size="middle">
-          <a
-            onClick={async () => {
-              const detail = await handleDetailOta(record);
-              if (detail) {
-                setEditOtaDetail(detail);
-                setEditOtaId(record.id);
-                setModalDirectiveOpen(true);
-              }
-            }}
-          >
-            下载
-          </a>
+          <a>查看</a>
         </Space>
       ),
     },
@@ -226,63 +111,33 @@ export default () => {
     <div className={styles.container}>
       <div className={styles.titleCard}>
         <div className={styles.titleText}>升级管理</div>
-        <div className={styles.rightContent}>
-          <Input
-            style={{ width: '320px', height: '40px', marginRight: '8px' }}
-            placeholder="搜索固件..."
-            suffix={<SearchOutlined />}
-          />
-          <Button
-            color="primary"
-            variant="solid"
-            size="large"
-            onClick={handleAddClick}
-          >
-            新增协议
-          </Button>
-        </div>
       </div>
       <div className={styles.contentCard}>
         <Table<DataType>
-          rowSelection={{ type: 'checkbox' }}
-          key="id"
+          rowKey="id"
+          rowSelection={{
+            type: 'checkbox',
+            onChange: (selectedRowKeys) => {
+              console.log('Selected Row Keys:', selectedRowKeys);
+            },
+          }}
+          loading={loading}
           columns={columns}
           dataSource={directiveList}
           size="large"
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 条`,
+          }}
+          onChange={(pagination) => {
+            const { current = 1, pageSize: ps = 10 } = pagination;
+            fetchOtaList(current, ps);
+          }}
         />
       </div>
-      <AddDirectiveModal
-        cateList={cateList}
-        isEdit={!!editOtaId}
-        detail={editOtaDetail}
-        open={modalDirectiveOpen}
-        styles={{}}
-        onOk={async (values: any) => {
-          const success = editOtaId
-            ? await handleEditOta({ id: editOtaId, ...values })
-            : await handleAddOta(values);
-          if (success) {
-            setModalDirectiveOpen(false);
-            setEditOtaDetail({});
-            setEditOtaId(0);
-            await fetchOtaList();
-          }
-        }}
-        onCancel={() => {
-          setModalDirectiveOpen(false);
-          setEditOtaDetail({});
-          setEditOtaId(0);
-        }}
-      />
-      <UpgradeLogModal
-        open={modalUpgradeLogOpen}
-        onOk={() => {
-          setModalUpgradeLogOpen(false);
-        }}
-        onCancel={() => {
-          setModalUpgradeLogOpen(false);
-        }}
-      />
     </div>
   );
 };

@@ -87,12 +87,12 @@ export default () => {
             xxl: 3,
           }}
           dataSource={directiveList}
-          renderItem={(item) => (
+          renderItem={(item, index) => (
             <List.Item>
               <div className={styles.shareItem}>
                 <img
                   className={styles.shareImage}
-                  src="http://temp.im/500x186"
+                  src={`https://picsum.photos/500/200?${index}`}
                   alt=""
                 />
                 <div className={styles.shareHeader}>

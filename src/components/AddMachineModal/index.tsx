@@ -7,7 +7,7 @@ interface AddMachineModalProps {
   isEdit: any;
   onOk: (fieldsValue: any) => void;
   onCancel: () => void;
-  styles: any;
+  styles?: any;
 }
 
 const AddMachineModal: React.FC<AddMachineModalProps> = ({

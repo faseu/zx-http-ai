@@ -854,25 +854,27 @@ export default () => {
             }}
           />
         )}
-        <DetailMachineModal
-          data={machineDetail}
-          open={detailMachineOpen}
-          onCancel={() => setDetailMachineOpen(false)}
-          onEdit={async (machineData: any) => {
-            const detail = await handleDetailMachine(machineData);
-            if (detail) {
-              setEditMachineDetail(detail);
-              setEditMachineId(machineData.machineId);
-              setModalMachineOpen(true);
-            }
-          }}
-          onDelete={async (machineData: any) => {
-            const success = await handleDelMachine(machineData);
-            if (success) {
-              await fetchMachineList();
-            }
-          }}
-        />
+        {detailMachineOpen && (
+          <DetailMachineModal
+            data={machineDetail}
+            open={detailMachineOpen}
+            onCancel={() => setDetailMachineOpen(false)}
+            onEdit={async (machineData: any) => {
+              const detail = await handleDetailMachine(machineData);
+              if (detail) {
+                setEditMachineDetail(detail);
+                setEditMachineId(machineData.machineId);
+                setModalMachineOpen(true);
+              }
+            }}
+            onDelete={async (machineData: any) => {
+              const success = await handleDelMachine(machineData);
+              if (success) {
+                await fetchMachineList();
+              }
+            }}
+          />
+        )}
       </Card>
 
       {/* 新增：升级遮罩层 */}

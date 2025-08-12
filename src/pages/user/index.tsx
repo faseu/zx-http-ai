@@ -2,6 +2,7 @@ import CustomTitle from '@/components/CustomTitle';
 import { Popover, Space, Table, TableColumnsType } from 'antd';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
+import { getUserInfo } from './service';
 interface DataType {
   key: React.Key;
   id: number;
@@ -11,59 +12,64 @@ interface DataType {
   cateId: number;
   fileUrl?: string;
 }
-const columns: TableColumnsType<DataType> = [
-  {
-    title: '协议名称',
-    dataIndex: 'otaName',
-    width: 150,
-    render: (text) => {
-      return (
-        <Popover content={text}>
-          <div
-            style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              width: '100%',
-            }}
-          >
-            {text}
-          </div>
-        </Popover>
-      );
-    },
-  },
-  {
-    title: '硬件厂家',
-    dataIndex: 'reason',
-  },
-  {
-    title: '设备型号',
-    dataIndex: 'cateName',
-  },
-  {
-    title: '协议文件',
-    dataIndex: 'fileUrl',
-    render: (fileUrl: string) => {
-      if (fileUrl) {
-        return (
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-            下载文件
-          </a>
-        );
-      }
-      return '-';
-    },
-  },
-  {
-    title: '操作',
-    key: 'action',
-    width: 150,
-    render: (_, record) => <Space size="middle">1</Space>,
-  },
-];
+
 export default () => {
-  useEffect(() => {}, []);
+  const { id } = JSON.parse(localStorage.getItem('userInfo') || '');
+
+  useEffect(() => {
+    getUserInfo({ id }).then((res) => {});
+  }, []);
+  const columns: TableColumnsType<DataType> = [
+    {
+      title: '协议名称',
+      dataIndex: 'otaName',
+      width: 150,
+      render: (text) => {
+        return (
+          <Popover content={text}>
+            <div
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                width: '100%',
+              }}
+            >
+              {text}
+            </div>
+          </Popover>
+        );
+      },
+    },
+    {
+      title: '硬件厂家',
+      dataIndex: 'reason',
+    },
+    {
+      title: '设备型号',
+      dataIndex: 'cateName',
+    },
+    {
+      title: '协议文件',
+      dataIndex: 'fileUrl',
+      render: (fileUrl: string) => {
+        if (fileUrl) {
+          return (
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+              下载文件
+            </a>
+          );
+        }
+        return '-';
+      },
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 150,
+      render: (_, record) => <Space size="middle">1</Space>,
+    },
+  ];
   const [directiveList, setDirectiveList] = useState([
     1, 2, 6, 4, 5, 6, 7, 8, 9, 21, 2, 42,
   ]);
