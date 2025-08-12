@@ -1,8 +1,9 @@
 import CustomTitle from '@/components/CustomTitle';
 import { Popover, Space, Table, TableColumnsType } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
 import { getUserInfo } from './service';
+
 interface DataType {
   key: React.Key;
   id: number;
@@ -13,12 +14,82 @@ interface DataType {
   fileUrl?: string;
 }
 
+interface ApiUser {
+  id: number;
+  userName: string;
+  password?: string;
+  email: string | null;
+  realName: string;
+  phone: string;
+  img: string | null;
+  regTime: number;
+  regIp: string;
+  loginTime: number; // 秒或毫秒时间戳，下面会兼容处理
+  loginIp: string;
+  updateTime: number;
+  isEnabled: number;
+  groupId: number;
+  deptId: number;
+  deptGroupId: number;
+  isAdmin: number | null;
+  expireDay: number; // 剩余有效天数
+  title: string; // 角色/类型
+}
+
+function formatPhone(phone?: string) {
+  if (!phone) return '-';
+  // 138 1234 5678 格式
+  const p = phone.replace(/\D/g, '').slice(0, 11);
+  if (p.length <= 3) return p;
+  if (p.length <= 7) return `${p.slice(0, 3)} ${p.slice(3)}`;
+  return `${p.slice(0, 3)} ${p.slice(3, 7)} ${p.slice(7)}`;
+}
+
+function tsToDateTime(ts?: number) {
+  if (!ts) return '-';
+  // 兼容秒/毫秒
+  const ms = ts < 10_000_000_000 ? ts * 1000 : ts;
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return '-';
+  const pad = (n: number) => `${n}`.padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export default () => {
-  const { id } = JSON.parse(localStorage.getItem('userInfo') || '');
+  const { id } = JSON.parse(localStorage.getItem('userInfo') || '{}') || {};
+  const [user, setUser] = useState<ApiUser | null>(null);
 
   useEffect(() => {
-    getUserInfo({ id }).then((res) => {});
-  }, []);
+    if (!id) return;
+    getUserInfo({ id })
+      .then((res) => {
+        // 兼容不同请求封装：有的返回在 res.data，有的直接返回对象
+        const data: ApiUser | undefined = (res && (res.data || res)) as
+          | ApiUser
+          | undefined;
+        if (data) {
+          setUser(data);
+        }
+      })
+      .catch(() => {
+        // 可按需添加错误处理
+      });
+  }, [id]);
+
+  const avatarSrc = useMemo(
+    () => user?.img || 'http://temp.im/110x110',
+    [user],
+  );
+  const displayName = user?.realName || user?.userName || '未知用户';
+  const displayType = user?.title || '普通用户';
+  const displayId = user?.id ?? '-';
+  const displayPhone = formatPhone(user?.phone);
+  const displayEmail = user?.email || '-';
+  const displayCreateTime = tsToDateTime(user?.regTime);
+  const displayExpire = user?.expireDay;
+
   const columns: TableColumnsType<DataType> = [
     {
       title: '协议名称',
@@ -70,6 +141,7 @@ export default () => {
       render: (_, record) => <Space size="middle">1</Space>,
     },
   ];
+
   const [directiveList, setDirectiveList] = useState([
     1, 2, 6, 4, 5, 6, 7, 8, 9, 21, 2, 42,
   ]);
@@ -81,14 +153,14 @@ export default () => {
       </div>
       <div className={styles.contentBase}>
         <div className={styles.avatar}>
-          <img src="http://temp.im/110x110" alt="用户头像" />
+          <img src={avatarSrc} alt="用户头像" />
         </div>
         <div className={styles.userInfo}>
           <div className={styles.user}>
-            <div className={styles.userName}>张明远</div>
-            <div className={styles.userType}>个人用户</div>
+            <div className={styles.userName}>{displayName}</div>
+            <div className={styles.userType}>{displayType}</div>
           </div>
-          <div className={styles.userId}>用户ID：123456789</div>
+          <div className={styles.userId}>用户ID：{displayId}</div>
         </div>
       </div>
       <div className={styles.subInfo}>
@@ -104,7 +176,7 @@ export default () => {
           <div className={styles.infoItem}>
             <div className={styles.infoLabel}>手机号码</div>
             <div className={styles.infoContent}>
-              <div className={styles.infoText}>138 123 5678</div>
+              <div className={styles.infoText}>{displayPhone}</div>
               <img
                 src="http://temp.im/16x16"
                 alt=""
@@ -115,7 +187,7 @@ export default () => {
           <div className={styles.infoItem}>
             <div className={styles.infoLabel}>电子邮箱</div>
             <div className={styles.infoContent}>
-              <div className={styles.infoText}>zhang.mingyuan@example.com</div>
+              <div className={styles.infoText}>{displayEmail}</div>
               <img
                 src="http://temp.im/16x16"
                 alt=""
@@ -136,13 +208,13 @@ export default () => {
           <div className={styles.infoItem}>
             <div className={styles.infoLabel}>创建时间</div>
             <div className={styles.infoContent}>
-              <div className={styles.infoText}>2025-05-12 12:34:32</div>
+              <div className={styles.infoText}>{displayCreateTime}</div>
             </div>
           </div>
           <div className={styles.infoItem}>
             <div className={styles.infoLabel}>账号有效期</div>
             <div className={styles.infoContent}>
-              <div className={styles.infoText}>剩余 8 个月 15 天</div>
+              <div className={styles.infoText}>{displayExpire}</div>
             </div>
           </div>
         </div>
@@ -188,7 +260,7 @@ export default () => {
             scroll={{ y: 200 }}
             pagination={false}
             columns={columns}
-            dataSource={directiveList}
+            dataSource={directiveList as any}
             size="small"
           />
         </div>
@@ -204,7 +276,7 @@ export default () => {
             scroll={{ y: 200 }}
             pagination={false}
             columns={columns}
-            dataSource={directiveList}
+            dataSource={directiveList as any}
             size="small"
           />
         </div>

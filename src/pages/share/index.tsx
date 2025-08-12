@@ -1,5 +1,6 @@
 import PublishShare from '@/components/PublishShare';
 import { getCateList, getOtaList } from '@/pages/machine/service';
+import { tabs } from '@/utils/config';
 import { SearchOutlined } from '@ant-design/icons';
 import { Button, Input, List, Tabs } from 'antd';
 import { useEffect, useState } from 'react';
@@ -12,15 +13,6 @@ const fetchDict = async () => {
   ];
 };
 
-// 定义标签数据
-const tabs = [
-  { key: 'all', label: '#全部' },
-  { key: 'sensor', label: '#传感器' },
-  { key: 'structure', label: '#结构件' },
-  { key: 'protocol', label: '#协议' },
-  { key: 'automation', label: '#自动化' },
-  { key: 'iot', label: '#物联网' },
-];
 export default () => {
   const [editOtaId, setEditOtaId] = useState(0);
   const [modalAddOpen, setModalAddOpen] = useState(false);

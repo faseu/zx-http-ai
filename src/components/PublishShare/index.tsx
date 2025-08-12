@@ -1,5 +1,8 @@
+import UploadDraggerFile from '@/components/UploadDraggerFile';
 import UploadDraggerImage from '@/components/UploadDraggerImage';
-import { Form, Input, Modal } from 'antd';
+import { tabsForm } from '@/utils/config';
+import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Form, Input, InputNumber, Modal, Select, Space } from 'antd';
 import React from 'react';
 import styles from './index.less';
 const { TextArea } = Input;
@@ -88,6 +91,107 @@ const UpgradeLogModal: React.FC<UpgradeLogModalProps> = ({
             name="otaName"
           >
             <TextArea rows={5} style={{ width: '100%' }} onChange={(e) => {}} />
+          </Form.Item>
+          <Form.Item
+            label="标签："
+            rules={[{ required: true, message: '请输入指令描述' }]}
+            name="otaName"
+          >
+            <Select
+              size="large"
+              mode="tags"
+              style={{ width: '100%' }}
+              options={tabsForm}
+            />
+          </Form.Item>
+          <Form.Item label="材料清单">
+            <Form.List name="materialList">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space
+                      key={key}
+                      style={{ display: 'flex', marginBottom: 8 }}
+                      align="baseline"
+                    >
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'name']}
+                        rules={[{ required: true, message: '请输入材料名称' }]}
+                      >
+                        <Input size="large" placeholder="请输入材料名称" />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, '数量']}
+                        rules={[{ required: true, message: '请输入数量' }]}
+                      >
+                        <InputNumber size="large" min={1} placeholder="数量" />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, '购买连接']}
+                        rules={[{ required: true, message: '请输入购买连接' }]}
+                      >
+                        <Input
+                          size="large"
+                          style={{ width: '100%' }}
+                          placeholder="请输入购买连接"
+                        />
+                      </Form.Item>
+                      <MinusCircleOutlined onClick={() => remove(name)} />
+                    </Space>
+                  ))}
+                  <Form.Item>
+                    <Button
+                      size="large"
+                      type="dashed"
+                      onClick={() => add()}
+                      block
+                      icon={<PlusOutlined />}
+                    >
+                      添加材料
+                    </Button>
+                  </Form.Item>
+                </>
+              )}
+            </Form.List>
+          </Form.Item>
+          <Form.Item
+            label="3D打印文件："
+            name="fileUrl"
+            rules={[{ required: true, message: '请上传3D打印文件' }]}
+          >
+            <UploadDraggerFile
+              name="img"
+              onSuccess={(value: any) => {
+                console.log(value);
+              }}
+            />
+          </Form.Item>
+          <Form.Item
+            label="协议文档："
+            name="fileUrl"
+            rules={[{ required: true, message: '请上传协议文档' }]}
+          >
+            <UploadDraggerFile
+              name="img"
+              onSuccess={(value: any) => {
+                console.log(value);
+              }}
+            />
+          </Form.Item>
+          <Form.Item
+            label="实现代码："
+            name="fileUrl"
+            rules={[{ required: true, message: '请上传实现代码' }]}
+          >
+            <UploadDraggerFile
+              name="img"
+              onSuccess={(value: any) => {
+                console.log(value);
+              }}
+            />
           </Form.Item>
         </Form>
       </div>
