@@ -2,6 +2,30 @@
 import { request } from '@umijs/max';
 
 /**
+ * 新增共创星球
+ */
+export async function addDialogue(params?: { [key: string]: any }) {
+  return request('/admin/project/save', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+
+/**
+ * 共创星球列表
+ */
+export async function getDialogueList(params?: { [key: string]: any }) {
+  return request('/admin/project/index', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+
+/**
  * 新增设备
  */
 export async function addDevice(params?: { [key: string]: any }) {

@@ -7,13 +7,13 @@ import React from 'react';
 import styles from './index.less';
 const { TextArea } = Input;
 
-interface UpgradeLogModalProps {
+interface PublishShareModalProps {
   open: boolean;
   onOk: (fieldsValue: any) => void;
   onCancel: () => void;
 }
 
-const UpgradeLogModal: React.FC<UpgradeLogModalProps> = ({
+const PublishShareModal: React.FC<PublishShareModalProps> = ({
   open,
   onOk,
   onCancel,
@@ -26,7 +26,13 @@ const UpgradeLogModal: React.FC<UpgradeLogModalProps> = ({
       open={open}
       width={700}
       onOk={() => {
-        onOk(1);
+        form.validateFields().then((values: any) => {
+          onOk({
+            ...values,
+            materialList: JSON.stringify(values.materialList),
+            tag: values.tag.join(','),
+          });
+        });
       }}
       onCancel={() => {
         onCancel();
@@ -35,42 +41,50 @@ const UpgradeLogModal: React.FC<UpgradeLogModalProps> = ({
     >
       <div className={styles.content}>
         <Form form={form} layout="vertical">
-          <div className={styles.coverContainer}>
-            <div className={styles.coverTitle}>封面图片</div>
-            <div className={styles.imageGrid}>
-              <img
-                src="http://temp.im/120x72"
-                alt=""
-                className={styles.coverImage}
-              />
-              <img
-                src="http://temp.im/120x72"
-                alt=""
-                className={styles.coverImage}
-              />
-              <img
-                src="http://temp.im/120x72"
-                alt=""
-                className={styles.coverImage}
-              />
-              <img
-                src="http://temp.im/120x72"
-                alt=""
-                className={styles.coverImage}
-              />
+          <Form.Item
+            label="封面图片："
+            rules={[{ required: true, message: '请输入内容名称' }]}
+            name="img"
+          >
+            <div className={styles.coverContainer}>
+              <div className={styles.imageGrid}>
+                <img
+                  src="http://temp.im/120x72"
+                  alt=""
+                  className={styles.coverImage}
+                />
+                <img
+                  src="http://temp.im/120x72"
+                  alt=""
+                  className={styles.coverImage}
+                />
+                <img
+                  src="http://temp.im/120x72"
+                  alt=""
+                  className={styles.coverImage}
+                />
+                <img
+                  src="http://temp.im/120x72"
+                  alt=""
+                  className={styles.coverImage}
+                />
+              </div>
+              <div className={styles.divider}>或者</div>
+              <div className={styles.componentBox}>
+                <UploadDraggerImage
+                  name="img"
+                  onSuccess={(value: any) => {
+                    console.log(value);
+                    form.setFieldValue('img', value);
+                  }}
+                />
+              </div>
             </div>
-            <div className={styles.divider}>或者</div>
-            <UploadDraggerImage
-              name="img"
-              onSuccess={(value: any) => {
-                console.log(value);
-              }}
-            />
-          </div>
+          </Form.Item>
           <Form.Item
             label="内容名称："
             rules={[{ required: true, message: '请输入内容名称' }]}
-            name="otaName"
+            name="name"
           >
             <Input
               size="large"
@@ -81,21 +95,21 @@ const UpgradeLogModal: React.FC<UpgradeLogModalProps> = ({
           <Form.Item
             label="指令描述："
             rules={[{ required: true, message: '请输入指令描述' }]}
-            name="otaName"
+            name="content"
           >
             <TextArea rows={5} style={{ width: '100%' }} onChange={(e) => {}} />
           </Form.Item>
           <Form.Item
             label="功能说明："
             rules={[{ required: true, message: '请输入指令描述' }]}
-            name="otaName"
+            name="remark"
           >
             <TextArea rows={5} style={{ width: '100%' }} onChange={(e) => {}} />
           </Form.Item>
           <Form.Item
             label="标签："
             rules={[{ required: true, message: '请输入指令描述' }]}
-            name="otaName"
+            name="tag"
           >
             <Select
               size="large"
@@ -157,39 +171,38 @@ const UpgradeLogModal: React.FC<UpgradeLogModalProps> = ({
               )}
             </Form.List>
           </Form.Item>
-          <Form.Item
-            label="3D打印文件："
-            name="fileUrl"
-            rules={[{ required: true, message: '请上传3D打印文件' }]}
-          >
+          <Form.Item label="3D打印文件：" name="3dfile">
             <UploadDraggerFile
-              name="img"
+              name="3dfile"
               onSuccess={(value: any) => {
                 console.log(value);
+                form.setFieldValue('3dfile', value);
               }}
             />
           </Form.Item>
           <Form.Item
             label="协议文档："
-            name="fileUrl"
+            name="otafile"
             rules={[{ required: true, message: '请上传协议文档' }]}
           >
             <UploadDraggerFile
-              name="img"
+              name="otafile"
               onSuccess={(value: any) => {
                 console.log(value);
+                form.setFieldValue('otafile', value);
               }}
             />
           </Form.Item>
           <Form.Item
             label="实现代码："
-            name="fileUrl"
+            name="code"
             rules={[{ required: true, message: '请上传实现代码' }]}
           >
             <UploadDraggerFile
-              name="img"
+              name="code"
               onSuccess={(value: any) => {
                 console.log(value);
+                form.setFieldValue('code', value);
               }}
             />
           </Form.Item>
@@ -199,4 +212,4 @@ const UpgradeLogModal: React.FC<UpgradeLogModalProps> = ({
   );
 };
 
-export default UpgradeLogModal;
+export default PublishShareModal;

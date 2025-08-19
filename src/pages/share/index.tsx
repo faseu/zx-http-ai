@@ -1,27 +1,37 @@
 import PublishShare from '@/components/PublishShare';
-import { getCateList, getOtaList } from '@/pages/machine/service';
+import { addDialogue, getDialogueList } from '@/pages/share/service';
 import { tabs } from '@/utils/config';
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Input, List, Tabs } from 'antd';
+import { Button, Input, List, message, Tabs } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
 
-const fetchDict = async () => {
-  const [cateList] = await Promise.all([getCateList()]);
-  return [
-    cateList.map((item: any) => ({ label: item.cateName, value: item.id })),
-  ];
+/**
+ * add设备
+ * @param fields
+ */
+const handleAddDialogue = async (fields: any) => {
+  const hide = message.loading('正在新增');
+  try {
+    await addDialogue({
+      ...fields,
+    });
+    hide();
+    message.success('新增成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('新增失败请重试！');
+    return false;
+  }
 };
 
 export default () => {
-  const [editOtaId, setEditOtaId] = useState(0);
   const [modalAddOpen, setModalAddOpen] = useState(false);
   const [directiveList, setAddList] = useState([]);
-  const [cateList, setCateList] = useState([]);
 
-  const [editOtaDetail, setEditOtaDetail] = useState({});
-  const fetchOtaList = async () => {
-    const { data } = await getOtaList({
+  const fetchDialogueList = async () => {
+    const { data } = await getDialogueList({
       page: 1,
       psize: 1000,
     });
@@ -29,16 +39,9 @@ export default () => {
   };
 
   useEffect(() => {
-    fetchOtaList();
-
-    fetchDict().then((res) => {
-      const [cateList] = res;
-      setCateList(cateList);
-    });
+    fetchDialogueList();
   }, []);
   const handleAddClick = () => {
-    setEditOtaDetail({});
-    setEditOtaId(0);
     setModalAddOpen(true);
   };
 
@@ -109,8 +112,12 @@ export default () => {
       </div>
       <PublishShare
         open={modalAddOpen}
-        onOk={() => {
-          setModalAddOpen(false);
+        onOk={async (values: any) => {
+          console.log(values);
+          const success = await handleAddDialogue(values);
+          if (success) {
+            setModalAddOpen(false);
+          }
         }}
         onCancel={() => {
           setModalAddOpen(false);
