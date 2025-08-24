@@ -94,19 +94,19 @@ export default () => {
                 </div>
                 <div className={styles.shareDescription}>{item.content}</div>
                 <div className={styles.shareTags}>
-                  {/*{(() => {*/}
-                  {/*  const raw = JSON.parse(item?.tag || '');*/}
-                  {/*  let arr: any[] = [];*/}
-                  {/*  if (Array.isArray(raw)) {*/}
-                  {/*    arr = raw;*/}
-                  {/*  }*/}
-                  {/*  return arr.map((tag) => (*/}
-                  {/*    <div*/}
-                  {/*      key={String(tag)}*/}
-                  {/*      className={styles.shareTag}*/}
-                  {/*    >{`#${tag}`}</div>*/}
-                  {/*  ));*/}
-                  {/*})()}*/}
+                  {(() => {
+                    const raw = item?.tag.split(',');
+                    let arr: any[] = [];
+                    if (Array.isArray(raw)) {
+                      arr = raw;
+                    }
+                    return arr.map((tag) => (
+                      <div
+                        key={String(tag)}
+                        className={styles.shareTag}
+                      >{`#${tag}`}</div>
+                    ));
+                  })()}
                 </div>
                 <Button className={styles.btn} type="link">
                   查看详情

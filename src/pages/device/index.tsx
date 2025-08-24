@@ -306,6 +306,7 @@ export default () => {
           >
             {/*<Select.Option value="0">未添加智能空间</Select.Option>*/}
             <Select.Option value="1">已添加智能空间</Select.Option>
+            <Select.Option value="0">未加入智能空间</Select.Option>
           </Select>
           {selectedDeviceIds.length > 0 && (
             <Button variant="solid" size="large" onClick={addSelectedToGroup}>

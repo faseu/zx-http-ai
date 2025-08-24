@@ -1,8 +1,23 @@
 import CustomTitle from '@/components/CustomTitle';
-import { Popover, Space, Table, TableColumnsType } from 'antd';
+import {
+  Form,
+  Input,
+  Modal,
+  Popover,
+  Space,
+  Table,
+  TableColumnsType,
+} from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
-import { getUserInfo } from './service';
+import { changesUserInfo, getUserInfo, getUserList } from './service';
+// 新增导入
+import UploadImage from '@/components/UploadImage';
+import { request } from '@umijs/max';
+import { message } from 'antd';
+// 若需要头像上传，可解开以下组件并在“编辑资料”中使用
+// import { Form, Input, Modal } from 'antd';
+// import UploadImage from '@/components/UploadImage';
 
 interface DataType {
   key: React.Key;
@@ -60,9 +75,41 @@ function tsToDateTime(ts?: number) {
 export default () => {
   const { id } = JSON.parse(localStorage.getItem('userInfo') || '{}') || {};
   const [user, setUser] = useState<ApiUser | null>(null);
+  // 添加用户：弹窗与表单
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [addUserLoading, setAddUserLoading] = useState(false);
+  const [addUserForm] = Form.useForm();
+
+  // 编辑资料弹窗
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm] = Form.useForm();
+
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  const [directiveList, setDirectiveList] = useState([
+    1, 2, 6, 4, 5, 6, 7, 8, 9, 21, 2, 42,
+  ]);
+  const [userList, setUserList] = useState([
+    1, 2, 6, 4, 5, 6, 7, 8, 9, 21, 2, 42,
+  ]);
+
+  // 获取协议列表（带分页）
+  const fetchUserList = async (
+    nextPage: number = page,
+    nextPageSize: number = pageSize,
+  ) => {
+    const res = await getUserList({
+      page: nextPage,
+      psize: nextPageSize,
+    });
+    setUserList(res?.data || []);
+  };
 
   useEffect(() => {
     if (!id) return;
+    fetchUserList(1, 1000);
     getUserInfo({ id })
       .then((res) => {
         // 兼容不同请求封装：有的返回在 res.data，有的直接返回对象
@@ -142,9 +189,151 @@ export default () => {
     },
   ];
 
-  const [directiveList, setDirectiveList] = useState([
-    1, 2, 6, 4, 5, 6, 7, 8, 9, 21, 2, 42,
-  ]);
+  const userColumns: TableColumnsType<DataType> = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+    },
+    {
+      title: '姓名',
+      dataIndex: 'realName',
+    },
+    {
+      title: '角色',
+      dataIndex: 'title',
+    },
+    {
+      title: '手机号',
+      dataIndex: 'phone',
+    },
+
+    {
+      title: '操作',
+      key: 'action',
+      width: 150,
+      render: (_, record) => (
+        <Space size="middle">
+          <a onClick={async () => {}}>编辑</a>
+        </Space>
+      ),
+    },
+  ];
+
+  const handleAddUser = () => {
+    addUserForm.resetFields();
+    setAddUserOpen(true);
+  };
+
+  const submitAddUser = async () => {
+    try {
+      const values = await addUserForm.validateFields();
+      setAddUserLoading(true);
+      await request('/admin/admin/save', {
+        method: 'POST',
+        data: {
+          val: values.val, // 可为空，编辑时携带
+          realName: values.realName,
+          img: values.img,
+          phone: values.phone,
+          email: values.email,
+          password: values.password,
+          userName: values.userName, // 昵称
+        },
+      });
+      message.success('用户保存成功');
+      setAddUserOpen(false);
+      setAddUserLoading(false);
+      // 这里按需刷新用户列表或执行其他回调
+      // refreshUserList?.();
+    } catch (err) {
+      setAddUserLoading(false);
+      if ((err as any)?.errorFields) return; // 表单校验错误
+      message.error('保存失败，请重试');
+    }
+  };
+
+  // 统一字段修改弹窗状态
+  const [changeOpen, setChangeOpen] = useState(false);
+  const [changeField, setChangeField] = useState<
+    'password' | 'email' | 'phone'
+  >('password');
+  const [changeLoading, setChangeLoading] = useState(false);
+  const [changeForm] = Form.useForm();
+
+  const openChangeModal = (field: 'password' | 'email' | 'phone') => {
+    setChangeField(field);
+    setChangeOpen(true);
+    changeForm.resetFields();
+  };
+
+  const handleChangeSubmit = async () => {
+    try {
+      const values = await changeForm.validateFields();
+      setChangeLoading(true);
+      await changesUserInfo({
+        val: user?.id,
+        field: changeField,
+        value: values.value,
+      });
+      message.success('修改成功');
+      setChangeOpen(false);
+      setChangeLoading(false);
+      // 修改后刷新用户信息（尤其是邮箱/手机）
+      if (id) {
+        const res = await getUserInfo({ id });
+        const data: ApiUser | undefined = (res && (res.data || res)) as
+          | ApiUser
+          | undefined;
+        if (data) setUser(data);
+      }
+    } catch (e) {
+      setChangeLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && editOpen) {
+      editForm.setFieldsValue({
+        val: user.id,
+        realName: user.realName,
+        img: user.img || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        password: '',
+      });
+    }
+  }, [user, editOpen, editForm]);
+
+  const handleEditSubmit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      setEditLoading(true);
+      await request('/admin/admin/modify', {
+        method: 'POST',
+        data: {
+          val: values.val,
+          realName: values.realName,
+          img: values.img,
+          phone: values.phone,
+          email: values.email,
+          password: values.password || undefined,
+        },
+      });
+      message.success('资料已更新');
+      setEditOpen(false);
+      setEditLoading(false);
+      // 刷新用户信息
+      if (id) {
+        const res = await getUserInfo({ id });
+        const data: ApiUser | undefined = (res && (res.data || res)) as
+          | ApiUser
+          | undefined;
+        if (data) setUser(data);
+      }
+    } catch (e) {
+      setEditLoading(false);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -167,7 +356,7 @@ export default () => {
         <div className={styles.infoContainer}>
           <div className={styles.infoHeader}>
             <img
-              src="http://temp.im/24x18"
+              src="/admin/user-module-1.png"
               alt=""
               className={styles.headerIcon}
             />
@@ -178,7 +367,7 @@ export default () => {
             <div className={styles.infoContent}>
               <div className={styles.infoText}>{displayPhone}</div>
               <img
-                src="http://temp.im/16x16"
+                src="/admin/user-checkmark.png"
                 alt=""
                 className={styles.copyIcon}
               />
@@ -189,7 +378,7 @@ export default () => {
             <div className={styles.infoContent}>
               <div className={styles.infoText}>{displayEmail}</div>
               <img
-                src="http://temp.im/16x16"
+                src="/admin/user-checkmark.png"
                 alt=""
                 className={styles.copyIcon}
               />
@@ -199,7 +388,7 @@ export default () => {
         <div className={styles.infoContainer}>
           <div className={styles.infoHeader}>
             <img
-              src="http://temp.im/24x18"
+              src="/admin/user-module-2.png"
               alt=""
               className={styles.headerIcon}
             />
@@ -221,31 +410,54 @@ export default () => {
         <div className={styles.infoContainer}>
           <div className={styles.infoHeader}>
             <img
-              src="http://temp.im/24x18"
+              src="/admin/user-module-3.png"
               alt=""
               className={styles.headerIcon}
             />
             <div className={styles.headerTitle}>账号管理</div>
           </div>
           <div className={styles.btnList}>
-            <div className={styles.btnItem}>
-              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
+            <div
+              className={styles.btnItem}
+              onClick={() => openChangeModal('password')}
+            >
+              <img src="/admin/user-btn-1.png" alt="" className={styles.icon} />
               <div className={styles.btnText}>修改密码</div>
             </div>
-            <div className={styles.btnItem}>
-              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
+            <div
+              className={styles.btnItem}
+              onClick={() => openChangeModal('email')}
+            >
+              <img src="/admin/user-btn-2.png" alt="" className={styles.icon} />
               <div className={styles.btnText}>更换邮箱</div>
             </div>
-            <div className={styles.btnItem}>
-              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
+            <div
+              className={styles.btnItem}
+              onClick={() => openChangeModal('phone')}
+            >
+              <img src="/admin/user-btn-3.png" alt="" className={styles.icon} />
               <div className={styles.btnText}>更换手机</div>
             </div>
-            <div className={styles.btnItem}>
-              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
+            <div
+              className={styles.btnItem}
+              onClick={() => {
+                setEditOpen(true);
+              }}
+            >
+              <img src="/admin/user-btn-4.png" alt="" className={styles.icon} />
               <div className={styles.btnText}>编辑资料</div>
             </div>
-            <div className={styles.btnItem}>
-              <img src="http://temp.im/16x16" alt="" className={styles.icon} />
+            <div
+              className={styles.btnItemSignOut}
+              onClick={() => {
+                try {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('userInfo');
+                } catch {}
+                window.location.href = '/login';
+              }}
+            >
+              <img src="/admin/user-btn-5.png" alt="" className={styles.icon} />
               <div className={styles.btnText}>退出登录</div>
             </div>
           </div>
@@ -269,18 +481,195 @@ export default () => {
             title="用户列表"
             searchPlaceholder="搜索用户..."
             addButtonText="添加用户"
+            onSubmit={handleAddUser}
           />
           <Table<DataType>
             style={{ width: '100%' }}
             key="id"
             scroll={{ y: 200 }}
             pagination={false}
-            columns={columns}
-            dataSource={directiveList as any}
+            columns={userColumns}
+            dataSource={userList as any}
             size="small"
           />
         </div>
       </div>
+      {/* 修改字段弹窗：密码/邮箱/手机 共用 */}
+      {changeOpen && (
+        <Modal
+          title={
+            changeField === 'password'
+              ? '修改密码'
+              : changeField === 'email'
+              ? '更换邮箱'
+              : '更换手机'
+          }
+          open={changeOpen}
+          confirmLoading={changeLoading}
+          onOk={handleChangeSubmit}
+          onCancel={() => setChangeOpen(false)}
+          destroyOnClose
+        >
+          <Form form={changeForm} layout="vertical" autoComplete="off">
+            <Form.Item
+              label={
+                changeField === 'password'
+                  ? '新密码'
+                  : changeField === 'email'
+                  ? '新邮箱'
+                  : '新手机号'
+              }
+              name="value"
+              rules={[
+                { required: true, message: '请输入内容' },
+                ...(changeField === 'email'
+                  ? [{ type: 'email' as const, message: '请输入正确的邮箱' }]
+                  : []),
+                ...(changeField === 'phone'
+                  ? [
+                      {
+                        pattern: /^1\d{10}$/,
+                        message: '请输入11位手机号',
+                      },
+                    ]
+                  : []),
+                ...(changeField === 'password'
+                  ? [{ min: 6, message: '密码至少6位' }]
+                  : []),
+              ]}
+            >
+              {changeField === 'password' ? (
+                <Input.Password placeholder="请输入新密码" />
+              ) : (
+                <Input
+                  placeholder={`请输入${
+                    changeField === 'email' ? '新邮箱' : '新手机号'
+                  }`}
+                />
+              )}
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
+      {/* 编辑资料弹窗 */}
+      {editOpen && (
+        <Modal
+          title="编辑资料"
+          open={editOpen}
+          confirmLoading={editLoading}
+          onOk={handleEditSubmit}
+          onCancel={() => setEditOpen(false)}
+          destroyOnClose
+        >
+          <Form
+            form={editForm}
+            layout="vertical"
+            initialValues={{ val: user?.id }}
+            autoComplete="off"
+          >
+            <Form.Item
+              label="真实姓名"
+              name="realName"
+              rules={[{ required: true, message: '请输入真实姓名' }]}
+            >
+              <Input placeholder="请输入真实姓名" />
+            </Form.Item>
+
+            <Form.Item label="头像：" name="img" rules={[{ required: true }]}>
+              <UploadImage
+                name="img"
+                onSuccess={(value: any) => {
+                  editForm.setFieldValue('img', value);
+                }}
+              />
+            </Form.Item>
+            <Form.Item
+              label="手机"
+              name="phone"
+              rules={[
+                { required: true, message: '请输入手机号' },
+                { pattern: /^1\d{10}$/, message: '请输入11位手机号' },
+              ]}
+            >
+              <Input placeholder="请输入手机号" />
+            </Form.Item>
+            <Form.Item
+              label="邮箱"
+              name="email"
+              rules={[{ type: 'email', message: '请输入正确的邮箱' }]}
+            >
+              <Input placeholder="请输入邮箱" />
+            </Form.Item>
+            <Form.Item label="密码" name="password" tooltip="不修改可留空">
+              <Input.Password
+                placeholder="如需重置密码请填写，至少6位"
+                autoComplete="new-password"
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
+      {addUserOpen && (
+        <Modal
+          title="新增用户"
+          open={addUserOpen}
+          confirmLoading={addUserLoading}
+          onOk={submitAddUser}
+          onCancel={() => setAddUserOpen(false)}
+          destroyOnClose
+        >
+          <Form layout="vertical" form={addUserForm} autoComplete="off">
+            <Form.Item
+              label="真实姓名"
+              name="realName"
+              rules={[{ required: true, message: '请输入真实姓名' }]}
+            >
+              <Input placeholder="请输入真实姓名" />
+            </Form.Item>
+            <Form.Item label="昵称" name="userName">
+              <Input placeholder="请输入昵称" />
+            </Form.Item>
+            <Form.Item label="头像：" name="img" rules={[{ required: true }]}>
+              <UploadImage
+                name="img"
+                onSuccess={(value: any) => {
+                  addUserForm.setFieldValue('img', value);
+                }}
+              />
+            </Form.Item>
+            <Form.Item
+              label="手机"
+              name="phone"
+              rules={[
+                { required: true, message: '请输入手机号' },
+                { pattern: /^1\d{10}$/, message: '请输入11位手机号' },
+              ]}
+            >
+              <Input placeholder="请输入手机号" />
+            </Form.Item>
+            <Form.Item
+              label="邮箱"
+              name="email"
+              rules={[{ type: 'email', message: '请输入正确的邮箱' }]}
+            >
+              <Input placeholder="请输入邮箱（可选）" />
+            </Form.Item>
+            <Form.Item
+              label="密码"
+              name="password"
+              rules={[
+                { required: true, message: '请输入密码' },
+                { min: 6, message: '密码至少6位' },
+              ]}
+            >
+              <Input.Password
+                placeholder="请输入密码"
+                autoComplete="new-password"
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
     </div>
   );
 };

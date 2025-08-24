@@ -1057,6 +1057,12 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                 url: uploadResult.url,
               },
             });
+
+            if (!compileResult.compileId) {
+              message.error('编译失败，已将错误信息填充到输入框');
+              setValue(compileResult);
+              return;
+            }
             console.log('编译提交结果:', compileResult);
             message.success('编译已提交');
 

@@ -98,7 +98,7 @@
 
   .headerIcon {
     width: 24px;
-    height: 18px;
+    height: 24px;
   }
 
   .headerTitle {
@@ -146,27 +146,53 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 24px;
+    gap: 16px;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
 
     &:hover {
       background: rgba(255, 255, 255, 0.1);
     }
+    .icon {
+      width: 20px;
+      height: 16px;
+    }
+
+    .btnText {
+      color: #FFFFFF;
+      font-size: 14px;
+    }
   }
 
-  .icon {
-    width: 16px;
-    height: 16px;
+  .btnItemSignOut {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px;
+    background: rgba(255, 0, 0, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      background: rgba(255, 0, 0, 0.1);
+    }
+
+    .icon {
+      width: 20px;
+      height: 16px;
+    }
+
+    .btnText {
+      color: #DC2626;
+      font-size: 14px;
+    }
   }
 
-  .btnText {
-    color: #FFFFFF;
-    font-size: 14px;
-  }
 }
 
 .other {
