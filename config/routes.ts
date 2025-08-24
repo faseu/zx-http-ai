@@ -13,7 +13,7 @@
 export default [
   {
     path: '/',
-    redirect: '/device',
+    redirect: '/dialogue',
     hideInMenu: true,
   },
   {

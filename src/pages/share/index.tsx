@@ -28,18 +28,20 @@ const handleAddDialogue = async (fields: any) => {
 
 export default () => {
   const [modalAddOpen, setModalAddOpen] = useState(false);
-  const [directiveList, setAddList] = useState([]);
+  const [directiveList, setDirectiveList] = useState([]);
 
   const fetchDialogueList = async () => {
     const { data } = await getDialogueList({
       page: 1,
       psize: 1000,
     });
-    setAddList(data);
+    setDirectiveList(data);
   };
 
   useEffect(() => {
-    fetchDialogueList();
+    fetchDialogueList().then((res) => {
+      console.log(res);
+    });
   }, []);
   const handleAddClick = () => {
     setModalAddOpen(true);
@@ -85,22 +87,26 @@ export default () => {
           renderItem={(item, index) => (
             <List.Item>
               <div className={styles.shareItem}>
-                <img
-                  className={styles.shareImage}
-                  src={`https://picsum.photos/500/200?${index}`}
-                  alt=""
-                />
+                <img className={styles.shareImage} src={`${item.img}`} alt="" />
                 <div className={styles.shareHeader}>
-                  <div className={styles.shareTitle}>智能灯光控制</div>
+                  <div className={styles.shareTitle}>{item.name}</div>
                   <div className={styles.shareStatus}>审核中</div>
                 </div>
-                <div className={styles.shareDescription}>
-                  通过语音或手机APP控制智能灯泡的开关和亮度
-                </div>
+                <div className={styles.shareDescription}>{item.content}</div>
                 <div className={styles.shareTags}>
-                  <div className={styles.shareTag}>#自动化</div>
-                  <div className={styles.shareTag}>#物联网</div>
-                  <div className={styles.shareTag}>#语音控制</div>
+                  {/*{(() => {*/}
+                  {/*  const raw = JSON.parse(item?.tag || '');*/}
+                  {/*  let arr: any[] = [];*/}
+                  {/*  if (Array.isArray(raw)) {*/}
+                  {/*    arr = raw;*/}
+                  {/*  }*/}
+                  {/*  return arr.map((tag) => (*/}
+                  {/*    <div*/}
+                  {/*      key={String(tag)}*/}
+                  {/*      className={styles.shareTag}*/}
+                  {/*    >{`#${tag}`}</div>*/}
+                  {/*  ));*/}
+                  {/*})()}*/}
                 </div>
                 <Button className={styles.btn} type="link">
                   查看详情
