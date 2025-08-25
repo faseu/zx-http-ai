@@ -47,38 +47,6 @@ export default () => {
     fetchOtaList(1, pageSize);
   }, []);
 
-  /*
-  * cmdUuid
-:
-1756069392
-compileId
-:
-436
-currentVer
-:
-null
-id
-:
-389
-lastVer
-:
-null
-machineId
-:
-39
-machineName
-:
-"张玺测试"
-regTime
-:
-"2025-08-25 05:03:12"
-status
-:
-0
-updateTime
-:
-"2025-08-25 05:03:12"*/
-
   const columns: TableColumnsType<DataType> = [
     {
       title: 'uuid',
