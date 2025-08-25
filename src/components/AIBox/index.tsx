@@ -39,8 +39,8 @@ import EditCodeModal from './EditCodeModal';
 import styles from './index.less';
 
 // 使用OpenAI SDK配置
-const API_KEY = 'sk-2eff7e9a0050477ab64b85bf3bd7e287'; // 替换为你的实际API Key
-const BASE_URL = 'https://dashscope.aliyuncs.com/api/v1/apps/8be55fe0f7c64c17b37ca66d9f629411';
+const API_KEY = 'sk-27b6793c7f634c038eb344a0d2bd39c9'; // 替换为你的实际API Key
+const BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
 // 定义组件ref接口
 export interface AIBoxRef {
@@ -231,7 +231,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
       const controller = new AbortController();
       abortController.current = controller;
 
-      const response = await fetch(`${BASE_URL}/completion`, {
+      const response = await fetch(`${BASE_URL}/chat/completions`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${API_KEY}`,
