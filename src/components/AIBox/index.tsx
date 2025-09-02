@@ -40,6 +40,7 @@ import styles from './index.less';
 
 // 使用OpenAI SDK配置
 const API_KEY = 'sk-27b6793c7f634c038eb344a0d2bd39c9'; // 替换为你的实际API Key
+const APP_ID = '8be55fe0f7c64c17b37ca66d9f629411'; // 替换为你的实际API Key
 const BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
 // 定义组件ref接口
@@ -231,21 +232,23 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
       const controller = new AbortController();
       abortController.current = controller;
 
-      const response = await fetch(`${BASE_URL}/chat/completions`, {
+      const response = await fetch(`https://dashscope.aliyuncs.com/api/v1/apps/${APP_ID}/completion`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
+          'X-DashScope-SSE': 'enable',
         },
         body: JSON.stringify({
-          model: 'qwen-long',
-          messages: messages,
-          stream: true,
-          stream_options: {
-            include_usage: true,
+          input: {
+            messages:messages
           },
+          parameters: {
+            max_tokens: 512,
+            // incremental_output: true
+          },
+          debug: {}
         }),
-        signal: controller.signal, // 添加取消信号
       });
 
       if (!response.ok) {

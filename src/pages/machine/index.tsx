@@ -39,6 +39,7 @@ import {
 } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './index.less';
+import { setDeviceBatGroup } from '@/pages/device/service';
 
 /**
  * add设备
@@ -220,6 +221,24 @@ const handleDelMachine = async (fields: any) => {
     return false;
   }
 };
+/**
+ *  移除智能空间
+ * @param fields
+ */
+const handleMoveMachine = async (fields: any) => {
+  const hide = message.loading('正在移除智能空间');
+  try {
+    await setDeviceBatGroup({ machineIds: fields.machineId, isGroup: 0 });
+    hide();
+    message.success('移除智能空间成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('移除智能空间失败，请重试');
+    return false;
+  }
+};
+
 
 /**
  *  删除协议
@@ -735,6 +754,7 @@ export default () => {
                   return (
                     <MachineItem
                       detail={item}
+                      isSmart
                       text="这是设备信息"
                       isChecked={selectedMachineIds.includes(item.machineId)}
                       onCheckChange={(checked: boolean) =>
@@ -748,6 +768,10 @@ export default () => {
                       }}
                       onDelMachine={async (item: any) => {
                         await handleDelMachine(item);
+                        await fetchMachineList();
+                      }}
+                      onMoveMachine={async (item: any) => {
+                        await handleMoveMachine(item);
                         await fetchMachineList();
                       }}
                       onGetDetail={async (item: any) => {

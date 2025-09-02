@@ -15,6 +15,7 @@ import {
   detailDeviceLastData,
   editDevice,
   getDeviceList,
+  setDeviceBatGroup,
   setDeviceGroup,
 } from './service';
 
@@ -138,7 +139,7 @@ const handleDelDevice = async (fields: any) => {
 const handleSetDeviceGroup = async (fields: any) => {
   const hide = message.loading('正在添加');
   try {
-    await setDeviceGroup({ machineId: fields.machineIds[0], isGroup: 1 });
+    await setDeviceBatGroup({ machineIds: fields.machineIds.join(','), isGroup: 1 });
     hide();
     message.success('添加成功');
     return true;

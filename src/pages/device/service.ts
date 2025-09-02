@@ -107,3 +107,14 @@ export async function setDeviceGroup(params?: { [key: string]: any }) {
     },
   });
 }
+/**
+ * 添加设备到智能空间
+ */
+export async function setDeviceBatGroup(params?: { [key: string]: any }) {
+  return request('/admin/machine/setBatGroup', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+  });
+}

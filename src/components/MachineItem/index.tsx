@@ -9,9 +9,11 @@ interface MachineItemProps {
   detail: any;
   onEditMachine: any;
   onDelMachine: any;
+  onMoveMachine?: any;
   onGetDetail: any;
   // 更新：改为简化的checkbox处理
   isChecked?: boolean;
+  isSmart?: boolean;
   onCheckChange?: (checked: boolean) => void;
 }
 
@@ -20,9 +22,11 @@ const MachineItem: React.FC<MachineItemProps> = ({
   detail,
   onEditMachine,
   onDelMachine,
+  onMoveMachine,
   onGetDetail,
   // 更新：新的checkbox props
   isChecked = false,
+  isSmart = false,
   onCheckChange,
 }) => {
   console.log(detail);
@@ -87,17 +91,31 @@ const MachineItem: React.FC<MachineItemProps> = ({
           >
             编辑
           </div>
-          <Popconfirm
-            title="删除设备"
-            description="删除后无法回复，确定删除设备?"
-            okText="确定"
-            cancelText="取消"
-            onConfirm={() => onDelMachine(detail)}
-          >
-            <div className={styles.buttom} style={{ background: '#3E3F43' }}>
-              删除
-            </div>
-          </Popconfirm>
+          {isSmart && (
+            <Popconfirm
+              title="移除智能空间"
+              okText="确定"
+              cancelText="取消"
+              onConfirm={() => onMoveMachine(detail)}
+            >
+              <div className={styles.buttom} style={{ background: '#3E3F43' }}>
+                移除
+              </div>
+            </Popconfirm>
+          )}
+          {!isSmart && (
+            <Popconfirm
+              title="删除设备"
+              description="删除后无法回复，确定删除设备?"
+              okText="确定"
+              cancelText="取消"
+              onConfirm={() => onDelMachine(detail)}
+            >
+              <div className={styles.buttom} style={{ background: '#3E3F43' }}>
+                删除
+              </div>
+            </Popconfirm>
+          )}
         </Flex>
         <div
           onClick={() => onGetDetail(detail)}
