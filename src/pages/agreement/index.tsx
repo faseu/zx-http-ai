@@ -36,6 +36,7 @@ const handleAddOta = async (fields: any) => {
   try {
     await addOta({
       ...fields,
+      cate: 'file',
     });
     hide();
     message.success('新增成功');
@@ -56,6 +57,7 @@ const handleEditOta = async (fields: any) => {
   try {
     await editOta({
       ...fields,
+      cate: 'file',
     });
     hide();
     message.success('更新成功');

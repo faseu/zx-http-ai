@@ -10,9 +10,17 @@ import {
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
-import { changesUserInfo, getUserInfo, getUserList } from './service';
+import {
+  addOta,
+  changesUserInfo,
+  editOta,
+  getUserInfo,
+  getUserList,
+} from './service';
 // 新增导入
+import AddDirectiveModal from '@/components/AddDirectiveModal';
 import UploadImage from '@/components/UploadImage';
+import { getOtaList } from '@/pages/machine/service';
 import { request } from '@umijs/max';
 import { message } from 'antd';
 // 若需要头像上传，可解开以下组件并在“编辑资料”中使用
@@ -72,6 +80,48 @@ function tsToDateTime(ts?: number) {
   )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
+/**
+ * 新增协议
+ * @param fields
+ */
+const handleAddOta = async (fields: any) => {
+  const hide = message.loading('正在新增');
+  try {
+    await addOta({
+      ...fields,
+      cate: 'file',
+    });
+    hide();
+    message.success('新增成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('新增失败请重试！');
+    return false;
+  }
+};
+
+/**
+ * 编辑协议
+ * @param fields
+ */
+const handleEditOta = async (fields: any) => {
+  const hide = message.loading('正在更新');
+  try {
+    await editOta({
+      ...fields,
+      cate: 'file',
+    });
+    hide();
+    message.success('更新成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('更新失败请重试！');
+    return false;
+  }
+};
+
 export default () => {
   const { id } = JSON.parse(localStorage.getItem('userInfo') || '{}') || {};
   const [user, setUser] = useState<ApiUser | null>(null);
@@ -88,28 +138,53 @@ export default () => {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  const [directiveList, setDirectiveList] = useState([
-    1, 2, 6, 4, 5, 6, 7, 8, 9, 21, 2, 42,
-  ]);
-  const [userList, setUserList] = useState([
-    1, 2, 6, 4, 5, 6, 7, 8, 9, 21, 2, 42,
-  ]);
+  const [codeList, setCodeList] = useState([1]);
+  const [userList, setUserList] = useState([]);
+  const [total, setTotal] = useState<number>(0);
 
-  // 获取协议列表（带分页）
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [editOtaId, setEditOtaId] = useState(0);
+  const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
+  const [editOtaDetail, setEditOtaDetail] = useState({});
+
+  // 获取用户列表
   const fetchUserList = async (
     nextPage: number = page,
     nextPageSize: number = pageSize,
   ) => {
     const res = await getUserList({
       page: nextPage,
-      psize: nextPageSize,
+      psize: 100,
     });
     setUserList(res?.data || []);
+  };
+
+  // 获取协议列表（带分页）
+  const fetchOtaList = async (
+    nextPage: number = page,
+    nextPageSize: number = pageSize,
+  ) => {
+    try {
+      setLoading(true);
+      const res = await getOtaList({
+        page: nextPage,
+        psize: nextPageSize,
+      });
+      setCodeList(res?.data || []);
+      setTotal(res?.total ?? 0);
+      setPage(nextPage);
+      setPageSize(nextPageSize);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (!id) return;
     fetchUserList(1, 1000);
+    fetchOtaList(1, pageSize);
+
     getUserInfo({ id })
       .then((res) => {
         // 兼容不同请求封装：有的返回在 res.data，有的直接返回对象
@@ -219,6 +294,9 @@ export default () => {
     },
   ];
 
+  const handleAddCode = () => {
+    setModalDirectiveOpen(true);
+  };
   const handleAddUser = () => {
     addUserForm.resetFields();
     setAddUserOpen(true);
@@ -465,14 +543,19 @@ export default () => {
       </div>
       <div className={styles.other}>
         <div className={styles.otherItem}>
-          <CustomTitle title="源码列表" />
+          <CustomTitle
+            title="源码列表"
+            addButtonText="添加源码"
+            onSubmit={handleAddCode}
+            showSearch={false}
+          />
           <Table<DataType>
             style={{ width: '100%' }}
             key="id"
             scroll={{ y: 200 }}
             pagination={false}
             columns={columns}
-            dataSource={directiveList as any}
+            dataSource={codeList as any}
             size="small"
           />
         </div>
@@ -669,6 +752,31 @@ export default () => {
             </Form.Item>
           </Form>
         </Modal>
+      )}
+      {modalDirectiveOpen && (
+        <AddDirectiveModal
+          isEdit={!!editOtaId}
+          detail={editOtaDetail}
+          open={modalDirectiveOpen}
+          styles={{}}
+          onOk={async (values: any) => {
+            const success = editOtaId
+              ? await handleEditOta({ id: editOtaId, ...values })
+              : await handleAddOta(values);
+            if (success) {
+              setModalDirectiveOpen(false);
+              setEditOtaDetail({});
+              setEditOtaId(0);
+              // 新增/编辑后刷新当前页
+              await fetchOtaList(page, pageSize);
+            }
+          }}
+          onCancel={() => {
+            setModalDirectiveOpen(false);
+            setEditOtaDetail({});
+            setEditOtaId(0);
+          }}
+        />
       )}
     </div>
   );

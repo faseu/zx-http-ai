@@ -15,6 +15,7 @@ interface CustomTitleProps {
   onClear?: () => void; // 新增：清空回调函数
   // 全选相关props
   isAllSelected?: boolean;
+  showSearch?: boolean;
   onSelectAll?: (checked: boolean) => void;
   selectedCount?: number;
   totalCount?: number;
@@ -30,6 +31,7 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
   onClear, // 新增参数
   // 全选相关props
   isAllSelected = false,
+  showSearch = true,
   onSelectAll,
   selectedCount = 0,
   totalCount = 0,
@@ -128,13 +130,15 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
               )}
             </div>
           )}
-          <Input
-            style={{ width: '200px', marginRight: '8px' }}
-            placeholder={searchPlaceholder}
-            suffix={<SearchOutlined />}
-            value={inputValue}
-            onChange={handleInputChange}
-          />
+          {showSearch && (
+            <Input
+              style={{ width: '200px', marginRight: '8px' }}
+              placeholder={searchPlaceholder}
+              suffix={<SearchOutlined />}
+              value={inputValue}
+              onChange={handleInputChange}
+            />
+          )}
           <Button color="primary" variant="solid" onClick={handleAddClick}>
             {addButtonText}
           </Button>
