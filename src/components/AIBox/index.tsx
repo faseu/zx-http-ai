@@ -245,7 +245,10 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
           },
           parameters: {
             max_tokens: 512,
-            // incremental_output: true
+            incremental_output: true,
+            rag_options: {
+              session_file_ids: ["file-fe-aef5651846914505924959c6"]
+            }
           },
           debug: {}
         }),
@@ -275,33 +278,43 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
           const lines = chunk.split('\n').filter((line) => line.trim() !== '');
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') {
+            // 只处理 data: 开头的行
+            if (!line.startsWith('data:')) continue;
+            const dataStr = line.slice(5).trim();
+
+            try {
+              const parsed = JSON.parse(dataStr);
+              const output = parsed.output || {};
+              const text = output.text || '';
+              const finishReason = output.finish_reason;
+
+              // ✅ 拼接文本
+              if (text) {
+                linesRef.current.push(text);
+                setLines([...linesRef.current]);
+              }
+
+              // ✅ 判断是否结束
+              if (finishReason === 'stop') {
+                console.log('流式输出结束');
                 setStatus('success');
                 const assistantContent = linesRef.current.join('');
                 setMessages((prev) => [
                   ...prev,
                   { role: 'assistant', content: assistantContent },
                 ]);
-                abortController.current = null; // 清空控制器
+                abortController.current = null;
                 return;
               }
-
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content || '';
-                if (content) {
-                  linesRef.current.push(content);
-                  setLines([...linesRef.current]);
-                }
-              } catch (parseError) {
-                console.warn('解析chunk失败:', parseError, data);
-              }
+            } catch (err) {
+              console.warn('解析 data 行失败:', err, dataStr);
             }
           }
         }
-      } finally {
+      } catch (err) {
+        console.error('流式读取错误:', err);
+      }
+ finally {
         reader.releaseLock();
         abortController.current = null; // 确保清空控制器
       }
