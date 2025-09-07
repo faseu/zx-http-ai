@@ -1,9 +1,15 @@
+import DetailShareModal from '@/components/DetailShareModal';
 import PublishShare from '@/components/PublishShare';
-import { addDialogue, getDialogueList } from '@/pages/share/service';
+import {
+  addDialogue,
+  changeProjectStatus,
+  getDialogueDetail,
+  getDialogueList,
+} from '@/pages/share/service';
 import { tabs } from '@/utils/config';
 import { SearchOutlined } from '@ant-design/icons';
 import { Button, Input, List, message, Spin, Tabs } from 'antd';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
 /**
@@ -26,6 +32,25 @@ const handleAddDialogue = async (fields: any) => {
   }
 };
 
+/**
+ * 获取详情
+ * @param fields
+ */
+const handleGetDetail = async (fields: any) => {
+  const hide = message.loading('正在获取详情');
+  try {
+    const data = await getDialogueDetail({
+      id: fields.id,
+    });
+    hide();
+    return data;
+  } catch (error) {
+    hide();
+    message.error('获取详情失败请重试！');
+    return false;
+  }
+};
+
 const PAGE_SIZE = 10; // 每页加载数量
 
 export default () => {
@@ -34,6 +59,11 @@ export default () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
+  // 详情弹窗相关状态
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailData, setDetailData] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchDialogueList = async (
     currentPage = 1,
@@ -97,6 +127,67 @@ export default () => {
     setModalAddOpen(true);
   };
 
+  // 查看详情点击处理
+  const handleDetailClick = async (item: any) => {
+    setDetailLoading(true);
+    setDetailModalOpen(true);
+
+    try {
+      const detail = await handleGetDetail(item);
+      if (detail) {
+        setDetailData(detail);
+      }
+    } catch (error) {
+      setDetailModalOpen(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  // 关闭详情弹窗
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false);
+    setDetailData(null);
+  };
+
+  // 处理审核状态变更
+  const handleStatusChange = async (id: string, status: number) => {
+    try {
+      await changeProjectStatus({
+        val: id,
+        value: status,
+      });
+
+      // 更新本地数据中的状态
+      setDetailData((prev: any) => ({
+        ...prev,
+        status: status,
+      }));
+
+      // 刷新列表数据
+      setPage(1);
+      setHasMore(true);
+      handleCloseDetailModal();
+      await fetchDialogueList(1, false);
+    } catch (error) {
+      throw error; // 让组件处理错误提示
+    }
+  };
+
+  // 获取状态显示文本和颜色
+  const getStatusInfo = (status: any) => {
+    switch (status) {
+      case 0:
+        return { text: '审核不通过', color: '#ff4d4f' };
+      case 1:
+        return { text: '审核中', color: '#ffb347' };
+      case 2:
+        return { text: '审核通过', color: '#52c41a' };
+      default:
+        return { text: '审核中', color: '#ffb347' };
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.titleCard}>
@@ -147,7 +238,18 @@ export default () => {
                 <img className={styles.shareImage} src={`${item.img}`} alt="" />
                 <div className={styles.shareHeader}>
                   <div className={styles.shareTitle}>{item.name}</div>
-                  <div className={styles.shareStatus}>审核中</div>
+                  <div
+                    style={{
+                      padding: '4px 12px',
+                      backgroundColor: getStatusInfo(item.isEnabled)?.color,
+                      color: '#ffffff',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    {getStatusInfo(item.isEnabled)?.text}
+                  </div>
                 </div>
                 <div className={styles.shareDescription}>{item.content}</div>
                 <div className={styles.shareTags}>
@@ -165,7 +267,11 @@ export default () => {
                     ));
                   })()}
                 </div>
-                <Button className={styles.btn} type="link">
+                <Button
+                  className={styles.btn}
+                  type="link"
+                  onClick={() => handleDetailClick(item)}
+                >
                   查看详情
                 </Button>
               </div>
@@ -187,6 +293,16 @@ export default () => {
           </div>
         )}
       </div>
+
+      {/* 使用详情弹窗组件 */}
+      <DetailShareModal
+        open={detailModalOpen}
+        onClose={handleCloseDetailModal}
+        data={detailData}
+        loading={detailLoading}
+        onStatusChange={handleStatusChange}
+        showAuditButtons={true} // 显示审核按钮
+      />
 
       <PublishShare
         open={modalAddOpen}

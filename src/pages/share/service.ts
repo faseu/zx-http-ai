@@ -26,10 +26,10 @@ export async function getDialogueList(params?: { [key: string]: any }) {
 }
 
 /**
- * 新增设备
+ * 共创星球详情
  */
-export async function addDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/save', {
+export async function getDialogueDetail(params?: { [key: string]: any }) {
+  return request('/admin/project/getInfo', {
     method: 'POST',
     data: {
       ...params,
@@ -38,85 +38,14 @@ export async function addDevice(params?: { [key: string]: any }) {
 }
 
 /**
- * 编辑设备
+ * 审核共创星球项目
  */
-export async function editDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/save', {
+export async function changeProjectStatus(params?: { [key: string]: any }) {
+  return request('/admin/project/change', {
     method: 'POST',
     data: {
       ...params,
-    },
-  });
-}
-
-/**
- * 设备详情
- */
-export async function detailDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/getInfo', {
-    method: 'POST',
-    data: {
-      ...params,
-    },
-  });
-}
-
-/**
- * 设备详情
- */
-export async function detailDeviceData(params?: { [key: string]: any }) {
-  return request('/admin/device_data/index', {
-    method: 'POST',
-    data: {
-      ...params,
-    },
-  });
-}
-
-/**
- * 设备详情
- */
-export async function detailDeviceLastData(params?: { [key: string]: any }) {
-  return request('/admin/device/getLastData', {
-    method: 'POST',
-    data: {
-      ...params,
-    },
-  });
-}
-
-/**
- * 设备详情
- */
-export async function detailDeviceChartData(params?: { [key: string]: any }) {
-  return request('/admin/device/getParams', {
-    method: 'POST',
-    data: {
-      ...params,
-    },
-  });
-}
-
-/**
- * 删除设备
- */
-export async function delDevice(params?: { [key: string]: any }) {
-  return request('/admin/device/del', {
-    method: 'POST',
-    data: {
-      ...params,
-    },
-  });
-}
-
-/**
- * 设备列表
- */
-export async function getDeviceList(params?: { [key: string]: any }) {
-  return request('/admin/machine/index', {
-    method: 'POST',
-    params: {
-      ...params,
+      field: 'isEnabled',
     },
   });
 }
