@@ -47,3 +47,27 @@ export async function getUserList(params?: { [key: string]: any }) {
     },
   });
 }
+
+/**
+ * 新增协议
+ */
+export async function addOta(params?: { [key: string]: any }) {
+  return request('/admin/ota/save', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+
+/**
+ * 编辑协议
+ */
+export async function editOta(params?: { [key: string]: any }) {
+  return request('/admin/ota/save', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
