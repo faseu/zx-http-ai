@@ -49,22 +49,22 @@ const PublishShareModal: React.FC<PublishShareModalProps> = ({
             <div className={styles.coverContainer}>
               <div className={styles.imageGrid}>
                 <img
-                  src="http://temp.im/120x72"
+                  src="http://121.40.161.20:8080/uploads/images/20250907/0fc418e0341b0406f07de823e0934eeb.jpg"
                   alt=""
                   className={styles.coverImage}
                 />
                 <img
-                  src="http://temp.im/120x72"
+                  src="http://121.40.161.20:8080/uploads/images/20250826/07eb499d4a1a0d8a70b5e7f523242bbe.png"
                   alt=""
                   className={styles.coverImage}
                 />
                 <img
-                  src="http://temp.im/120x72"
+                  src="http://121.40.161.20:8080/uploads/images/20250824/071f9f3894dae564898e12fe5ae52905.jpg"
                   alt=""
                   className={styles.coverImage}
                 />
                 <img
-                  src="http://temp.im/120x72"
+                  src="http://121.40.161.20:8080/uploads/images/20250824/c5bdd6ed4283ca768ebdc933910dbf62.png"
                   alt=""
                   className={styles.coverImage}
                 />

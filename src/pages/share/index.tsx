@@ -2,7 +2,7 @@ import PublishShare from '@/components/PublishShare';
 import { addDialogue, getDialogueList } from '@/pages/share/service';
 import { tabs } from '@/utils/config';
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Input, List, message, Tabs, Spin } from 'antd';
+import { Button, Input, List, message, Spin, Tabs } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
 
@@ -35,29 +35,34 @@ export default () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchDialogueList = async (currentPage = 1, isLoadMore = false, showMessage = false) => {
+  const fetchDialogueList = async (
+    currentPage = 1,
+    isLoadMore = false,
+    showMessage = false,
+  ) => {
     if (loading) return; // 防止重复请求
-    
+
     setLoading(true);
     try {
       const { data, total } = await getDialogueList({
         page: currentPage,
         psize: PAGE_SIZE,
       });
-      
+
       if (isLoadMore) {
         // 下拉加载，追加数据
-        setDirectiveList(prev => [...prev, ...data]);
+        setDirectiveList((prev) => [...prev, ...data]);
         showMessage && message.success(`加载了 ${data.length} 条内容!`);
       } else {
         // 初始加载，替换数据
         setDirectiveList(data);
       }
-      
+
       // 检查是否还有更多数据
-      const totalLoaded = isLoadMore ? directiveList.length + data.length : data.length;
+      const totalLoaded = isLoadMore
+        ? directiveList.length + data.length
+        : data.length;
       setHasMore(totalLoaded < total);
-      
     } catch (error) {
       message.error('加载失败');
     } finally {
@@ -68,7 +73,7 @@ export default () => {
   // 加载更多数据
   const loadMoreData = () => {
     if (!hasMore || loading) return;
-    
+
     const nextPage = page + 1;
     setPage(nextPage);
     fetchDialogueList(nextPage, true, true);
@@ -77,7 +82,7 @@ export default () => {
   // 监听滚动事件
   const handleScroll = (e: React.UIEvent<HTMLElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    
+
     // 当滚动到底部附近时加载更多
     if (scrollHeight - scrollTop - clientHeight <= 10 && hasMore && !loading) {
       loadMoreData();
@@ -117,13 +122,12 @@ export default () => {
         defaultActiveKey="all"
         onChange={(key) => console.log(key)}
       />
-      <div 
+      <div
         className={styles.contentCard}
         onScroll={handleScroll}
-        style={{ 
-          maxHeight: '70vh', 
+        style={{
           overflowY: 'auto',
-          padding: '0 12px'
+          padding: '0 12px',
         }}
       >
         <List
@@ -168,14 +172,14 @@ export default () => {
             </List.Item>
           )}
         />
-        
+
         {/* 加载状态 */}
         {loading && (
           <div style={{ textAlign: 'center', padding: '20px' }}>
             <Spin size="large" />
           </div>
         )}
-        
+
         {/* 没有更多数据提示 */}
         {!hasMore && directiveList.length > 0 && (
           <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
@@ -183,7 +187,7 @@ export default () => {
           </div>
         )}
       </div>
-      
+
       <PublishShare
         open={modalAddOpen}
         onOk={async (values: any) => {

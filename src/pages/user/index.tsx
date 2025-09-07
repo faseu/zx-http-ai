@@ -1,7 +1,12 @@
+import AddCodeModal from '@/components/AddCodeModal';
 import CustomTitle from '@/components/CustomTitle';
+import UploadImage from '@/components/UploadImage';
+import { getOtaList } from '@/pages/machine/service';
+import { request } from '@umijs/max';
 import {
   Form,
   Input,
+  message,
   Modal,
   Popover,
   Space,
@@ -17,15 +22,6 @@ import {
   getUserInfo,
   getUserList,
 } from './service';
-// 新增导入
-import AddDirectiveModal from '@/components/AddDirectiveModal';
-import UploadImage from '@/components/UploadImage';
-import { getOtaList } from '@/pages/machine/service';
-import { request } from '@umijs/max';
-import { message } from 'antd';
-// 若需要头像上传，可解开以下组件并在“编辑资料”中使用
-// import { Form, Input, Modal } from 'antd';
-// import UploadImage from '@/components/UploadImage';
 
 interface DataType {
   key: React.Key;
@@ -89,7 +85,7 @@ const handleAddOta = async (fields: any) => {
   try {
     await addOta({
       ...fields,
-      cate: 'file',
+      cate: 'code',
     });
     hide();
     message.success('新增成功');
@@ -110,7 +106,7 @@ const handleEditOta = async (fields: any) => {
   try {
     await editOta({
       ...fields,
-      cate: 'file',
+      cate: 'code',
     });
     hide();
     message.success('更新成功');
@@ -170,6 +166,7 @@ export default () => {
       const res = await getOtaList({
         page: nextPage,
         psize: nextPageSize,
+        cate: 'code',
       });
       setCodeList(res?.data || []);
       setTotal(res?.total ?? 0);
@@ -754,7 +751,7 @@ export default () => {
         </Modal>
       )}
       {modalDirectiveOpen && (
-        <AddDirectiveModal
+        <AddCodeModal
           isEdit={!!editOtaId}
           detail={editOtaDetail}
           open={modalDirectiveOpen}
