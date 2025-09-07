@@ -3,7 +3,7 @@ import UploadDraggerImage from '@/components/UploadDraggerImage';
 import { tabsForm } from '@/utils/config';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Form, Input, InputNumber, Modal, Select, Space } from 'antd';
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './index.less';
 const { TextArea } = Input;
 
@@ -19,6 +19,21 @@ const PublishShareModal: React.FC<PublishShareModalProps> = ({
   onCancel,
 }) => {
   const [form] = Form.useForm();
+  const [selectedCover, setSelectedCover] = useState<string>('');
+
+  // 预设的封面图片
+  const defaultCovers = [
+    'http://121.40.161.20:8080/uploads/images/20250907/0fc418e0341b0406f07de823e0934eeb.jpg',
+    'http://121.40.161.20:8080/uploads/images/20250826/07eb499d4a1a0d8a70b5e7f523242bbe.png',
+    'http://121.40.161.20:8080/uploads/images/20250824/071f9f3894dae564898e12fe5ae52905.jpg',
+    'http://121.40.161.20:8080/uploads/images/20250824/c5bdd6ed4283ca768ebdc933910dbf62.png',
+  ];
+
+  // 选中预设封面
+  const handleCoverSelect = (coverUrl: string) => {
+    setSelectedCover(coverUrl);
+    form.setFieldValue('img', coverUrl);
+  };
 
   return (
     <Modal
@@ -43,31 +58,22 @@ const PublishShareModal: React.FC<PublishShareModalProps> = ({
         <Form form={form} layout="vertical">
           <Form.Item
             label="封面图片："
-            rules={[{ required: true, message: '请输入内容名称' }]}
+            rules={[{ required: true, message: '请选择或上传封面图片' }]}
             name="img"
           >
             <div className={styles.coverContainer}>
               <div className={styles.imageGrid}>
-                <img
-                  src="http://121.40.161.20:8080/uploads/images/20250907/0fc418e0341b0406f07de823e0934eeb.jpg"
-                  alt=""
-                  className={styles.coverImage}
-                />
-                <img
-                  src="http://121.40.161.20:8080/uploads/images/20250826/07eb499d4a1a0d8a70b5e7f523242bbe.png"
-                  alt=""
-                  className={styles.coverImage}
-                />
-                <img
-                  src="http://121.40.161.20:8080/uploads/images/20250824/071f9f3894dae564898e12fe5ae52905.jpg"
-                  alt=""
-                  className={styles.coverImage}
-                />
-                <img
-                  src="http://121.40.161.20:8080/uploads/images/20250824/c5bdd6ed4283ca768ebdc933910dbf62.png"
-                  alt=""
-                  className={styles.coverImage}
-                />
+                {defaultCovers.map((coverUrl, index) => (
+                  <img
+                    key={index}
+                    src={coverUrl}
+                    alt={`封面${index + 1}`}
+                    className={`${styles.coverImage} ${
+                      selectedCover === coverUrl ? styles.selected : ''
+                    }`}
+                    onClick={() => handleCoverSelect(coverUrl)}
+                  />
+                ))}
               </div>
               <div className={styles.divider}>或者</div>
               <div className={styles.componentBox}>
@@ -75,12 +81,14 @@ const PublishShareModal: React.FC<PublishShareModalProps> = ({
                   name="img"
                   onSuccess={(value: any) => {
                     console.log(value);
+                    setSelectedCover(''); // 清除预设封面选择
                     form.setFieldValue('img', value);
                   }}
                 />
               </div>
             </div>
           </Form.Item>
+
           <Form.Item
             label="内容名称："
             rules={[{ required: true, message: '请输入内容名称' }]}

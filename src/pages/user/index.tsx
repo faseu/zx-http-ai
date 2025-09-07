@@ -542,7 +542,7 @@ export default () => {
         <div className={styles.otherItem}>
           <CustomTitle
             title="源码列表"
-            addButtonText="添加源码"
+            addButtonText={user?.isAdmin ? '添加源码' : ''}
             onSubmit={handleAddCode}
             showSearch={false}
           />
