@@ -2,9 +2,10 @@ import AddMachineModal from '@/components/AddMachineModal';
 import DetailMachineModal from '@/components/DetailMachineModal';
 import MachineItem from '@/components/MachineItem';
 import { SearchOutlined } from '@ant-design/icons';
+import { debounce } from '@antv/util';
 import { useModel } from '@umijs/max';
 import { Button, Input, message, Pagination, Select } from 'antd';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
 import {
   addDevice,
@@ -16,7 +17,6 @@ import {
   editDevice,
   getDeviceList,
   setDeviceBatGroup,
-  setDeviceGroup,
 } from './service';
 
 /**
@@ -139,7 +139,10 @@ const handleDelDevice = async (fields: any) => {
 const handleSetDeviceGroup = async (fields: any) => {
   const hide = message.loading('正在添加');
   try {
-    await setDeviceBatGroup({ machineIds: fields.machineIds.join(','), isGroup: 1 });
+    await setDeviceBatGroup({
+      machineIds: fields.machineIds.join(','),
+      isGroup: 1,
+    });
     hide();
     message.success('添加成功');
     return true;
@@ -177,16 +180,19 @@ export default () => {
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<number[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
+  const [inputValue, setInputValue] = useState('');
+
   // 新增：筛选状态
   const [isGroupFilter, setIsGroupFilter] = useState<'0' | '1' | undefined>(
     undefined,
   );
 
-  // 获取设备列表（带分页 + isGroup 筛选）
+  // 获取设备列表（带分页 + isGroup 筛选 + 搜索关键词）
   const fetchDeviceList = async (
     nextPage: number = page,
     nextPageSize: number = pageSize,
     rawIsGroup?: string | number | null,
+    searchKeywords?: string,
   ) => {
     try {
       setLoading(true);
@@ -194,6 +200,7 @@ export default () => {
         page: nextPage,
         psize: nextPageSize,
         isGroup: rawIsGroup,
+        keywords: searchKeywords,
       });
       // 接口返回：{ data: [...], total: 12 }
       setDeviceList(res?.data || []);
@@ -224,16 +231,29 @@ export default () => {
     setModalDeviceOpen(true);
   };
 
-  // 全选/取消全选处理函数
-  const handleSelectAll = (checked: boolean) => {
-    setIsAllSelected(checked);
-    if (checked) {
-      const allDeviceIds = deviceList.map((device: any) => device.machineId);
-      setSelectedDeviceIds(allDeviceIds);
-    } else {
-      setSelectedDeviceIds([]);
-    }
-  };
+  // 创建防抖搜索函数
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchValue: string) => {
+        fetchDeviceList(1, pageSize, isGroupFilter, searchValue);
+      }, 500), // 500ms 防抖延迟
+    [pageSize, isGroupFilter],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInputValue(value);
+
+      // 如果搜索框为空，立即重置到第一页
+      if (value.trim() === '') {
+        fetchDeviceList(1, pageSize, isGroupFilter);
+      } else {
+        debouncedSearch(value);
+      }
+    },
+    [debouncedSearch, fetchDeviceList, pageSize, isGroupFilter],
+  );
 
   // 单个设备选中/取消选中处理函数
   const handleDeviceCheck = (machineId: number, checked: boolean) => {
@@ -291,6 +311,8 @@ export default () => {
             style={{ width: '320px', height: '40px', marginRight: '8px' }}
             placeholder="搜索设备ID、名称或用途..."
             suffix={<SearchOutlined />}
+            value={inputValue}
+            onChange={handleInputChange}
           />
           <Select
             size="large"

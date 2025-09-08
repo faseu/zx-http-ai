@@ -1,13 +1,9 @@
 import AddDirectiveModal from '@/components/AddDirectiveModal';
-import {
-  addOta,
-  delOta,
-  detailOta,
-  editOta,
-  getOtaList,
-} from '@/pages/machine/service';
+import { SearchOutlined } from '@ant-design/icons';
+import { debounce } from '@antv/util';
 import {
   Button,
+  Input,
   message,
   Popconfirm,
   Popover,
@@ -15,8 +11,16 @@ import {
   Table,
   TableColumnsType,
 } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
+import {
+  addOta,
+  delOta,
+  detailOta,
+  editOta,
+  getOtaList,
+  setOtaGroup,
+} from './service';
 interface DataType {
   key: React.Key;
   id: number;
@@ -106,10 +110,29 @@ const handleDelOta = async (fields: any) => {
   }
 };
 
+/**
+ *  添加设备到智能空间
+ * @param fields
+ */
+const handleSetOtaGroup = async (fields: any) => {
+  const hide = message.loading('正在添加');
+  try {
+    await setOtaGroup({ ids: fields.ids.join(','), isGroup: 1 });
+    hide();
+    message.success('添加成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('添加失败，请重试');
+    return false;
+  }
+};
+
 export default () => {
   const [editOtaId, setEditOtaId] = useState(0);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
   const [directiveList, setDirectiveList] = useState<DataType[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<DataType[]>([]);
   const [editOtaDetail, setEditOtaDetail] = useState({});
 
   // 分页状态
@@ -118,16 +141,20 @@ export default () => {
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const [inputValue, setInputValue] = useState('');
+
   // 获取协议列表（带分页）
   const fetchOtaList = async (
     nextPage: number = page,
     nextPageSize: number = pageSize,
+    searchKeywords?: string,
   ) => {
     try {
       setLoading(true);
       const res = await getOtaList({
         page: nextPage,
         psize: nextPageSize,
+        keywords: searchKeywords,
       });
       // 接口返回：{ data: [...], total: 12 }
       setDirectiveList(res?.data || []);
@@ -136,6 +163,43 @@ export default () => {
       setPageSize(nextPageSize);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 创建防抖搜索函数
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchValue: string) => {
+        fetchOtaList(1, pageSize, searchValue);
+      }, 500), // 500ms 防抖延迟
+    [pageSize],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInputValue(value);
+
+      // 如果搜索框为空，立即重置到第一页
+      if (value.trim() === '') {
+        fetchOtaList(1, pageSize);
+      } else {
+        debouncedSearch(value);
+      }
+    },
+    [debouncedSearch, fetchOtaList, pageSize],
+  );
+
+  // 新增：批量添加选中设备到智能空间
+  const addSelectedToGroup = async () => {
+    if (!selectedRowKeys.length) return;
+    const success = await handleSetOtaGroup({
+      ids: selectedRowKeys,
+    });
+    if (success) {
+      // 成功后清空选择并刷新当前页
+      setSelectedRowKeys([]);
+      await fetchOtaList(page, pageSize);
     }
   };
 
@@ -237,14 +301,28 @@ export default () => {
     <div className={styles.container}>
       <div className={styles.titleCard}>
         <div className={styles.titleText}>协议管理</div>
-        <Button
-          color="primary"
-          variant="solid"
-          size="large"
-          onClick={handleAddClick}
-        >
-          新增协议
-        </Button>
+        <Space>
+          <Input
+            style={{ width: '320px', height: '40px', marginRight: '8px' }}
+            placeholder="搜索名称、厂家或型号..."
+            suffix={<SearchOutlined />}
+            value={inputValue}
+            onChange={handleInputChange}
+          />
+          {selectedRowKeys.length > 0 && (
+            <Button variant="solid" size="large" onClick={addSelectedToGroup}>
+              添加至智能空间
+            </Button>
+          )}
+          <Button
+            color="primary"
+            variant="solid"
+            size="large"
+            onClick={handleAddClick}
+          >
+            新增协议
+          </Button>
+        </Space>
       </div>
       <div className={styles.contentCard}>
         <Table<DataType>
@@ -252,6 +330,7 @@ export default () => {
           rowSelection={{
             type: 'checkbox',
             onChange: (selectedRowKeys) => {
+              setSelectedRowKeys(selectedRowKeys);
               console.log('Selected Row Keys:', selectedRowKeys);
             },
           }}

@@ -94,6 +94,7 @@ const MachineItem: React.FC<MachineItemProps> = ({
           {isSmart && (
             <Popconfirm
               title="移除智能空间"
+              description="确定将设备移除智能空间?"
               okText="确定"
               cancelText="取消"
               onConfirm={() => onMoveMachine(detail)}

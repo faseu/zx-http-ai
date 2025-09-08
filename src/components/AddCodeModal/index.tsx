@@ -52,18 +52,18 @@ const AddDirectiveModal: React.FC<AddDirectiveModalProps> = ({
           <Input placeholder="请输入协议名称" />
         </Form.Item>
         <Form.Item
-          label="硬件厂家："
-          rules={[{ required: true, message: '请输入硬件厂家' }]}
+          label="描述："
+          rules={[{ required: true, message: '请输入描述' }]}
           name="reason"
         >
-          <Input placeholder="请输入硬件厂家" />
+          <Input placeholder="请输入描述" />
         </Form.Item>
         <Form.Item
-          label="设备型号："
-          rules={[{ required: true, message: '请选择设备类型' }]}
+          label="分类："
+          rules={[{ required: true, message: '请选择分类' }]}
           name="cateName"
         >
-          <Input placeholder="请输入设备类型" />
+          <Input placeholder="请输入分类" />
         </Form.Item>
         <Form.Item
           label="源码文件："

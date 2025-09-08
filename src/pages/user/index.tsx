@@ -2,6 +2,7 @@ import AddCodeModal from '@/components/AddCodeModal';
 import CustomTitle from '@/components/CustomTitle';
 import UploadImage from '@/components/UploadImage';
 import { getOtaList } from '@/pages/machine/service';
+import { DownloadOutlined } from '@ant-design/icons';
 import { request } from '@umijs/max';
 import {
   Form,
@@ -232,32 +233,25 @@ export default () => {
       },
     },
     {
-      title: '硬件厂家',
+      title: '描述',
       dataIndex: 'reason',
     },
     {
-      title: '设备型号',
+      title: '分类',
       dataIndex: 'cateName',
-    },
-    {
-      title: '协议文件',
-      dataIndex: 'fileUrl',
-      render: (fileUrl: string) => {
-        if (fileUrl) {
-          return (
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-              下载文件
-            </a>
-          );
-        }
-        return '-';
-      },
     },
     {
       title: '操作',
       key: 'action',
       width: 150,
-      render: (_, record) => <Space size="middle">1</Space>,
+      render: (_, record) => (
+        <Space size="middle">
+          <a href={record.fileUrl} target="_blank" rel="noopener noreferrer">
+            <DownloadOutlined />
+            <span>下载</span>
+          </a>
+        </Space>
+      ),
     },
   ];
 

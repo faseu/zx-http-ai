@@ -2,7 +2,8 @@ import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { Button, Checkbox, Input, Popconfirm } from 'antd';
 import classNames from 'classnames';
-import { useState } from 'react';
+import { debounce } from 'lodash';
+import { useCallback, useMemo, useState } from 'react';
 import styles from './index.less';
 
 interface CustomTitleProps {
@@ -11,7 +12,8 @@ interface CustomTitleProps {
   addButtonText?: string;
   showEmpty?: boolean;
   showCheckbox?: boolean;
-  onSubmit?: (inputValue: string) => void;
+  onSubmit?: () => void;
+  onSearch?: (inputValue: string) => void;
   onClear?: () => void; // 新增：清空回调函数
   // 全选相关props
   isAllSelected?: boolean;
@@ -32,6 +34,7 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
   // 全选相关props
   isAllSelected = false,
   showSearch = true,
+  onSearch,
   onSelectAll,
   selectedCount = 0,
   totalCount = 0,
@@ -40,13 +43,27 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
   const isDark = initialState?.settings?.navTheme === 'realDark';
   const [inputValue, setInputValue] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
+  // 创建防抖搜索函数
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchValue: string) => {
+        onSearch?.(searchValue);
+      }, 500), // 500ms 防抖延迟
+    [onSearch],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInputValue(value);
+      debouncedSearch(value);
+    },
+    [debouncedSearch],
+  );
 
   const handleAddClick = () => {
     if (onSubmit) {
-      onSubmit(inputValue);
+      onSubmit();
     }
   };
 

@@ -8,13 +8,13 @@ import DetailMachineModal from '@/components/DetailMachineModal';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
 import UpgradeOverlay from '@/components/UpgradeOverlay'; // 新增：导入升级遮罩组件
+import { setDeviceBatGroup } from '@/pages/device/service';
 import {
   addMachine,
   addOta,
   clearAllDialogue,
   delDialogue,
   delMachine,
-  delOta,
   detailMachine,
   detailMachineChartData,
   detailMachineData,
@@ -25,6 +25,7 @@ import {
   getDialogueList,
   getMachineList,
   getOtaList,
+  setOtaGroup,
 } from '@/pages/machine/service';
 import { useModel } from '@umijs/max';
 import {
@@ -39,7 +40,6 @@ import {
 } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './index.less';
-import { setDeviceBatGroup } from '@/pages/device/service';
 
 /**
  * add设备
@@ -239,21 +239,20 @@ const handleMoveMachine = async (fields: any) => {
   }
 };
 
-
 /**
- *  删除协议
+ *  移除协议
  * @param fields
  */
 const handleDelOta = async (fields: any) => {
-  const hide = message.loading('正在删除');
+  const hide = message.loading('正在移除');
   try {
-    await delOta({ id: fields.id });
+    await setOtaGroup({ ids: fields.id, isGroup: 0 });
     hide();
-    message.success('删除成功');
+    message.success('移除成功');
     return true;
   } catch (error) {
     hide();
-    message.error('删除失败，请重试');
+    message.error('移除失败，请重试');
     return false;
   }
 };
@@ -333,19 +332,22 @@ export default () => {
 
   console.log(isDark);
 
-  const fetchMachineList = async () => {
+  const fetchMachineList = async (params?: any) => {
     const { data } = await getMachineList({
       page: 1,
       psize: 1000,
       isGroup: 1,
+      ...params,
     });
     setMachineList(data);
   };
 
-  const fetchOtaList = async () => {
+  const fetchOtaList = async (params?: any) => {
     const { data } = await getOtaList({
       page: 1,
       psize: 1000,
+      isGroup: 1,
+      ...params,
     });
     setDirectiveList(data);
   };
@@ -552,8 +554,8 @@ export default () => {
             编辑
           </a>
           <Popconfirm
-            title="删除协议"
-            description="删除后无法恢复，确定删除协议?"
+            title="移除智能空间"
+            description="确定将协议移除智能空间?"
             okText="确定"
             cancelText="取消"
             onConfirm={async () => {
@@ -563,7 +565,7 @@ export default () => {
               }
             }}
           >
-            <a style={{ color: 'red' }}>删除</a>
+            <a style={{ color: 'red' }}>移除</a>
           </Popconfirm>
           <a
             onClick={() => handleAiAnalysis(record)}
@@ -732,6 +734,7 @@ export default () => {
               searchPlaceholder="搜索设备..."
               addButtonText="新增设备"
               onSubmit={addMachineHandler}
+              onSearch={(keywords) => fetchMachineList({ keywords })}
               isAllSelected={isAllSelected}
               onSelectAll={handleSelectAll}
               selectedCount={selectedMachineIds.length}
@@ -815,6 +818,7 @@ export default () => {
               title="协议管理"
               searchPlaceholder="搜索协议..."
               addButtonText="新增协议"
+              onSearch={(keywords) => fetchOtaList({ keywords })}
               onSubmit={addDirective}
             />
             <Table<DataType>

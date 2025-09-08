@@ -1,4 +1,4 @@
-import { Popover, Space, Table, TableColumnsType } from 'antd';
+import { Space, Table, TableColumnsType } from 'antd';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 import { getOtaList } from './service';
@@ -63,11 +63,9 @@ export default () => {
     {
       title: '设备名称（ID）',
       dataIndex: 'machineName',
-      render: (text,record) => {
-        return (
-          <span>{`${record.machineName}(${record.machineId})`}</span>
-        )
-      }
+      render: (text, record) => {
+        return <span>{`${record.machineName}(${record.machineId})`}</span>;
+      },
     },
     {
       title: '操作',

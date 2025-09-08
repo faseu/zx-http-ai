@@ -60,6 +60,7 @@ export async function detailMachineLastData(params?: { [key: string]: any }) {
     },
   });
 }
+
 /**
  * 设备详情
  */
@@ -157,10 +158,10 @@ export async function getOtaList(params?: { [key: string]: any }) {
 }
 
 /**
- * 分类列表
+ * 协议移除智能空间
  */
-export async function getCateList(params?: { [key: string]: any }) {
-  return request('/admin/cate/getCateList', {
+export async function setOtaGroup(params?: { [key: string]: any }) {
+  return request('/admin/ota/setBatGroup', {
     method: 'POST',
     params: {
       ...params,
@@ -213,6 +214,7 @@ export async function upgrade(params?: { [key: string]: any }) {
     },
   });
 }
+
 /**
  * 清空所有指令
  */

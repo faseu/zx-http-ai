@@ -9,7 +9,8 @@ import {
 import { tabs } from '@/utils/config';
 import { SearchOutlined } from '@ant-design/icons';
 import { Button, Input, List, message, Spin, Tabs } from 'antd';
-import React, { useEffect, useState } from 'react';
+import { debounce } from 'lodash'; // 新增lodash的debounce
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
 
 /**
@@ -60,6 +61,10 @@ export default () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  // 新增：搜索和筛选状态
+  const [inputValue, setInputValue] = useState('');
+  const [selectedTag, setSelectedTag] = useState('all');
+
   // 详情弹窗相关状态
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [detailData, setDetailData] = useState<any>(null);
@@ -69,15 +74,32 @@ export default () => {
     currentPage = 1,
     isLoadMore = false,
     showMessage = false,
+    searchKeywords?: string,
+    filterTag?: string,
   ) => {
     if (loading) return; // 防止重复请求
 
     setLoading(true);
     try {
-      const { data, total } = await getDialogueList({
+      const params: any = {
         page: currentPage,
         psize: PAGE_SIZE,
-      });
+      };
+
+      // 添加搜索关键词
+      const keywords =
+        searchKeywords !== undefined ? searchKeywords : inputValue.trim();
+      if (keywords) {
+        params.keywords = keywords;
+      }
+
+      // 添加标签筛选
+      const tag = filterTag !== undefined ? filterTag : selectedTag;
+      if (tag && tag !== 'all') {
+        params.tag = tag;
+      }
+
+      const { data, total } = await getDialogueList(params);
 
       if (isLoadMore) {
         // 下拉加载，追加数据
@@ -122,6 +144,40 @@ export default () => {
   useEffect(() => {
     fetchDialogueList(1, false);
   }, []);
+
+  // 新增：创建防抖搜索函数
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchValue: string) => {
+        setPage(1);
+        setHasMore(true);
+        setDirectiveList([]);
+        fetchDialogueList(1, false, true, searchValue, selectedTag);
+      }, 500), // 500ms 防抖延迟
+    [],
+  );
+
+  // 修改：处理搜索输入变化（使用防抖）
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInputValue(value);
+      debouncedSearch(value);
+    },
+    [debouncedSearch],
+  );
+
+  // 新增：处理标签切换
+  const handleTabChange = (key: string) => {
+    setSelectedTag(key);
+    setPage(1);
+    setHasMore(true);
+    setDirectiveList([]); // 清空现有数据
+    // 延迟执行，确保状态更新后再请求
+    setTimeout(() => {
+      fetchDialogueList(1, false, true, inputValue, key);
+    }, 0);
+  };
 
   const handleAddClick = () => {
     setModalAddOpen(true);
@@ -197,6 +253,8 @@ export default () => {
             style={{ width: '320px', height: '40px', marginRight: '8px' }}
             placeholder="搜索..."
             suffix={<SearchOutlined />}
+            value={inputValue}
+            onChange={handleInputChange}
           />
           <Button
             color="primary"
@@ -211,7 +269,8 @@ export default () => {
       <Tabs
         items={tabs}
         defaultActiveKey="all"
-        onChange={(key) => console.log(key)}
+        activeKey={selectedTag}
+        onChange={handleTabChange}
       />
       <div
         className={styles.contentCard}
