@@ -231,6 +231,30 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
       const controller = new AbortController();
       abortController.current = controller;
 
+      // 收集所有成功上传的文件ID
+      const sessionFileIds = fileList
+        .filter((file) => file.fileId && file.uploadStatus === 'success')
+        .map((file) => file.fileId);
+
+      console.log('当前会话文件IDs:', sessionFileIds);
+
+      const requestBody = {
+        input: {
+          messages: messages,
+        },
+        parameters: {
+          max_tokens: 8192,
+          incremental_output: true,
+          rag_options: {
+            // 动态设置会话文件ID列表
+            session_file_ids: sessionFileIds.length > 0 ? sessionFileIds : [],
+          },
+        },
+        debug: {},
+      };
+
+      console.log('发送的请求体:', JSON.stringify(requestBody, null, 2));
+
       const response = await fetch(
         `https://dashscope.aliyuncs.com/api/v1/apps/${APP_ID}/completion`,
         {
@@ -240,21 +264,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
             'Content-Type': 'application/json',
             'X-DashScope-SSE': 'enable',
           },
-          body: JSON.stringify({
-            input: {
-              messages: messages,
-            },
-            parameters: {
-              max_tokens: 512,
-              incremental_output: true,
-              rag_options: {
-                session_file_ids: [
-                  'file_session_efdcc88fc3ba46bbb61a944d9deab052_12313549',
-                ],
-              },
-            },
-            debug: {},
-          }),
+          body: JSON.stringify(requestBody),
         },
       );
 
