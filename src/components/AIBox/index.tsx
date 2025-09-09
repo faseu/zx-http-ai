@@ -27,6 +27,7 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 import MarkdownIt from 'markdown-it';
 
+import type { RcFile } from 'antd/es/upload';
 import {
   forwardRef,
   useEffect,
@@ -197,17 +198,15 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     try {
       // 创建FormData
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('purpose', 'file-extract');
+      formData.append('file', file as RcFile); // 上传文件
+      formData.append('filename', 'file'); // 原始文件名作为额外参数传给后端
 
       // 使用fetch调用OpenAI兼容接口
-      const response = await fetch(`${BASE_URL}/files`, {
+      const response = await fetch('/admin/upload/aifile', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${API_KEY}`,
-        },
         body: formData,
       });
+      console.log(response);
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -218,7 +217,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
 
       const result = await response.json();
       console.log('文件上传成功:', result);
-      return result.id; // 返回file-id
+      return result.data.fileId; // 返回file-id
     } catch (error) {
       console.error('上传文件失败:', error);
       throw error;
@@ -232,27 +231,32 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
       const controller = new AbortController();
       abortController.current = controller;
 
-      const response = await fetch(`https://dashscope.aliyuncs.com/api/v1/apps/${APP_ID}/completion`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${API_KEY}`,
-          'Content-Type': 'application/json',
-          'X-DashScope-SSE': 'enable',
+      const response = await fetch(
+        `https://dashscope.aliyuncs.com/api/v1/apps/${APP_ID}/completion`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json',
+            'X-DashScope-SSE': 'enable',
+          },
+          body: JSON.stringify({
+            input: {
+              messages: messages,
+            },
+            parameters: {
+              max_tokens: 512,
+              incremental_output: true,
+              rag_options: {
+                session_file_ids: [
+                  'file_session_efdcc88fc3ba46bbb61a944d9deab052_12313549',
+                ],
+              },
+            },
+            debug: {},
+          }),
         },
-        body: JSON.stringify({
-          input: {
-            messages:messages
-          },
-          parameters: {
-            max_tokens: 512,
-            incremental_output: true,
-            rag_options: {
-              session_file_ids: ["file-fe-aef5651846914505924959c6"]
-            }
-          },
-          debug: {}
-        }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -313,8 +317,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
         }
       } catch (err) {
         console.error('流式读取错误:', err);
-      }
- finally {
+      } finally {
         reader.releaseLock();
         abortController.current = null; // 确保清空控制器
       }
