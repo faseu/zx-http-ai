@@ -101,7 +101,7 @@ export async function getDeviceList(params?: { [key: string]: any }) {
  * 设备列表
  */
 export async function getOtaList(params?: { [key: string]: any }) {
-  return request('/admin/compile_log/index', {
+  return request('/admin/compile/index', {
     method: 'POST',
     params: {
       ...params,

@@ -6,11 +6,16 @@ interface DataType {
   key: React.Key;
   id: number;
   otaName: string;
-  reason: string;
-  cateName: string;
-  cateId: number;
-  fileUrl?: string;
+  ver: string;
+  type: string;
+  regTime: string;
+  url: string;
+  codeUrl: string;
+  userId: number;
+  fileUrl: string;
+  remark?: string;
 }
+
 
 export default () => {
   const [directiveList, setDirectiveList] = useState<DataType[]>([]);
@@ -49,22 +54,50 @@ export default () => {
 
   const columns: TableColumnsType<DataType> = [
     {
-      title: 'uuid',
-      dataIndex: 'cmdUuid',
+      title: 'ID',
+      dataIndex: 'id',
+      width: 100,
     },
     {
-      title: '编译ID',
-      dataIndex: 'compileId',
+      title: 'OTA名称',
+      dataIndex: 'otaName',
+      width: 150,
+    },
+    {
+      title: '版本',
+      dataIndex: 'ver',
     },
     {
       title: '发布时间',
       dataIndex: 'regTime',
     },
     {
-      title: '设备名称（ID）',
-      dataIndex: 'machineName',
-      render: (text, record) => {
-        return <span>{`${record.machineName}(${record.machineId})`}</span>;
+      title: '源码下载',
+      dataIndex: 'url',
+      render: (url: string) => {
+        if (url) {
+          return (
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              下载源码
+            </a>
+          );
+        }
+        return '-';
+      },
+    },
+    {
+      title: '固件下载',
+      dataIndex: 'codeUrl',
+      render: (codeUrl: string, record: DataType) => {
+        if (codeUrl && record.fileUrl) {
+          const downloadUrl = `${record.fileUrl}${codeUrl}`;
+          return (
+            <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+              下载固件
+            </a>
+          );
+        }
+        return '-';
       },
     },
     {
@@ -73,7 +106,7 @@ export default () => {
       width: 150,
       render: (_, record) => (
         <Space size="middle">
-          <a>查看</a>
+          <a>升级</a>
         </Space>
       ),
     },
@@ -87,12 +120,7 @@ export default () => {
       <div className={styles.contentCard}>
         <Table<DataType>
           rowKey="id"
-          rowSelection={{
-            type: 'checkbox',
-            onChange: (selectedRowKeys) => {
-              console.log('Selected Row Keys:', selectedRowKeys);
-            },
-          }}
+
           loading={loading}
           columns={columns}
           dataSource={directiveList}

@@ -618,7 +618,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     previousMessages: any[], // 新增：传入历史消息
   ) => {
     const messages: any[] = [
-      { role: 'system', content: 'You are a helpful assistant.' },
+      // { role: 'system', content: 'You are a helpful assistant.' },
     ];
 
     // 添加file-id到system messages（只在第一次上传文件时添加）
@@ -1349,7 +1349,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
         >
           <img style={{ width: '305px' }} src="/admin/ai-prompt.png" alt="" />
           <div style={{ fontSize: '18px', marginTop: '32px' }}>
-            你好，我是即插智联，一款自然语言编程的智能体！
+            你好，我是即插智联，一款AIOT解决方案智能体！
           </div>
         </div>
       )}
