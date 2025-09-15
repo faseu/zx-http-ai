@@ -1,4 +1,5 @@
-import { Space, Table, TableColumnsType } from 'antd';
+import { history } from '@umijs/max';
+import { Button, Space, Table, TableColumnsType } from 'antd';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 import { getOtaList } from './service';
@@ -15,7 +16,6 @@ interface DataType {
   fileUrl: string;
   remark?: string;
 }
-
 
 export default () => {
   const [directiveList, setDirectiveList] = useState<DataType[]>([]);
@@ -106,7 +106,20 @@ export default () => {
       width: 150,
       render: (_, record) => (
         <Space size="middle">
-          <a>升级</a>
+          <Button
+            type="link"
+            onClick={() => {
+              // history.push({
+              //   pathname: `/machine?url=${record.fileUrl}${record.codeUrl}`,
+              // });
+              history.push('/machine', {
+                url: `${record.codeUrl}`,
+                compileId: `${record.id}`,
+              });
+            }}
+          >
+            升级
+          </Button>
         </Space>
       ),
     },
@@ -120,7 +133,6 @@ export default () => {
       <div className={styles.contentCard}>
         <Table<DataType>
           rowKey="id"
-
           loading={loading}
           columns={columns}
           dataSource={directiveList}

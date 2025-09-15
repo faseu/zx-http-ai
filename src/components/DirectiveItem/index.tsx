@@ -8,7 +8,7 @@ import styles from './index.less';
 interface DirectiveItemProps {
   text: string;
   detail?: any; // 完整的指令数据
-  onDelete?: () => void; // 删除回调函数
+  onDelete?: any; // 删除回调函数
   onDirectiveClick?: (text: string) => void; // 新增：点击指令的回调函数
 }
 

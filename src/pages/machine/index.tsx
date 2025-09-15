@@ -39,8 +39,8 @@ import {
   TableColumnsType,
 } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'umi';
 import styles from './index.less';
-
 /**
  * add设备
  * @param fields
@@ -314,6 +314,7 @@ export default () => {
   const [editMachineId, setEditMachineId] = useState(0);
   const [editMachineDetail, setEditMachineDetail] = useState({});
   const [machineDetail, setMachineDetail] = useState({});
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '');
 
   // 协议编辑相关状态
   const [editOtaId, setEditOtaId] = useState(0);
@@ -683,11 +684,21 @@ export default () => {
       setIsAllSelected(false);
     }
   }, [machineList]);
+  const location = useLocation();
 
   useEffect(() => {
     fetchMachineList();
     fetchOtaList();
     fetchDialogueList(); // 获取指令历史
+    if (location?.state?.url) {
+      const url = location?.state?.url;
+      const compileId = location?.state?.compileId;
+      setUpgradeUrl({
+        url,
+        compileId,
+      });
+      setShowUpgradeOverlay(true);
+    }
   }, []);
 
   return (
@@ -791,8 +802,11 @@ export default () => {
             {/* 常用指令部分 */}
             <CustomTitle
               title="常用指令"
-              showEmpty
+              showEmpty={!!userInfo.isAdmin}
               onClear={onClearAllDialogue} // 传递清空回调函数
+              addButtonText="新增指令"
+              showSearch={false}
+              onSubmit={addMachineHandler}
             />
             <div className={styles.hideScrollbar}>
               <List
@@ -803,7 +817,9 @@ export default () => {
                     <DirectiveItem
                       text={item.content}
                       detail={item}
-                      onDelete={() => onDelDialogue(item.id)} // 传递删除函数
+                      onDelete={
+                        userInfo.isAdmin ? () => onDelDialogue(item.id) : false
+                      } // 传递删除函数
                       onDirectiveClick={handleDirectiveClick} // 新增：传递点击回调函数
                     />
                   );

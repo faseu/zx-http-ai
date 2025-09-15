@@ -69,7 +69,8 @@ export default () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [detailData, setDetailData] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '');
+  console.log(userInfo);
   const fetchDialogueList = async (
     currentPage = 1,
     isLoadMore = false,
@@ -360,7 +361,7 @@ export default () => {
         data={detailData}
         loading={detailLoading}
         onStatusChange={handleStatusChange}
-        showAuditButtons={true} // 显示审核按钮
+        showAuditButtons={!!userInfo.isAdmin} // 显示审核按钮
       />
 
       <PublishShare

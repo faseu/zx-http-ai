@@ -1,6 +1,6 @@
 import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
-import { Button, Checkbox, Input, Popconfirm } from 'antd';
+import { Button, Checkbox, Input, Popconfirm, Space } from 'antd';
 import classNames from 'classnames';
 import { debounce } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
@@ -118,52 +118,31 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
       <div className={styles.dot}></div>
       <div className={styles.title}>{title}</div>
 
-      {addButtonText && (
-        <>
-          {showCheckbox && (
-            <div
-              style={{
-                marginRight: '8px',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <Checkbox
-                {...getCheckboxProps()}
-                onChange={handleSelectAllChange}
+      <Space>
+        {showCheckbox && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Checkbox {...getCheckboxProps()} onChange={handleSelectAllChange}>
+              全选
+            </Checkbox>
+            {totalCount > 0 && (
+              <span
+                style={{
+                  marginLeft: '8px',
+                  fontSize: '12px',
+                  color: isDark ? '#888' : '#666',
+                }}
               >
-                全选
-              </Checkbox>
-              {totalCount > 0 && (
-                <span
-                  style={{
-                    marginLeft: '8px',
-                    fontSize: '12px',
-                    color: isDark ? '#888' : '#666',
-                  }}
-                >
-                  ({selectedCount}/{totalCount})
-                </span>
-              )}
-            </div>
-          )}
-          {showSearch && (
-            <Input
-              style={{ width: '200px', marginRight: '8px' }}
-              placeholder={searchPlaceholder}
-              suffix={<SearchOutlined />}
-              value={inputValue}
-              onChange={handleInputChange}
-            />
-          )}
-          <Button color="primary" variant="solid" onClick={handleAddClick}>
-            {addButtonText}
-          </Button>
-        </>
-      )}
-
-      {showEmpty && (
-        <>
+                ({selectedCount}/{totalCount})
+              </span>
+            )}
+          </div>
+        )}
+        {showEmpty && (
           <Popconfirm
             title="清空指令"
             description="清空后无法恢复，确定清空指令?"
@@ -176,8 +155,22 @@ const CustomTitle: React.FC<CustomTitleProps> = ({
               <span style={{ marginLeft: '4px' }}>清空</span>
             </div>
           </Popconfirm>
-        </>
-      )}
+        )}
+        {showSearch && (
+          <Input
+            style={{ width: '200px' }}
+            placeholder={searchPlaceholder}
+            suffix={<SearchOutlined />}
+            value={inputValue}
+            onChange={handleInputChange}
+          />
+        )}
+        {addButtonText && (
+          <Button color="primary" variant="solid" onClick={handleAddClick}>
+            {addButtonText}
+          </Button>
+        )}
+      </Space>
     </div>
   );
 };
