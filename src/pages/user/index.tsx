@@ -517,6 +517,18 @@ export default () => {
               <div className={styles.btnText}>编辑资料</div>
             </div>
             <div
+              className={styles.btnItem}
+              onClick={() => {
+                window.open(
+                  'http://121.40.161.20:8080/uploads/AIOT.html',
+                  '_blank',
+                );
+              }}
+            >
+              <img src="/admin/user-btn-6.png" alt="" className={styles.icon} />
+              <div className={styles.btnText}>协议文档</div>
+            </div>
+            <div
               className={styles.btnItemSignOut}
               onClick={() => {
                 try {

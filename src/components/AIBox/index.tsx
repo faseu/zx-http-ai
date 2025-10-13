@@ -39,6 +39,17 @@ import {
 import EditCodeModal from './EditCodeModal';
 import styles from './index.less';
 
+// 本地存储key
+const CHAT_HISTORY_KEY = 'ai_chat_history';
+const CHAT_FILES_KEY = 'ai_chat_files'; // 新增：文件信息存储key
+
+// 定义完整的聊天会话数据结构
+interface ChatSession {
+  messages: any[];
+  files: FileWithStatus[];
+  timestamp: number; // 最后更新时间
+}
+
 // 使用OpenAI SDK配置
 const API_KEY = 'sk-27b6793c7f634c038eb344a0d2bd39c9'; // 替换为你的实际API Key
 const APP_ID = '8be55fe0f7c64c17b37ca66d9f629411'; // 替换为你的实际API Key
@@ -92,6 +103,114 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     null,
   );
   const [fileListCollapsed, setFileListCollapsed] = useState(false);
+
+  // 从本地存储加载完整的聊天会话（消息+文件）
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+      const savedFiles = localStorage.getItem(CHAT_FILES_KEY);
+
+      if (savedHistory) {
+        const parsedHistory = JSON.parse(savedHistory);
+        if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+          setMessages(parsedHistory);
+          console.log('已加载对话历史:', parsedHistory.length, '条消息');
+        }
+      }
+
+      if (savedFiles) {
+        const parsedFiles = JSON.parse(savedFiles);
+        if (Array.isArray(parsedFiles) && parsedFiles.length > 0) {
+          // 恢复文件时，保持之前的状态
+          const restoredFiles = parsedFiles.map((file) => ({
+            ...file,
+            // 确保文件对象包含必要的属性
+            status:
+              file.uploadStatus === 'success'
+                ? 'done'
+                : file.uploadStatus === 'error'
+                ? 'error'
+                : 'uploading',
+          }));
+          setFileList(restoredFiles);
+          console.log('已加载文件列表:', restoredFiles.length, '个文件');
+        }
+      }
+    } catch (error) {
+      console.error('加载聊天会话失败:', error);
+      // 如果加载失败，清空可能损坏的数据
+      localStorage.removeItem(CHAT_HISTORY_KEY);
+      localStorage.removeItem(CHAT_FILES_KEY);
+    }
+  }, []);
+
+  // 保存完整的聊天会话到本地存储（消息+文件）
+  const saveSessionToLocalStorage = (
+    messagesToSave: any[],
+    filesToSave: FileWithStatus[],
+  ) => {
+    try {
+      // 保存消息
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messagesToSave));
+
+      // 保存文件信息（过滤掉不必要的属性，减少存储空间）
+      const filesToStore = filesToSave.map((file) => ({
+        uid: file.uid,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        fileId: file.fileId,
+        uploadStatus: file.uploadStatus,
+        uploadProgress: file.uploadProgress,
+        status: file.status,
+        // 注意：不保存 originFileObj，因为它是 File 对象无法序列化
+        // 而且恢复时也不需要重新上传
+      }));
+      localStorage.setItem(CHAT_FILES_KEY, JSON.stringify(filesToStore));
+
+      console.log('聊天会话已保存到本地存储：', {
+        messages: messagesToSave.length,
+        files: filesToStore.length,
+      });
+    } catch (error) {
+      console.error('保存聊天会话失败:', error);
+      // 如果存储空间不足，清理数据
+      if (error.name === 'QuotaExceededError') {
+        try {
+          // 只保留最近30条消息和最近10个文件
+          const recentMessages = messagesToSave.slice(-30);
+          const recentFiles = filesToSave.slice(-10).map((file) => ({
+            uid: file.uid,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            fileId: file.fileId,
+            uploadStatus: file.uploadStatus,
+            uploadProgress: file.uploadProgress,
+            status: file.status,
+          }));
+
+          localStorage.setItem(
+            CHAT_HISTORY_KEY,
+            JSON.stringify(recentMessages),
+          );
+          localStorage.setItem(CHAT_FILES_KEY, JSON.stringify(recentFiles));
+          console.log('存储空间不足，已清理旧数据，保留最近30条消息和10个文件');
+          message.warning('存储空间不足，已自动清理部分历史数据');
+        } catch (retryError) {
+          console.error('重试保存也失败:', retryError);
+          message.error('本地存储失败，对话记录可能无法保存');
+        }
+      }
+    }
+  };
+
+  // 监听messages和fileList变化，自动保存到本地存储
+  useEffect(() => {
+    if (messages.length > 0 || fileList.length > 0) {
+      saveSessionToLocalStorage(messages, fileList);
+    }
+  }, [messages, fileList]);
 
   // 暴露给父组件的方法
   useImperativeHandle(ref, () => ({
@@ -754,7 +873,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     }
   };
 
-  // 渲染文件列表
+  // 渲染文件列表时，对恢复的文件添加特殊标识
   const renderFileList = () => {
     if (fileList.length === 0) return null;
 
@@ -786,6 +905,12 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <PaperClipOutlined />
             <span>已选择 {fileList.length} 个附件</span>
+            {/* 显示恢复文件的数量 */}
+            {fileList.some((f) => f.isRestored) && (
+              <span style={{ color: '#1890ff', fontSize: '10px' }}>
+                (含 {fileList.filter((f) => f.isRestored).length} 个历史文件)
+              </span>
+            )}
           </div>
 
           {/* 折叠/展开图标 */}
@@ -830,17 +955,39 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                   height: '100px',
                   background: '#2a2a2a',
                   borderRadius: '8px',
-                  border: '1px solid #404040',
+                  border: file.isRestored
+                    ? '1px solid #1890ff'
+                    : '1px solid #404040', // 历史文件使用蓝色边框
                   padding: '6px',
                   boxSizing: 'border-box',
                   position: 'relative',
-                  flexShrink: 0, // 防止卡片被压缩
+                  flexShrink: 0,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}
               >
+                {/* 历史文件标识 */}
+                {file.isRestored && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: '2px',
+                      background: '#1890ff',
+                      color: '#fff',
+                      fontSize: '8px',
+                      padding: '1px 3px',
+                      borderRadius: '2px',
+                      lineHeight: '1',
+                      zIndex: 1,
+                    }}
+                  >
+                    历史
+                  </div>
+                )}
+
                 {/* 删除按钮 */}
                 <Button
                   type="text"
@@ -979,6 +1126,14 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     setLines([]);
     linesRef.current = [];
     setStatus(undefined);
+    // 清空本地存储的完整会话数据
+    try {
+      localStorage.removeItem(CHAT_HISTORY_KEY);
+      localStorage.removeItem(CHAT_FILES_KEY);
+      console.log('已清空本地存储的聊天会话数据');
+    } catch (error) {
+      console.error('清空本地存储失败:', error);
+    }
     message.success('对话已清空');
   };
 

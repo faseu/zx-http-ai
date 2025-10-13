@@ -1,5 +1,6 @@
 // src/pages/machine/index.tsx - 添加升级遮罩功能
 
+import AddAiDialogueModal from '@/components/AddAiDialogueModal';
 import AddDirectiveModal from '@/components/AddDirectiveModal';
 import AddMachineModal from '@/components/AddMachineModal';
 import AIBox, { AIBoxRef } from '@/components/AIBox'; // 导入 AIBoxRef 类型
@@ -10,6 +11,7 @@ import MachineItem from '@/components/MachineItem';
 import UpgradeOverlay from '@/components/UpgradeOverlay'; // 新增：导入升级遮罩组件
 import { setDeviceBatGroup } from '@/pages/device/service';
 import {
+  addDialogue,
   addMachine,
   addOta,
   clearAllDialogue,
@@ -261,6 +263,23 @@ const handleDelOta = async (fields: any) => {
  * 删除单条指令
  * @param fields
  */
+const handleAddDialogue = async (fields: any) => {
+  const hide = message.loading('正在新增');
+  try {
+    await addDialogue({ ...fields });
+    hide();
+    message.success('新增成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('新增失败，请重试');
+    return false;
+  }
+};
+/**
+ * 删除单条指令
+ * @param fields
+ */
 const handleDelDialogue = async (fields: any) => {
   const hide = message.loading('正在删除');
   try {
@@ -307,6 +326,7 @@ export default () => {
   const isDark = initialState?.settings?.navTheme === 'realDark';
   const [modalMachineOpen, setModalMachineOpen] = useState(false);
   const [modalDirectiveOpen, setModalDirectiveOpen] = useState(false);
+  const [modalAiDialogueOpen, setModalAiDialogueOpen] = useState(false);
   const [detailMachineOpen, setDetailMachineOpen] = useState(false);
   const [machineList, setMachineList] = useState<any[]>([]);
   const [directiveList, setDirectiveList] = useState([]);
@@ -583,6 +603,9 @@ export default () => {
   const addMachineHandler = () => {
     setModalMachineOpen(true);
   };
+  const addAiDialogueHandler = () => {
+    setModalAiDialogueOpen(true);
+  };
 
   const addDirective = () => {
     setEditOtaDetail({});
@@ -806,7 +829,7 @@ export default () => {
               onClear={onClearAllDialogue} // 传递清空回调函数
               addButtonText="新增指令"
               showSearch={false}
-              onSubmit={addMachineHandler}
+              onSubmit={addAiDialogueHandler}
             />
             <div className={styles.hideScrollbar}>
               <List
@@ -847,7 +870,23 @@ export default () => {
             />
           </div>
         </div>
-
+        {modalAiDialogueOpen && (
+          <AddAiDialogueModal
+            isEdit={!!editMachineId}
+            detail={editMachineDetail}
+            open={modalAiDialogueOpen}
+            onOk={async (values: any) => {
+              const success = await handleAddDialogue(values);
+              if (success) {
+                setModalAiDialogueOpen(false);
+                await fetchDialogueList();
+              }
+            }}
+            onCancel={() => {
+              setModalAiDialogueOpen(false);
+            }}
+          />
+        )}
         {modalMachineOpen && (
           <AddMachineModal
             isEdit={!!editMachineId}

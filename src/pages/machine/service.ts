@@ -184,6 +184,18 @@ export async function getDialogueList(params?: { [key: string]: any }) {
 /**
  * 删除指令 - 删除单条
  */
+export async function addDialogue(params?: { [key: string]: any }) {
+  return request('/admin/Ai_log/save', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
+
+/**
+ * 删除指令 - 删除单条
+ */
 export async function delDialogue(params?: { [key: string]: any }) {
   return request('/admin/ai_log/del', {
     method: 'POST',
