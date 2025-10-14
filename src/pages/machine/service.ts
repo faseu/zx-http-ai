@@ -238,3 +238,14 @@ export async function sendControl(params?: { [key: string]: any }) {
     },
   });
 }
+/**
+ * 获取文件状态
+ */
+export async function getFileStatus(params?: { [key: string]: any }) {
+  return request('/admin/upload/getFileStatus', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}
