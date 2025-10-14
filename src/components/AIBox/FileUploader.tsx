@@ -1,10 +1,11 @@
 import React from 'react';
 import { Button, Upload, message, UploadProps } from 'antd';
 import { PaperClipOutlined } from '@ant-design/icons';
-import { validateFile, formatFileSize } from './utils';
+import { validateFile, formatFileSize, pollFileStatus } from './utils';
 import { uploadFileToAI } from './api';
 import { MAX_FILES } from './constants';
 import type { FileWithStatus } from './types';
+import { getFileStatus } from '@/pages/machine/service';
 
 interface FileUploaderProps {
   fileList: FileWithStatus[];
@@ -23,7 +24,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     setFileList((prev) =>
       prev.map((item) =>
         item.uid === file.uid
-          ? { ...item, uploadStatus: 'uploading', uploadProgress: 0 }
+          ? { ...item, uploadStatus: 'uploading', uploadProgress: 0, canSendMessage: false }
           : item,
       ),
     );
@@ -44,7 +45,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       }, 200);
 
       const fileId = await uploadFileToAI(file);
+      
+      // 立即获取一次文件状态
+      const initialResult = await getFileStatus({ fileId });
+      const initialStatus = initialResult?.data?.status;
+      
       clearInterval(progressInterval);
+
+      const isReady = ['PARSE_SUCCESS', 'INDEX_BUILD_SUCCESS', 'FILE_IS_READY'].includes(initialStatus);
 
       setFileList((prev) =>
         prev.map((item) =>
@@ -55,20 +63,30 @@ const FileUploader: React.FC<FileUploaderProps> = ({
               uploadProgress: 100,
               fileId: fileId,
               status: 'done',
+              fileStatus: initialStatus,
+              canSendMessage: isReady,
             }
             : item,
         ),
       );
 
       onSuccess({ fileId }, file);
-      message.success(`${file.name} 上传成功，File ID: ${fileId}`);
+      
+      if (isReady) {
+        message.success(`${file.name} 上传成功，文件解析成功，现在可以发送消息了！`);
+      } else {
+        message.success(`${file.name} 上传成功，正在解析文件...`);
+        // 开始轮询检查文件状态
+        pollFileStatus(fileId, file.uid, setFileList);
+      }
+      
     } catch (error) {
       console.error('上传失败:', error);
 
       setFileList((prev) =>
         prev.map((item) =>
           item.uid === file.uid
-            ? { ...item, uploadStatus: 'error', uploadProgress: 0 }
+            ? { ...item, uploadStatus: 'error', uploadProgress: 0, canSendMessage: false }
             : item,
         ),
       );

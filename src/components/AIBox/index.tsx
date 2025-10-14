@@ -30,6 +30,7 @@ import type {
   FileWithStatus,
 } from './types';
 import { buildMessagesWithFiles, validateFile } from './utils';
+import { getFileStatus } from '@/pages/machine/service';
 
 const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   const [value, setValue] = useState('');
@@ -59,6 +60,9 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     if (loadedFiles.length > 0) {
       setFileList(loadedFiles);
       console.log('已加载文件列表:', loadedFiles.length, '个文件');
+      
+      // 检查已加载文件的状态
+      checkRestoredFilesStatus(loadedFiles);
     }
   }, []);
 
@@ -89,6 +93,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
           uploadStatus: 'uploading',
           uploadProgress: 0,
           status: 'uploading',
+          canSendMessage: false,
         };
 
         setFileList((prev) => [...prev, fileWithStatus]);
@@ -109,7 +114,14 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
         }, 100);
 
         const fileId = await uploadFileToAI(file);
+        
+        // 获取初始状态
+        const initialResult = await getFileStatus({ fileId });
+        const initialStatus = initialResult?.data?.status;
+        
         clearInterval(progressInterval);
+
+        const isReady = ['PARSE_SUCCESS', 'INDEX_BUILD_SUCCESS', 'FILE_IS_READY'].includes(initialStatus);
 
         setFileList((prev) =>
           prev.map((item) =>
@@ -120,12 +132,20 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                   uploadProgress: 100,
                   fileId: fileId,
                   status: 'done',
+                  fileStatus: initialStatus,
+                  canSendMessage: isReady,
                 }
               : item,
           ),
         );
 
-        message.success(`文件 ${file.name} 已成功添加到AI对话中`);
+        if (isReady) {
+          message.success(`文件 ${file.name} 已成功添加到AI对话中`);
+        } else {
+          message.success(`文件 ${file.name} 上传成功，正在解析中...`);
+          // 这里需要调用轮询逻辑，但由于pollFileStatus在FileUploader中，
+          // 我们需要将其提取到共用的工具函数中
+        }
       } catch (error) {
         console.error('程序化添加文件失败:', error);
         message.error(`添加文件失败: ${error.message}`);
@@ -186,8 +206,17 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
       return;
     }
 
+    // 检查是否有文件正在解析中
+    const parsingFiles = fileList.filter(
+      (file) => file.fileId && !file.canSendMessage && file.uploadStatus === 'success',
+    );
+    if (parsingFiles.length > 0) {
+      message.warning('文件正在解析中，请等待解析完成后再发送消息');
+      return;
+    }
+
     const successFiles = fileList.filter(
-      (file) => file.fileId && file.uploadStatus === 'success',
+      (file) => file.fileId && file.uploadStatus === 'success' && file.canSendMessage,
     );
 
     try {
@@ -238,6 +267,81 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
       console.error('发送错误:', error);
     }
   };
+
+  // 检查已恢复文件的状态
+  const checkRestoredFilesStatus = async (files: FileWithStatus[]) => {
+    const filesToCheck = files.filter(
+      (file) => file.fileId && file.uploadStatus === 'success'
+    );
+
+    if (filesToCheck.length === 0) return;
+
+    console.log('检查已恢复文件状态:', filesToCheck.length, '个文件');
+
+    for (const file of filesToCheck) {
+      try {
+        const result = await getFileStatus({ fileId: file.fileId });
+        const status = result?.status;
+        
+        console.log(`文件 ${file.fileId} 状态:`, status);
+        
+        const isReady = ['PARSE_SUCCESS', 'INDEX_BUILD_SUCCESS', 'FILE_IS_READY'].includes(status);
+        const isFailed = ['PARSE_FAILED', 'SAFE_CHECK_FAILED', 'INDEX_BUILDING_FAILED', 'FILE_EXPIRED'].includes(status);
+        
+        // 更新文件状态
+        setFileList((prev) =>
+          prev.map((item) =>
+            item.uid === file.uid
+              ? {
+                  ...item,
+                  fileStatus: status,
+                  canSendMessage: isReady,
+                  uploadStatus: isFailed ? 'error' : item.uploadStatus,
+                  isRestored: true, // 标记为已恢复的文件
+                }
+              : item,
+          ),
+        );
+
+        // 如果文件还在处理中，启动轮询
+        const isProcessing = ['INIT', 'PARSING', 'SAFE_CHECKING', 'INDEX_BUILDING'].includes(status);
+        if (isProcessing) {
+          console.log(`文件 ${file.fileId} 正在处理中，启动轮询`);
+          pollFileStatus(file.fileId!, file.uid, setFileList);
+        } else if (isFailed) {
+          message.warning(`文件 ${file.name} 处理失败: ${getStatusMessage(status)}`);
+        }
+      } catch (error) {
+        console.error(`检查文件 ${file.fileId} 状态失败:`, error);
+        // 如果检查失败，将文件标记为错误状态
+        setFileList((prev) =>
+          prev.map((item) =>
+            item.uid === file.uid
+              ? {
+                  ...item,
+                  uploadStatus: 'error',
+                  canSendMessage: false,
+                  fileStatus: 'ERROR',
+                  isRestored: true,
+                }
+              : item,
+          ),
+        );
+      }
+    }
+  };
+
+  // 计算是否有文件正在解析
+  const hasParsingFiles = useMemo(() => {
+    return fileList.some(
+      (file) => file.fileId && !file.canSendMessage && file.uploadStatus === 'success',
+    );
+  }, [fileList]);
+
+  // 计算发送按钮是否应该禁用
+  const isSendDisabled = useMemo(() => {
+    return status === 'pending' || hasParsingFiles;
+  }, [status, hasParsingFiles]);
 
   // 清空对话
   const clearConversation = () => {
@@ -309,6 +413,8 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                 placeholder={
                   status === 'pending'
                     ? 'AI正在回复中，请等待...'
+                    : hasParsingFiles
+                    ? '文件解析中，请等待解析完成...'
                     : '发送消息或上传长文档...'
                 }
                 actions={(node, info) => {
@@ -329,7 +435,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                       />
                       <SpeechButton
                         type="text"
-                        disabled={status === 'pending'}
+                        disabled={isSendDisabled}
                         icon={
                           <img
                             src="/admin/speech.png"
@@ -337,7 +443,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                             height={42}
                             alt=""
                             style={{
-                              opacity: status === 'pending' ? 0.5 : 1,
+                              opacity: isSendDisabled ? 0.5 : 1,
                             }}
                           />
                         }
@@ -364,13 +470,22 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                       ) : (
                         <SendButton
                           type="text"
+                          disabled={hasParsingFiles}
                           icon={
                             <img
                               src="/admin/send1.png"
                               width={42}
                               height={42}
                               alt=""
+                              style={{
+                                opacity: hasParsingFiles ? 0.5 : 1,
+                              }}
                             />
+                          }
+                          title={
+                            hasParsingFiles 
+                              ? '文件解析中，请等待解析完成' 
+                              : '发送消息'
                           }
                         />
                       )}

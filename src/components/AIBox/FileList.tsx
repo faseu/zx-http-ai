@@ -1,14 +1,8 @@
-import React, { useState } from 'react';
-import { Button, Progress } from 'antd';
-import {
-  PaperClipOutlined,
-  DownOutlined,
-  UpOutlined,
-  DeleteOutlined,
-  CloudUploadOutlined
-} from '@ant-design/icons';
-import { getFileIcon, formatFileSize } from './utils';
+import React from 'react';
+import { Badge, Button, List, Progress, Space, Tag, Tooltip } from 'antd';
+import { CloseOutlined, FileOutlined } from '@ant-design/icons';
 import type { FileWithStatus } from './types';
+import { formatFileSize } from './utils';
 
 interface FileListProps {
   fileList: FileWithStatus[];
@@ -16,213 +10,145 @@ interface FileListProps {
 }
 
 const FileList: React.FC<FileListProps> = ({ fileList, setFileList }) => {
-  const [fileListCollapsed, setFileListCollapsed] = useState(false);
-
   if (fileList.length === 0) return null;
 
+  // 获取文件状态的显示信息
+  const getFileStatusDisplay = (file: FileWithStatus) => {
+    if (file.uploadStatus === 'uploading') {
+      return { color: 'processing', text: '上传中' };
+    }
+
+    if (file.uploadStatus === 'error') {
+      return { color: 'error', text: file.fileStatus === 'ERROR' ? '状态检查失败' : '上传失败' };
+    }
+
+    if (file.uploadStatus === 'success') {
+      if (!file.fileStatus) {
+        return { color: 'processing', text: file.isRestored ? '检查状态中...' : '等待解析' };
+      }
+
+      switch (file.fileStatus) {
+        case 'INIT':
+          return { color: 'processing', text: '等待解析' };
+        case 'PARSING':
+          return { color: 'processing', text: '解析中' };
+        case 'PARSE_SUCCESS':
+          return { color: 'success', text: '解析成功' };
+        case 'SAFE_CHECKING':
+          return { color: 'processing', text: '安全检测中' };
+        case 'INDEX_BUILDING':
+          return { color: 'processing', text: '构建索引中' };
+        case 'INDEX_BUILD_SUCCESS':
+          return { color: 'success', text: '索引构建完成' };
+        case 'FILE_IS_READY':
+          return { color: 'success', text: '准备就绪' };
+        case 'PARSE_FAILED':
+          return { color: 'error', text: '解析失败' };
+        case 'SAFE_CHECK_FAILED':
+          return { color: 'error', text: '安全检测失败' };
+        case 'INDEX_BUILDING_FAILED':
+          return { color: 'error', text: '索引构建失败' };
+        case 'FILE_EXPIRED':
+          return { color: 'error', text: '文件过期' };
+        case 'ERROR':
+          return { color: 'error', text: '状态检查失败' };
+        default:
+          return { color: 'default', text: '未知状态' };
+      }
+    }
+
+    return { color: 'default', text: '等待中' };
+  };
+
+  const removeFile = (uid: string) => {
+    setFileList((prev) => prev.filter((file) => file.uid !== uid));
+  };
+
   return (
-    <div
-      style={{
-        background: '#1f1f1f',
-        borderRadius: '8px',
-        padding: '12px',
-        marginBottom: '8px',
-        border: '1px solid #333',
-      }}
-    >
-      {/* 文件列表头部 */}
-      <div
-        style={{
-          fontSize: '12px',
-          color: '#888',
-          marginBottom: fileListCollapsed ? '0' : '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          cursor: 'pointer',
-          padding: '4px 0',
-          transition: 'all 0.3s ease',
-        }}
-        onClick={() => setFileListCollapsed(!fileListCollapsed)}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <PaperClipOutlined />
-          <span>已选择 {fileList.length} 个附件</span>
-          {fileList.some((f) => f.isRestored) && (
-            <span style={{ color: '#1890ff', fontSize: '10px' }}>
-              (含 {fileList.filter((f) => f.isRestored).length} 个历史文件)
-            </span>
-          )}
-        </div>
+    <div style={{ marginBottom: 8 }}>
+      <List
+        size="small"
+        dataSource={fileList}
+        renderItem={(file) => {
+          const statusDisplay = getFileStatusDisplay(file);
+          const isProcessing = file.uploadStatus === 'success' && !file.canSendMessage;
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            color: '#666',
-            fontSize: '10px',
-          }}
-        >
-          <span>{fileListCollapsed ? '展开' : '收起'}</span>
-          {fileListCollapsed ? <DownOutlined /> : <UpOutlined />}
-        </div>
-      </div>
-
-      {/* 文件列表内容 */}
-      <div
-        style={{
-          maxHeight: fileListCollapsed ? '0' : '120px',
-          overflow: 'hidden',
-          transition: 'max-height 0.3s ease, opacity 0.3s ease',
-          opacity: fileListCollapsed ? 0 : 1,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            gap: '12px',
-            overflowX: 'auto',
-            paddingBottom: '8px',
-            scrollbarWidth: 'thin',
-          }}
-        >
-          {fileList.map((file) => (
-            <div
+          return (
+            <List.Item
               key={file.uid}
               style={{
-                width: '100px',
-                height: '100px',
+                padding: '8px 12px',
                 background: '#2a2a2a',
-                borderRadius: '8px',
-                border: file.isRestored ? '1px solid #1890ff' : '1px solid #404040',
-                padding: '6px',
-                boxSizing: 'border-box',
-                position: 'relative',
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                borderRadius: 6,
+                marginBottom: 4,
+                border: isProcessing ? '1px solid #1890ff' : 'none',
               }}
             >
-              {/* 历史文件标识 */}
-              {file.isRestored && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '2px',
-                    left: '2px',
-                    background: '#1890ff',
-                    color: '#fff',
-                    fontSize: '8px',
-                    padding: '1px 3px',
-                    borderRadius: '2px',
-                    lineHeight: '1',
-                    zIndex: 1,
-                  }}
-                >
-                  历史
-                </div>
-              )}
+              <Space style={{ width: '100%' }}>
+                <FileOutlined style={{ color: '#1890ff' }} />
 
-              {/* 删除按钮 */}
-              <Button
-                type="text"
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={() => {
-                  const newFileList = fileList.filter(
-                    (item) => item.uid !== file.uid,
-                  );
-                  setFileList(newFileList);
-                }}
-                style={{
-                  position: 'absolute',
-                  top: '2px',
-                  right: '2px',
-                  color: '#ff4d4f',
-                  padding: '1px',
-                  height: 'auto',
-                  minWidth: 'auto',
-                  fontSize: '10px',
-                  zIndex: 2,
-                }}
-              />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: '13px',
+                      color: '#fff',
+                      marginBottom: 2,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {file.name}
+                    {file.isRestored && (
+                      <Tag size="small" color="blue" style={{ marginLeft: 4 }}>
+                        已恢复
+                      </Tag>
+                    )}
+                  </div>
 
-              {/* 文件图标和状态 */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  flex: 1,
-                  justifyContent: 'center',
-                  marginTop: '12px',
-                }}
-              >
-                <div style={{ fontSize: '20px', marginBottom: '2px' }}>
-                  {getFileIcon(file.name)}
-                </div>
+                  <Space size="small">
+                    <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+                      {formatFileSize(file.size)}
+                    </span>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <Tag color={statusDisplay.color} size="small">
+                      {statusDisplay.text}
+                    </Tag>
+
+                    {isProcessing && (
+                      <Badge status="processing" text="解析中..." />
+                    )}
+                  </Space>
+
                   {file.uploadStatus === 'uploading' && (
-                    <CloudUploadOutlined
-                      style={{ color: '#1890ff', fontSize: '12px' }}
+                    <Progress
+                      percent={file.uploadProgress || 0}
+                      size="small"
+                      style={{ marginTop: 4 }}
+                      strokeColor="#1890ff"
                     />
                   )}
-                  {file.uploadStatus === 'success' && (
-                    <span style={{ color: '#52c41a', fontSize: '12px' }}>✓</span>
-                  )}
-                  {file.uploadStatus === 'error' && (
-                    <span style={{ color: '#ff4d4f', fontSize: '12px' }}>✗</span>
-                  )}
                 </div>
-              </div>
 
-              {/* 文件名 */}
-              <div style={{ width: '100%', textAlign: 'center', marginBottom: '2px' }}>
-                <div
-                  style={{
-                    fontSize: '10px',
-                    color: '#fff',
-                    lineHeight: '1.1',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: '100%',
-                  }}
-                >
-                  {file.name}
-                </div>
-                <div style={{ fontSize: '9px', color: '#888', marginTop: '1px' }}>
-                  {formatFileSize(file.size || 0)}
-                </div>
-              </div>
-
-              {/* 上传进度条 */}
-              {file.uploadStatus === 'uploading' && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '0',
-                    left: '0',
-                    right: '0',
-                    padding: '0 6px 6px 6px',
-                  }}
-                >
-                  <Progress
-                    percent={file.uploadProgress || 0}
+                <Tooltip title="移除文件">
+                  <Button
+                    type="text"
                     size="small"
-                    showInfo={false}
-                    strokeColor="#1890ff"
+                    icon={<CloseOutlined />}
+                    onClick={() => removeFile(file.uid)}
+                    style={{
+                      color: '#8c8c8c',
+                      fontSize: '12px',
+                      width: 20,
+                      height: 20,
+                    }}
                   />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+                </Tooltip>
+              </Space>
+            </List.Item>
+          );
+        }}
+      />
     </div>
   );
 };

@@ -18,6 +18,8 @@ export interface FileWithStatus extends UploadFile {
   uploadStatus?: 'uploading' | 'success' | 'error';
   uploadProgress?: number;
   isRestored?: boolean;
+  fileStatus?: string; // 文件处理状态
+  canSendMessage?: boolean; // 是否可以发送消息
 }
 
 // 定义完整的聊天会话数据结构

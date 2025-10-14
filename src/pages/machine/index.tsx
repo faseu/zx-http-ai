@@ -8,6 +8,7 @@ import CustomTitle from '@/components/CustomTitle';
 import DetailMachineModal from '@/components/DetailMachineModal';
 import DirectiveItem from '@/components/DirectiveItem';
 import MachineItem from '@/components/MachineItem';
+import ScoreModal from '@/components/ScoreModal';
 import UpgradeOverlay from '@/components/UpgradeOverlay'; // 新增：导入升级遮罩组件
 import { setDeviceBatGroup } from '@/pages/device/service';
 import {
@@ -334,6 +335,7 @@ export default () => {
   const [editMachineId, setEditMachineId] = useState(0);
   const [editMachineDetail, setEditMachineDetail] = useState({});
   const [machineDetail, setMachineDetail] = useState({});
+  const [score, setScore] = useState(false);
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '');
 
   // 协议编辑相关状态
@@ -682,6 +684,7 @@ export default () => {
     // 可选：清空选中状态
     // setSelectedMachineIds([]);
     // setIsAllSelected(false);
+    setScore(true);
   };
 
   // 当设备列表变化时，重新计算全选状态
@@ -958,6 +961,8 @@ export default () => {
             }}
           />
         )}
+        {/*{score && <ScoreModal open={score} />}*/}
+        <ScoreModal open={score} />
       </Card>
 
       {/* 新增：升级遮罩层 */}

@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { getFileStatus } from '@/pages/machine/service';
 import {
   SUPPORTED_TEXT_FORMATS,
   SUPPORTED_IMAGE_FORMATS,
@@ -146,4 +147,95 @@ export const buildMessagesWithFiles = (
 // 移除字符串末尾的指定后缀
 export const removeAnySuffix = (str: string, suffixes: string): string => {
   return str.slice(0, -suffixes.length);
+};
+
+// 文件状态轮询函数
+export const pollFileStatus = async (
+  fileId: string, 
+  fileUid: string,
+  setFileList: React.Dispatch<React.SetStateAction<FileWithStatus[]>>
+) => {
+  const poll = async () => {
+    try {
+      const result = await getFileStatus({ fileId });
+      const status = result?.status; // 修复：使用正确的数据结构
+      
+      console.log(`文件 ${fileId} 当前状态:`, status);
+      
+      switch (status) {
+        case 'INIT':
+        case 'PARSING':
+        case 'SAFE_CHECKING':
+        case 'INDEX_BUILDING':
+          // 继续轮询
+          setTimeout(poll, 3000);
+          break;
+          
+        case 'PARSE_SUCCESS':
+        case 'INDEX_BUILD_SUCCESS':
+        case 'FILE_IS_READY':
+          // 文件准备完毕，可以发送消息
+          setFileList((prev) =>
+            prev.map((item) =>
+              item.uid === fileUid
+                ? { ...item, fileStatus: status, canSendMessage: true }
+                : item,
+            ),
+          );
+          message.success(`文件解析成功，现在可以发送消息了！`);
+          break;
+          
+        case 'PARSE_FAILED':
+        case 'SAFE_CHECK_FAILED':
+        case 'INDEX_BUILDING_FAILED':
+        case 'FILE_EXPIRED':
+          // 文件处理失败
+          setFileList((prev) =>
+            prev.map((item) =>
+              item.uid === fileUid
+                ? { 
+                    ...item, 
+                    uploadStatus: 'error', 
+                    fileStatus: status,
+                    canSendMessage: false 
+                  }
+                : item,
+            ),
+          );
+          message.error(`文件处理失败: ${getStatusMessage(status)}`);
+          break;
+          
+        default:
+          // 未知状态，停止轮询
+          console.warn('未知文件状态:', status);
+          break;
+      }
+    } catch (error) {
+      console.error('检查文件状态失败:', error);
+      // 轮询出错，继续尝试
+      setTimeout(poll, 3000);
+    }
+  };
+  
+  // 开始轮询
+  setTimeout(poll, 3000);
+};
+
+// 获取状态描述信息
+export const getStatusMessage = (status: string): string => {
+  const statusMessages = {
+    'INIT': '文件已上传，等待解析',
+    'PARSING': '正在解析文件内容',
+    'PARSE_SUCCESS': '文件解析成功',
+    'PARSE_FAILED': '文件解析失败，需重新上传',
+    'SAFE_CHECKING': '正在进行文件安全检测',
+    'SAFE_CHECK_FAILED': '文件未通过安全检测，需重新上传或更换文件',
+    'INDEX_BUILDING': '正在为文件构建索引',
+    'INDEX_BUILD_SUCCESS': '文件索引构建完成',
+    'INDEX_BUILDING_FAILED': '索引构建失败，需重新上传文件',
+    'INDEX_DELETED': '文件索引已删除',
+    'FILE_IS_READY': '文件准备完毕',
+    'FILE_EXPIRED': '文件过期',
+  };
+  return statusMessages[status] || '未知状态';
 };
