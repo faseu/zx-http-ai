@@ -8,7 +8,7 @@ interface UpgradeOverlayProps {
   visible: boolean;
   machineList: any[];
   selectedMachineIds: number[];
-  onCancel: () => void;
+  onCancel: (value: boolean) => void;
   onMachineCheck: (machineId: number, checked: boolean) => void;
   onSelectAll: (checked: boolean) => void;
   isAllSelected: boolean;
@@ -67,6 +67,7 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
 
       if (failCount === 0) {
         message.success(`所有设备升级成功！共升级 ${successCount} 台设备`);
+        onCancel(true);
       } else if (successCount > 0) {
         message.warning(
           `部分设备升级成功：成功 ${successCount} 台，失败 ${failCount} 台`,
@@ -75,12 +76,11 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
         // 显示失败的设备详情
         const failedDevices = results.filter((r) => !r.success);
         console.log('升级失败的设备:', failedDevices);
+        onCancel(false);
       } else {
         message.error('所有设备升级失败，请检查网络连接或设备状态');
+        onCancel(false);
       }
-
-      // 升级完成后关闭遮罩
-      onCancel();
     } catch (error) {
       loadingMessage();
       console.error('升级过程中发生错误:', error);

@@ -28,6 +28,7 @@ import {
   getDialogueList,
   getMachineList,
   getOtaList,
+  setAiScore,
   setOtaGroup,
 } from '@/pages/machine/service';
 import { useModel } from '@umijs/max';
@@ -224,6 +225,7 @@ const handleDelMachine = async (fields: any) => {
     return false;
   }
 };
+
 /**
  *  移除智能空间
  * @param fields
@@ -277,6 +279,7 @@ const handleAddDialogue = async (fields: any) => {
     return false;
   }
 };
+
 /**
  * 删除单条指令
  * @param fields
@@ -312,6 +315,24 @@ const handleClearAllDialogue = async () => {
   }
 };
 
+/**
+ *  移除协议
+ * @param fields
+ */
+const handleScore = async (fields: any) => {
+  const hide = message.loading('正在提交');
+  try {
+    await setAiScore({ ...fields });
+    hide();
+    message.success('提交成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('提交失败，请重试');
+    return false;
+  }
+};
+
 interface DataType {
   key: React.Key;
   id: number;
@@ -337,6 +358,7 @@ export default () => {
   const [machineDetail, setMachineDetail] = useState({});
   const [score, setScore] = useState(false);
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '');
+  const location = useLocation();
 
   // 协议编辑相关状态
   const [editOtaId, setEditOtaId] = useState(0);
@@ -679,12 +701,27 @@ export default () => {
   };
 
   // 新增：关闭升级遮罩层
-  const handleCloseUpgradeOverlay = () => {
+  const handleCloseUpgradeOverlay = (value) => {
     setShowUpgradeOverlay(false);
     // 可选：清空选中状态
     // setSelectedMachineIds([]);
     // setIsAllSelected(false);
-    setScore(true);
+    if (value) {
+      setScore(true);
+    }
+  };
+
+  // 提交评分
+  const submitScore = async (value) => {
+    const compileId = location?.state?.compileId;
+    console.log(compileId);
+    const success = await handleScore({
+      id: compileId,
+      score: value,
+    });
+    if (success) {
+      setScore(false);
+    }
   };
 
   // 当设备列表变化时，重新计算全选状态
@@ -710,7 +747,6 @@ export default () => {
       setIsAllSelected(false);
     }
   }, [machineList]);
-  const location = useLocation();
 
   useEffect(() => {
     fetchMachineList();
@@ -961,8 +997,13 @@ export default () => {
             }}
           />
         )}
-        {/*{score && <ScoreModal open={score} />}*/}
-        <ScoreModal open={score} />
+        {score && (
+          <ScoreModal
+            open={score}
+            submit={submitScore}
+            close={() => setScore(false)}
+          />
+        )}
       </Card>
 
       {/* 新增：升级遮罩层 */}
