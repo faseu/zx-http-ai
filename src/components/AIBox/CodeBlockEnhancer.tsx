@@ -1,21 +1,26 @@
-import React, { useEffect } from 'react';
-import { message } from 'antd';
 import { request } from '@umijs/max';
+import { message } from 'antd';
+import React, { useEffect } from 'react';
 import { removeAnySuffix } from './utils';
 
 interface CodeBlockEnhancerProps {
   messages: any[];
   status?: string;
   onCompileSuccess?: (result: any) => void;
-  onEditCode?: (code: string, codeBlock: HTMLElement) => void;
+  onEditCode?: (
+    code: string,
+    codeBlock: HTMLElement,
+    messageIndex: number,
+    codeBlockIndex: number,
+  ) => void;
 }
 
 const CodeBlockEnhancer: React.FC<CodeBlockEnhancerProps> = ({
-                                                               messages,
-                                                               status,
-                                                               onCompileSuccess,
-                                                               onEditCode,
-                                                             }) => {
+  messages,
+  status,
+  onCompileSuccess,
+  onEditCode,
+}) => {
   useEffect(() => {
     if (status === 'pending') {
       return;
@@ -23,12 +28,52 @@ const CodeBlockEnhancer: React.FC<CodeBlockEnhancerProps> = ({
 
     const timeoutId = setTimeout(() => {
       const codeBlocks = document.querySelectorAll('.markdown-body pre');
+      let globalCodeBlockIndex = 0; // 全局代码块索引
+
       codeBlocks.forEach((block) => {
         if (
           block.querySelector('.copy-container') ||
           block.querySelector('.action-container')
         ) {
           return;
+        }
+
+        // 找到当前代码块属于哪个消息
+        const messageElement = block.closest('[data-message-index]');
+        const messageIndex = messageElement
+          ? parseInt(messageElement.getAttribute('data-message-index') || '-1')
+          : -1;
+
+        // 如果无法通过DOM属性获取messageIndex，则使用估算方法
+        let estimatedMessageIndex = messageIndex;
+        if (messageIndex === -1) {
+          // 根据当前代码块的位置估算属于哪个消息
+          const allBubbles = document.querySelectorAll('.ant-bubble');
+          let currentCodeBlockCount = 0;
+
+          for (let i = 0; i < allBubbles.length; i++) {
+            const bubble = allBubbles[i];
+            const bubbleCodeBlocks = bubble.querySelectorAll('pre');
+
+            if (Array.from(bubbleCodeBlocks).includes(block as Element)) {
+              estimatedMessageIndex = i;
+              currentCodeBlockCount = Array.from(bubbleCodeBlocks).indexOf(
+                block as Element,
+              );
+              break;
+            }
+          }
+        }
+
+        // 检查消息角色，如果是用户消息则不添加按钮
+        if (
+          estimatedMessageIndex >= 0 &&
+          estimatedMessageIndex < messages.length
+        ) {
+          const message = messages[estimatedMessageIndex];
+          if (message && message.role === 'user') {
+            return; // 跳过用户消息的代码块，不添加按钮
+          }
         }
 
         // 创建复制按钮容器
@@ -51,8 +96,13 @@ const CodeBlockEnhancer: React.FC<CodeBlockEnhancerProps> = ({
         // 复制按钮
         const copyButton = createCopyButton(block);
 
-        // 编辑按钮
-        const editButton = createEditButton(block, onEditCode);
+        // 编辑按钮（传递位置信息）
+        const editButton = createEditButton(
+          block,
+          estimatedMessageIndex,
+          globalCodeBlockIndex,
+          onEditCode,
+        );
 
         // 编译按钮
         const compileButton = createCompileButton(block, onCompileSuccess);
@@ -98,6 +148,18 @@ const CodeBlockEnhancer: React.FC<CodeBlockEnhancerProps> = ({
         block.style.position = 'relative';
         block.appendChild(copyContainer);
         block.appendChild(actionContainer);
+
+        // 为代码块添加唯一标识
+        block.setAttribute(
+          'data-code-block-index',
+          globalCodeBlockIndex.toString(),
+        );
+        block.setAttribute(
+          'data-message-index',
+          estimatedMessageIndex.toString(),
+        );
+
+        globalCodeBlockIndex++;
       });
     }, 200);
 
@@ -130,16 +192,30 @@ const createCopyButton = (block: Element) => {
 // 创建编辑按钮
 const createEditButton = (
   block: Element,
-  onEditCode?: (code: string, codeBlock: HTMLElement) => void
+  estimatedMessageIndex: number,
+  globalCodeBlockIndex: number,
+  onEditCode?: (
+    code: string,
+    codeBlock: HTMLElement,
+    estimatedMessageIndex: number,
+    globalCodeBlockIndex: number,
+  ) => void,
 ) => {
   const button = document.createElement('button');
   button.className = 'edit-btn';
   button.textContent = '编辑';
   button.onclick = () => {
     const codeElement = block.querySelector('code');
-    const originalCode = codeElement ? codeElement.textContent || '' : block.textContent || '';
+    const originalCode = codeElement
+      ? codeElement.textContent || ''
+      : block.textContent || '';
     if (onEditCode) {
-      onEditCode(originalCode, codeElement || block as HTMLElement);
+      onEditCode(
+        originalCode,
+        codeElement || (block as HTMLElement),
+        estimatedMessageIndex,
+        globalCodeBlockIndex,
+      );
     }
   };
   return button;
@@ -148,7 +224,7 @@ const createEditButton = (
 // 创建编译按钮
 const createCompileButton = (
   block: Element,
-  onCompileSuccess?: (result: any) => void
+  onCompileSuccess?: (result: any) => void,
 ) => {
   const button = document.createElement('button');
   button.className = 'compile-btn';
@@ -197,7 +273,12 @@ const createCompileButton = (
       message.success('编译已提交');
 
       // 轮询编译结果
-      await pollCompileResult(uploadResult, button, onCompileSuccess);
+      await pollCompileResult(
+        uploadResult,
+        button,
+        compileResult,
+        onCompileSuccess,
+      );
     } catch (error) {
       console.error('编译错误:', error);
       button.textContent = '编译失败';
@@ -216,7 +297,8 @@ const createCompileButton = (
 const pollCompileResult = async (
   uploadResult: any,
   button: HTMLButtonElement,
-  onCompileSuccess?: (result: any) => void
+  compileResult: any,
+  onCompileSuccess?: (result: any) => void,
 ) => {
   let pollCount = 0;
   const maxPolls = 30;
@@ -239,7 +321,7 @@ const pollCompileResult = async (
 
         setTimeout(() => {
           if (onCompileSuccess) {
-            onCompileSuccess({ url: statusResult });
+            onCompileSuccess({ url: compileResult });
           }
         }, 1000);
 

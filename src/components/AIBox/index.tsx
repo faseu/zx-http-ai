@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 // 导入所有子组件和工具
+import { getFileStatus } from '@/pages/machine/service';
 import { chatWithAI, uploadFileToAI } from './api';
 import CodeBlockEnhancer from './CodeBlockEnhancer';
 import EditCodeModal from './EditCodeModal';
@@ -30,7 +31,6 @@ import type {
   FileWithStatus,
 } from './types';
 import { buildMessagesWithFiles, validateFile } from './utils';
-import { getFileStatus } from '@/pages/machine/service';
 
 const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   const [value, setValue] = useState('');
@@ -48,6 +48,10 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   const [currentCodeBlock, setCurrentCodeBlock] = useState<HTMLElement | null>(
     null,
   );
+  // 添加精确定位信息
+  const [editingMessageIndex, setEditingMessageIndex] = useState<number>(-1);
+  const [editingCodeBlockIndex, setEditingCodeBlockIndex] =
+    useState<number>(-1);
 
   // 从本地存储加载完整的聊天会话
   useEffect(() => {
@@ -60,7 +64,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     if (loadedFiles.length > 0) {
       setFileList(loadedFiles);
       console.log('已加载文件列表:', loadedFiles.length, '个文件');
-      
+
       // 检查已加载文件的状态
       checkRestoredFilesStatus(loadedFiles);
     }
@@ -68,6 +72,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
 
   // 监听messages和fileList变化，自动保存到本地存储
   useEffect(() => {
+    console.log(messages);
     if (messages.length > 0 || fileList.length > 0) {
       saveSessionToLocalStorage(messages, fileList);
     }
@@ -114,14 +119,18 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
         }, 100);
 
         const fileId = await uploadFileToAI(file);
-        
+
         // 获取初始状态
         const initialResult = await getFileStatus({ fileId });
         const initialStatus = initialResult?.data?.status;
-        
+
         clearInterval(progressInterval);
 
-        const isReady = ['PARSE_SUCCESS', 'INDEX_BUILD_SUCCESS', 'FILE_IS_READY'].includes(initialStatus);
+        const isReady = [
+          'PARSE_SUCCESS',
+          'INDEX_BUILD_SUCCESS',
+          'FILE_IS_READY',
+        ].includes(initialStatus);
 
         setFileList((prev) =>
           prev.map((item) =>
@@ -208,7 +217,8 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
 
     // 检查是否有文件正在解析中
     const parsingFiles = fileList.filter(
-      (file) => file.fileId && !file.canSendMessage && file.uploadStatus === 'success',
+      (file) =>
+        file.fileId && !file.canSendMessage && file.uploadStatus === 'success',
     );
     if (parsingFiles.length > 0) {
       message.warning('文件正在解析中，请等待解析完成后再发送消息');
@@ -216,7 +226,8 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
     }
 
     const successFiles = fileList.filter(
-      (file) => file.fileId && file.uploadStatus === 'success' && file.canSendMessage,
+      (file) =>
+        file.fileId && file.uploadStatus === 'success' && file.canSendMessage,
     );
 
     try {
@@ -271,7 +282,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   // 检查已恢复文件的状态
   const checkRestoredFilesStatus = async (files: FileWithStatus[]) => {
     const filesToCheck = files.filter(
-      (file) => file.fileId && file.uploadStatus === 'success'
+      (file) => file.fileId && file.uploadStatus === 'success',
     );
 
     if (filesToCheck.length === 0) return;
@@ -282,12 +293,21 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
       try {
         const result = await getFileStatus({ fileId: file.fileId });
         const status = result?.status;
-        
+
         console.log(`文件 ${file.fileId} 状态:`, status);
-        
-        const isReady = ['PARSE_SUCCESS', 'INDEX_BUILD_SUCCESS', 'FILE_IS_READY'].includes(status);
-        const isFailed = ['PARSE_FAILED', 'SAFE_CHECK_FAILED', 'INDEX_BUILDING_FAILED', 'FILE_EXPIRED'].includes(status);
-        
+
+        const isReady = [
+          'PARSE_SUCCESS',
+          'INDEX_BUILD_SUCCESS',
+          'FILE_IS_READY',
+        ].includes(status);
+        const isFailed = [
+          'PARSE_FAILED',
+          'SAFE_CHECK_FAILED',
+          'INDEX_BUILDING_FAILED',
+          'FILE_EXPIRED',
+        ].includes(status);
+
         // 更新文件状态
         setFileList((prev) =>
           prev.map((item) =>
@@ -304,12 +324,19 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
         );
 
         // 如果文件还在处理中，启动轮询
-        const isProcessing = ['INIT', 'PARSING', 'SAFE_CHECKING', 'INDEX_BUILDING'].includes(status);
+        const isProcessing = [
+          'INIT',
+          'PARSING',
+          'SAFE_CHECKING',
+          'INDEX_BUILDING',
+        ].includes(status);
         if (isProcessing) {
           console.log(`文件 ${file.fileId} 正在处理中，启动轮询`);
           pollFileStatus(file.fileId!, file.uid, setFileList);
         } else if (isFailed) {
-          message.warning(`文件 ${file.name} 处理失败: ${getStatusMessage(status)}`);
+          message.warning(
+            `文件 ${file.name} 处理失败: ${getStatusMessage(status)}`,
+          );
         }
       } catch (error) {
         console.error(`检查文件 ${file.fileId} 状态失败:`, error);
@@ -334,7 +361,8 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   // 计算是否有文件正在解析
   const hasParsingFiles = useMemo(() => {
     return fileList.some(
-      (file) => file.fileId && !file.canSendMessage && file.uploadStatus === 'success',
+      (file) =>
+        file.fileId && !file.canSendMessage && file.uploadStatus === 'success',
     );
   }, [fileList]);
 
@@ -360,9 +388,16 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   };
 
   // 处理代码编辑
-  const handleEditCode = (code: string, codeBlock: HTMLElement) => {
+  const handleEditCode = (
+    code: string,
+    codeBlock: HTMLElement,
+    messageIndex: number,
+    codeBlockIndex: number,
+  ) => {
     setCurrentCodeBlock(codeBlock);
     setEditingCode(code);
+    setEditingMessageIndex(messageIndex);
+    setEditingCodeBlockIndex(codeBlockIndex);
     setEditModalOpen(true);
   };
 
@@ -483,8 +518,8 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
                             />
                           }
                           title={
-                            hasParsingFiles 
-                              ? '文件解析中，请等待解析完成' 
+                            hasParsingFiles
+                              ? '文件解析中，请等待解析完成'
                               : '发送消息'
                           }
                         />
@@ -544,11 +579,144 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
         title="编辑代码"
         onOk={(newCode: string) => {
           if (currentCodeBlock) {
+            // 更新DOM元素
             currentCodeBlock.innerHTML = newCode;
+
+            // 精确更新messages状态中的对应代码
+            setMessages((prevMessages) => {
+              return prevMessages.map((message, messageIdx) => {
+                if (
+                  messageIdx === editingMessageIndex &&
+                  message.role === 'assistant'
+                ) {
+                  // 使用更精确的替换逻辑
+                  let updatedContent = message.content;
+
+                  // 使用正则表达式来替换代码块中的内容
+                  // 这里假设代码是在```代码块中
+                  const codeBlockRegex = /((?:^|\n)```[\s\S]*?```(?:\n|$))/g;
+                  let codeBlockCount = 0;
+
+                  updatedContent = updatedContent.replace(
+                    codeBlockRegex,
+                    (match) => {
+                      if (codeBlockCount === editingCodeBlockIndex) {
+                        // 检查代码块前后是否有换行符
+                        const hasLeadingNewline = match.startsWith('\n');
+                        const hasTrailingNewline = match.endsWith('\n');
+                        // 提取语言标识符（如果有的话）
+                        const langMatch = match.match(/```(\w+)?\n/);
+                        const lang = langMatch ? langMatch[1] || '' : '';
+
+                        // 构建新的代码块，确保保持原有的换行符格式
+                        let newCodeBlock = `\`\`\`${lang}\n${newCode}\n\`\`\``;
+
+                        // 添加前导换行符（如果原来有的话）
+                        if (
+                          hasLeadingNewline &&
+                          !newCodeBlock.startsWith('\n')
+                        ) {
+                          newCodeBlock = `\n${newCodeBlock}`;
+                        }
+
+                        // 添加尾随换行符（如果原来有的话）
+                        if (
+                          hasTrailingNewline &&
+                          !newCodeBlock.endsWith('\n')
+                        ) {
+                          newCodeBlock = `${newCodeBlock}\n`;
+                        }
+
+                        return newCodeBlock;
+                      }
+                      codeBlockCount++;
+                      return match;
+                    },
+                  );
+
+                  // 如果没有找到对应的代码块，使用更安全的字符串替换作为备选方案
+                  if (updatedContent === message.content) {
+                    // 在原始代码前后添加适当的上下文来确保准确替换
+                    const escapedEditingCode = editingCode.replace(
+                      /[.*+?^${}()|[\]\\]/g,
+                      '\\$&',
+                    );
+                    const codePattern = new RegExp(
+                      `(\`\`\`[\\w]*\\n)${escapedEditingCode}(\\n\`\`\`)`,
+                      'g',
+                    );
+
+                    updatedContent = updatedContent.replace(
+                      codePattern,
+                      (match, prefix, suffix) => {
+                        return prefix + newCode + suffix;
+                      },
+                    );
+
+                    // 如果还是没有替换成功，尝试简单替换但保证前后文完整性
+                    if (updatedContent === message.content) {
+                      // 查找包含代码的完整代码块
+                      const lines = message.content.split('\n');
+                      let inCodeBlock = false;
+                      let codeBlockStartIndex = -1;
+                      let codeBlockEndIndex = -1;
+                      let currentCodeBlockIndex = 0;
+
+                      for (let i = 0; i < lines.length; i++) {
+                        if (lines[i].startsWith('```')) {
+                          if (!inCodeBlock) {
+                            // 开始代码块
+                            inCodeBlock = true;
+                            codeBlockStartIndex = i;
+                          } else {
+                            // 结束代码块
+                            inCodeBlock = false;
+                            codeBlockEndIndex = i;
+
+                            if (
+                              currentCodeBlockIndex === editingCodeBlockIndex
+                            ) {
+                              // 替换这个代码块的内容
+                              const beforeBlock = lines.slice(
+                                0,
+                                codeBlockStartIndex + 1,
+                              );
+                              const afterBlock = lines.slice(codeBlockEndIndex);
+                              const newLines = [
+                                ...beforeBlock,
+                                newCode,
+                                ...afterBlock,
+                              ];
+                              updatedContent = newLines.join('\n');
+                              break;
+                            }
+                            currentCodeBlockIndex++;
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  return {
+                    ...message,
+                    content: updatedContent,
+                  };
+                }
+                return message;
+              });
+            });
           }
+
+          // 重置状态
           setEditModalOpen(false);
+          setEditingMessageIndex(-1);
+          setEditingCodeBlockIndex(-1);
         }}
-        onCancel={() => setEditModalOpen(false)}
+        onCancel={() => {
+          setEditModalOpen(false);
+          setEditingMessageIndex(-1);
+          setEditingCodeBlockIndex(-1);
+        }}
       />
     </Flex>
   );

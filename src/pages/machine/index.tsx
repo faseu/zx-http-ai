@@ -357,7 +357,7 @@ export default () => {
   const [editMachineDetail, setEditMachineDetail] = useState({});
   const [machineDetail, setMachineDetail] = useState({});
   const [score, setScore] = useState(false);
-  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '');
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   const location = useLocation();
 
   // 协议编辑相关状态
@@ -370,7 +370,7 @@ export default () => {
 
   // 新增：升级遮罩层状态
   const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false);
-  const [upgradeUrl, setUpgradeUrl] = useState('');
+  const [upgradeUrl, setUpgradeUrl] = useState({});
 
   // 新增：AIBox 的 ref
   const aiBoxRef = useRef<AIBoxRef>(null);
@@ -712,11 +712,9 @@ export default () => {
   };
 
   // 提交评分
-  const submitScore = async (value) => {
-    const compileId = location?.state?.compileId;
-    console.log(compileId);
+  const submitScore = async (value: any) => {
     const success = await handleScore({
-      id: compileId,
+      id: upgradeUrl?.compileId,
       score: value,
     });
     if (success) {

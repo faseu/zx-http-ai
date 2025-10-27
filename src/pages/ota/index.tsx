@@ -68,6 +68,10 @@ export default () => {
       dataIndex: 'ver',
     },
     {
+      title: '评分',
+      dataIndex: 'score',
+    },
+    {
       title: '发布时间',
       dataIndex: 'regTime',
     },

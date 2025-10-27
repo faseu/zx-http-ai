@@ -26,7 +26,7 @@ export async function getInitialState(): Promise<{
       settings: defaultSettings as Partial<LayoutSettings>,
     };
   } else {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '');
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     // history.push('/');
     return {
       ...userInfo,

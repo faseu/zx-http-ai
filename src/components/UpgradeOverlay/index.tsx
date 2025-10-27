@@ -136,7 +136,7 @@ const UpgradeOverlay: React.FC<UpgradeOverlayProps> = ({
         {/* 操作按钮 */}
         <div className={styles.actionButtons}>
           <Button
-            onClick={onCancel}
+            onClick={() => onCancel(false)}
             disabled={upgrading}
             style={{ marginRight: '12px' }}
           >
