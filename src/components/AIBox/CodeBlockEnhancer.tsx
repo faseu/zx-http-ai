@@ -231,7 +231,7 @@ const createCompileButton = (
   button.textContent = '提交编译';
   button.onclick = async () => {
     const rawCode = block.textContent || '';
-    const code = removeAnySuffix(rawCode, '复制\n编辑\n提交编译');
+    const code = removeAnySuffix(rawCode, '复制编辑提交编译');
 
     button.textContent = '编译中...';
     button.disabled = true;
