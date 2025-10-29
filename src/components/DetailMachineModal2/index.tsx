@@ -1,0 +1,225 @@
+import { sendControl } from '@/pages/machine/service';
+import { Line } from '@ant-design/plots';
+import {
+  Button,
+  Flex,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Space,
+  Table,
+  TableColumnsType,
+  Tag,
+} from 'antd';
+import dayjs from 'dayjs';
+import React from 'react';
+import styles from './index.less';
+const { TextArea } = Input;
+
+interface DetailMachineModalProps {
+  open: boolean;
+  data: any;
+  onCancel?: () => void;
+  // 新增：编辑和删除的回调函数
+  onEdit?: (machineData: any) => void;
+  onDelete?: (machineData: any) => void;
+}
+
+/**
+ * 删除单条指令
+ * @param fields
+ */
+const handleSendControl = async (e: any) => {
+  const hide = message.loading('正在发送');
+  try {
+    await sendControl({ ...e });
+    hide();
+    message.success('发送成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('发送失败，请重试');
+    return false;
+  }
+};
+
+const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
+  open,
+  data: { baseData, alarmList, lastData, chartData },
+  onCancel,
+  onEdit,
+  onDelete,
+}) => {
+  const [controlValue, setControlValue] = React.useState('');
+  const columns: TableColumnsType<any> = [
+    {
+      title: '报警时间',
+      dataIndex: 'regTime',
+      render: (text) => dayjs.unix(text).format('YYYY-MM-DD HH:mm:ss'),
+    },
+    {
+      title: '报警参数',
+      dataIndex: 'item',
+    },
+    {
+      title: '原始数据',
+      dataIndex: 'content',
+      width: '300px',
+    },
+  ];
+
+  // const chartData = [
+  //   { year: '1991', value: 3 },
+  //   { year: '1992', value: 4 },
+  //   { year: '1993', value: 3.5 },
+  //   { year: '1994', value: 5 },
+  //   { year: '1995', value: 4.9 },
+  //   { year: '1996', value: 6 },
+  //   { year: '1997', value: 7 },
+  //   { year: '1998', value: 9 },
+  //   { year: '1999', value: 13 },
+  // ];
+
+  const config = {
+    data: chartData?.map((item: any) => ({
+      time: item?.time.split(' ')[1],
+      value: JSON.parse(item?.content)?.Temperature,
+    })),
+    xField: 'time',
+    yField: 'value',
+    point: {
+      shapeField: 'square',
+      sizeField: 4,
+    },
+    interaction: {
+      tooltip: {
+        marker: false,
+      },
+    },
+    style: {
+      lineWidth: 2,
+    },
+    theme: { type: 'classicDark' },
+  };
+
+  // 处理编辑按钮点击
+  const handleEdit = () => {
+    if (onEdit && baseData) {
+      onEdit(baseData);
+      // 关闭详情弹窗
+      onCancel?.();
+    }
+  };
+
+  // 处理删除确认
+  const handleDelete = async () => {
+    if (onDelete && baseData) {
+      await onDelete(baseData);
+      // 关闭详情弹窗
+      onCancel?.();
+    }
+  };
+
+  return (
+    <Modal
+      title="设备详情页"
+      open={open}
+      style={{ top: 20 }}
+      width={1008}
+      footer={false}
+      onCancel={onCancel}
+    >
+      <div className={styles.detailBox}>
+        <div className={styles.row1}>
+          <div className={styles.machineBox}>
+            <Flex justify="space-between">
+              <Flex
+                justify="center"
+                align="center"
+                style={{ width: '100px', height: '100px' }}
+              >
+                <img
+                  style={{ width: '100px', height: '100px' }}
+                  src={baseData?.img || '/admin/machine.png'}
+                  alt=""
+                />
+              </Flex>
+              <div>
+                <Tag color={baseData?.isOnline ? '#87d068' : '#A40000'}>
+                  {baseData?.isOnline ? '在线' : '离线'}
+                </Tag>
+              </div>
+            </Flex>
+            <Flex justify="space-between">
+              <div>
+                <div>
+                  <div>{`设备名称：${baseData?.machineName || ''}`}</div>
+                  <div>{`设备类型：${baseData?.cateName || ''}`}</div>
+                  <div>{`设备位置：${baseData?.address || ''}`}</div>
+                  <div>{`固件版本：${baseData?.version || 'V1.2.3'}`}</div>
+                  <div>{`设备用途：${baseData?.application || ''}`}</div>
+                </div>
+              </div>
+              <Flex vertical justify="flex-end">
+                <Button type="primary" size="small" onClick={handleEdit}>
+                  编辑
+                </Button>
+                <Popconfirm
+                  title="删除设备"
+                  description="删除后无法恢复，确定删除设备?"
+                  okText="确定"
+                  cancelText="取消"
+                  onConfirm={handleDelete}
+                >
+                  <Button
+                    type="default"
+                    style={{
+                      backgroundColor: '#8c8c8c',
+                      color: '#fff',
+                      borderColor: '#8c8c8c',
+                      marginTop: '10px',
+                    }}
+                    size="small"
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
+              </Flex>
+            </Flex>
+          </div>
+          <div className={styles.alarmBox}>
+            <Flex style={{ marginBottom: '8px' }}>
+              <div className={styles.title}>报警信息</div>
+            </Flex>
+            <Table
+              key="id"
+              scroll={{ y: 150 }}
+              pagination={false}
+              columns={columns}
+              dataSource={alarmList}
+              size="small"
+              className="mini-table"
+            />
+          </div>
+        </div>
+        <div className={styles.chartsBox}>
+          <Flex style={{ marginBottom: '8px' }}>
+            <div className={styles.title}>参数监控</div>
+          </Flex>
+          <div style={{ width: '100%', height: '250px' }}>
+            <Line {...config} />
+          </div>
+        </div>
+        <div className={styles.row3}>
+          <Space>
+            <Button type="primary">配置参数</Button>
+            <Button>取消</Button>
+          </Space>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+export default DetailMachineModal;
