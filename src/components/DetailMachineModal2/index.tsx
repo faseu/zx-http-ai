@@ -1,10 +1,8 @@
-import { sendControl } from '@/pages/machine/service';
+import ConfigParamsModal from '@/components/ConfigParamsModal'; // 导入配置参数组件
 import { Line } from '@ant-design/plots';
 import {
   Button,
   Flex,
-  Input,
-  message,
   Modal,
   Popconfirm,
   Space,
@@ -15,7 +13,6 @@ import {
 import dayjs from 'dayjs';
 import React from 'react';
 import styles from './index.less';
-const { TextArea } = Input;
 
 interface DetailMachineModalProps {
   open: boolean;
@@ -26,32 +23,16 @@ interface DetailMachineModalProps {
   onDelete?: (machineData: any) => void;
 }
 
-/**
- * 删除单条指令
- * @param fields
- */
-const handleSendControl = async (e: any) => {
-  const hide = message.loading('正在发送');
-  try {
-    await sendControl({ ...e });
-    hide();
-    message.success('发送成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('发送失败，请重试');
-    return false;
-  }
-};
-
 const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   open,
-  data: { baseData, alarmList, lastData, chartData },
+  data: { baseData, alarmList, chartData },
   onCancel,
   onEdit,
   onDelete,
 }) => {
-  const [controlValue, setControlValue] = React.useState('');
+  const [configModalOpen, setConfigModalOpen] = React.useState(false); // 配置参数弹窗状态
+  const [paramConfigs, setParamConfigs] = React.useState([]); // 存储参数配置
+
   const columns: TableColumnsType<any> = [
     {
       title: '报警时间',
@@ -68,18 +49,6 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       width: '300px',
     },
   ];
-
-  // const chartData = [
-  //   { year: '1991', value: 3 },
-  //   { year: '1992', value: 4 },
-  //   { year: '1993', value: 3.5 },
-  //   { year: '1994', value: 5 },
-  //   { year: '1995', value: 4.9 },
-  //   { year: '1996', value: 6 },
-  //   { year: '1997', value: 7 },
-  //   { year: '1998', value: 9 },
-  //   { year: '1999', value: 13 },
-  // ];
 
   const config = {
     data: chartData?.map((item: any) => ({
@@ -101,6 +70,28 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       lineWidth: 2,
     },
     theme: { type: 'classicDark' },
+  };
+
+  // 处理配置参数提交
+  const handleConfigSubmit = (values: any) => {
+    setParamConfigs(values.params);
+    setConfigModalOpen(false);
+    // 这里可以调用API保存配置到后端
+    console.log('配置参数:', values.params);
+  };
+
+  // 根据配置解析数据的工具函数
+  const parseDataByConfig = (rawData: any, parsePath: string) => {
+    const keys = parsePath.split('.');
+    let result = rawData;
+    for (const key of keys) {
+      if (result && typeof result === 'object' && key in result) {
+        result = result[key];
+      } else {
+        return null;
+      }
+    }
+    return result;
   };
 
   // 处理编辑按钮点击
@@ -213,11 +204,21 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
         </div>
         <div className={styles.row3}>
           <Space>
-            <Button type="primary">配置参数</Button>
+            <Button type="primary" onClick={() => setConfigModalOpen(true)}>
+              配置参数
+            </Button>
             <Button>取消</Button>
           </Space>
         </div>
       </div>
+
+      {/* 配置参数弹窗 */}
+      <ConfigParamsModal
+        open={configModalOpen}
+        onCancel={() => setConfigModalOpen(false)}
+        onSubmit={handleConfigSubmit}
+        initialValues={{ params: paramConfigs }}
+      />
     </Modal>
   );
 };

@@ -1,5 +1,5 @@
 import AddMachineModal from '@/components/AddMachineModal';
-import DetailMachineModal from '@/components/DetailMachineModal';
+import DetailMachineModal2 from '@/components/DetailMachineModal2';
 import MachineItem from '@/components/MachineItem';
 import { SearchOutlined } from '@ant-design/icons';
 import { debounce } from '@antv/util';
@@ -425,7 +425,7 @@ export default () => {
           }}
         />
       )}
-      <DetailMachineModal
+      <DetailMachineModal2
         data={deviceDetail}
         open={detailDeviceOpen}
         onCancel={() => setDetailDeviceOpen(false)}
