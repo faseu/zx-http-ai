@@ -11,12 +11,12 @@ import {
   addDevice,
   delDevice,
   detailDevice,
-  detailDeviceChartData,
   detailDeviceData,
   detailDeviceLastData,
   editDevice,
   getDeviceList,
   setDeviceBatGroup,
+  setDeviceParams,
 } from './service';
 
 /**
@@ -97,16 +97,12 @@ const handleDetailDevice2 = async (fields: any) => {
       machineId: fields.machineId,
       type: 'info',
     });
-    const lastData = await detailDeviceLastData({
-      machineId: fields.machineId,
-    });
-
-    const chartData = await detailDeviceChartData({
+    const chartData = await detailDeviceLastData({
       machineId: fields.machineId,
     });
     hide();
     message.success('获取详情成功');
-    return { baseData, alarmList, infoData, lastData, chartData };
+    return { baseData, alarmList, infoData, chartData };
   } catch (error) {
     hide();
     message.error('获取详情失败请重试！');
@@ -160,6 +156,23 @@ const normalizeIsGroup = (v: any): '0' | '1' | undefined => {
   return undefined;
 };
 
+/**
+ *  删除设备
+ * @param fields
+ */
+const handleSetDeviceParams = async (fields: any) => {
+  const hide = message.loading('正在设置');
+  try {
+    await setDeviceParams({ ...fields });
+    hide();
+    message.success('设置成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('设置失败，请重试');
+    return false;
+  }
+};
 export default () => {
   const { initialState } = useModel('@@initialState');
   const isDark = initialState?.settings?.navTheme === 'realDark';
@@ -442,6 +455,9 @@ export default () => {
           if (success) {
             await fetchDeviceList();
           }
+        }}
+        onSetParams={async (deviceData: any) => {
+          const success = await handleSetDeviceParams(deviceData);
         }}
       />
     </div>

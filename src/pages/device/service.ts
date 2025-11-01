@@ -96,17 +96,19 @@ export async function getDeviceList(params?: { [key: string]: any }) {
     },
   });
 }
+
 /**
- * 添加设备到智能空间
+ * 设置设备参数
  */
-export async function setDeviceGroup(params?: { [key: string]: any }) {
-  return request('/admin/machine/setGroup', {
+export async function setDeviceParams(params?: { [key: string]: any }) {
+  return request('/admin/machine/setParams', {
     method: 'POST',
     params: {
       ...params,
     },
   });
 }
+
 /**
  * 添加设备到智能空间
  */

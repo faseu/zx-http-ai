@@ -17,10 +17,12 @@ import styles from './index.less';
 interface DetailMachineModalProps {
   open: boolean;
   data: any;
+  initParam: any;
   onCancel?: () => void;
   // 新增：编辑和删除的回调函数
   onEdit?: (machineData: any) => void;
   onDelete?: (machineData: any) => void;
+  onSetParams?: (machineData: any) => void;
 }
 
 const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
@@ -29,9 +31,11 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   onCancel,
   onEdit,
   onDelete,
+  onSetParams,
+  initParam,
 }) => {
-  const [configModalOpen, setConfigModalOpen] = React.useState(false); // 配置参数弹窗状态
-  const [paramConfigs, setParamConfigs] = React.useState([]); // 存储参数配置
+  const [configModalOpen, setConfigModalOpen] = React.useState(false);
+  const [paramConfigs, setParamConfigs] = React.useState([]);
 
   const columns: TableColumnsType<any> = [
     {
@@ -50,36 +54,6 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
     },
   ];
 
-  const config = {
-    data: chartData?.map((item: any) => ({
-      time: item?.time.split(' ')[1],
-      value: JSON.parse(item?.content)?.Temperature,
-    })),
-    xField: 'time',
-    yField: 'value',
-    point: {
-      shapeField: 'square',
-      sizeField: 4,
-    },
-    interaction: {
-      tooltip: {
-        marker: false,
-      },
-    },
-    style: {
-      lineWidth: 2,
-    },
-    theme: { type: 'classicDark' },
-  };
-
-  // 处理配置参数提交
-  const handleConfigSubmit = (values: any) => {
-    setParamConfigs(values.params);
-    setConfigModalOpen(false);
-    // 这里可以调用API保存配置到后端
-    console.log('配置参数:', values.params);
-  };
-
   // 根据配置解析数据的工具函数
   const parseDataByConfig = (rawData: any, parsePath: string) => {
     const keys = parsePath.split('.');
@@ -92,6 +66,136 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       }
     }
     return result;
+  };
+
+  // 获取参数配置
+  const getParamConfigs = () => {
+    try {
+      const controlData = JSON.parse(baseData?.control || '[]');
+      return Array.isArray(controlData) ? controlData : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const config = {
+    data: chartData
+      ?.flatMap((item: any) => {
+        const content = JSON.parse(item?.content);
+        const time = item?.time.split(' ')[1];
+        const configs = getParamConfigs();
+
+        // 如果没有配置参数，使用默认的 Temperature
+        if (configs.length === 0) {
+          return {
+            time,
+            value: parseDataByConfig(content, 'Temperature'),
+            category: 'Temperature',
+            unit: '°C',
+          };
+        }
+
+        // 根据配置的参数生成数据
+        return configs
+          .filter((config) => config.fieldName && config.parsePath) // 过滤有效配置
+          .map((config) => ({
+            time,
+            value: parseDataByConfig(content, config.parsePath),
+            category: config.fieldName,
+            unit: config.unit || '',
+          }))
+          .filter((item) => item.value !== null); // 过滤解析失败的数据
+      })
+      .filter(Boolean), // 过滤掉空值
+
+    xField: 'time',
+    yField: 'value',
+    colorField: 'category', // 根据参数名称显示不同颜色
+
+    point: {
+      shapeField: 'square',
+      sizeField: 1,
+    },
+
+    interaction: {
+      tooltip: {
+        marker: false,
+        title: (datum: any) => `时间: ${datum.time}`,
+        items: [
+          (datum: any) => ({
+            name: datum.category,
+            value: `${datum.value}${datum.unit ? ` ${datum.unit}` : ''}`,
+          }),
+        ],
+      },
+    },
+
+    style: {
+      lineWidth: 1,
+    },
+
+    theme: { type: 'classicDark' },
+
+    // 图例配置
+    legend: {
+      position: 'top' as const,
+    },
+
+    // 坐标轴配置
+    axis: {
+      x: {
+        title: '时间',
+        // 设置标签显示数量，避免拥挤
+        tickCount: 6, // 最多显示6个时间标签
+        // 标签旋转角度，避免重叠
+        labelFormatter: (text: string) => {
+          // 只显示时分，去掉秒数让标签更简洁
+          return text.substring(0, 5); // HH:mm 格式
+        },
+        // 标签样式
+        label: {
+          rotate: -45, // 旋转45度避免重叠
+          offset: 10,
+          style: {
+            fontSize: 10,
+          },
+        },
+        // 网格线配置
+        grid: {
+          line: {
+            style: {
+              stroke: '#434343',
+              lineWidth: 1,
+              lineDash: [2, 2],
+            },
+          },
+        },
+      },
+      y: {
+        title: '数值',
+        // y轴网格线
+        grid: {
+          line: {
+            style: {
+              stroke: '#434343',
+              lineWidth: 1,
+              lineDash: [2, 2],
+            },
+          },
+        },
+      },
+    },
+  };
+
+  // 处理配置参数提交
+  const handleConfigSubmit = (values: any) => {
+    setParamConfigs(values.params);
+    setConfigModalOpen(false);
+    console.log('配置参数:', values.params);
+    onSetParams?.({
+      machineId: baseData.machineId,
+      control: JSON.stringify(values.params),
+    });
   };
 
   // 处理编辑按钮点击
@@ -207,7 +311,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
             <Button type="primary" onClick={() => setConfigModalOpen(true)}>
               配置参数
             </Button>
-            <Button>取消</Button>
+            <Button onClick={() => onCancel()}>取消</Button>
           </Space>
         </div>
       </div>
@@ -217,7 +321,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
         open={configModalOpen}
         onCancel={() => setConfigModalOpen(false)}
         onSubmit={handleConfigSubmit}
-        initialValues={{ params: paramConfigs }}
+        initialValues={{ params: JSON.parse(baseData?.control || '[]') }}
       />
     </Modal>
   );
