@@ -438,28 +438,30 @@ export default () => {
           }}
         />
       )}
-      <DetailMachineModal2
-        data={deviceDetail}
-        open={detailDeviceOpen}
-        onCancel={() => setDetailDeviceOpen(false)}
-        onEdit={async (deviceData: any) => {
-          const detail = await handleDetailDevice(deviceData);
-          if (detail) {
-            setEditDeviceDetail(detail);
-            setEditDeviceId(deviceData.deviceId);
-            setModalDeviceOpen(true);
-          }
-        }}
-        onDelete={async (deviceData: any) => {
-          const success = await handleDelDevice(deviceData);
-          if (success) {
-            await fetchDeviceList();
-          }
-        }}
-        onSetParams={async (deviceData: any) => {
-          const success = await handleSetDeviceParams(deviceData);
-        }}
-      />
+      {detailDeviceOpen && (
+        <DetailMachineModal2
+          data={deviceDetail}
+          open={detailDeviceOpen}
+          onCancel={() => setDetailDeviceOpen(false)}
+          onEdit={async (deviceData: any) => {
+            const detail = await handleDetailDevice(deviceData);
+            if (detail) {
+              setEditDeviceDetail(detail);
+              setEditDeviceId(deviceData.deviceId);
+              setModalDeviceOpen(true);
+            }
+          }}
+          onDelete={async (deviceData: any) => {
+            const success = await handleDelDevice(deviceData);
+            if (success) {
+              await fetchDeviceList();
+            }
+          }}
+          onSetParams={async (deviceData: any) => {
+            const success = await handleSetDeviceParams(deviceData);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -13,6 +13,7 @@ import {
   Space,
   Table,
   TableColumnsType,
+  Tag,
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
@@ -212,7 +213,7 @@ export default () => {
 
   const columns: TableColumnsType<DataType> = [
     {
-      title: '协议名称',
+      title: '源码名称',
       dataIndex: 'otaName',
       width: 150,
       render: (text) => {
@@ -239,6 +240,7 @@ export default () => {
     {
       title: '分类',
       dataIndex: 'cateName',
+      render: (cateName: string) => <Tag color="blue">{cateName}</Tag>,
     },
     {
       title: '操作',

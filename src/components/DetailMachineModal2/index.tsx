@@ -90,8 +90,8 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
           return {
             time,
             value: parseDataByConfig(content, 'Temperature'),
-            category: 'Temperature',
-            unit: '°C',
+            category: '数值',
+            unit: '',
           };
         }
 
@@ -106,7 +106,8 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
           }))
           .filter((item) => item.value !== null); // 过滤解析失败的数据
       })
-      .filter(Boolean), // 过滤掉空值
+      .filter(Boolean) // 过滤掉空值
+      .slice(0, 45), // 选择前60条数据
 
     xField: 'time',
     yField: 'value',
@@ -117,17 +118,15 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       sizeField: 1,
     },
 
-    interaction: {
-      tooltip: {
-        marker: false,
-        title: (datum: any) => `时间: ${datum.time}`,
-        items: [
-          (datum: any) => ({
-            name: datum.category,
-            value: `${datum.value}${datum.unit ? ` ${datum.unit}` : ''}`,
-          }),
-        ],
-      },
+    tooltip: {
+      marker: false,
+      title: (datum: any) => `时间: ${datum.time}`,
+      items: [
+        (datum: any) => ({
+          name: datum.category,
+          value: `${datum.value}${datum.unit ? ` ${datum.unit}` : ''}`,
+        }),
+      ],
     },
 
     style: {
@@ -147,29 +146,20 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
         title: '时间',
         // 设置标签显示数量，避免拥挤
         tickCount: 6, // 最多显示6个时间标签
-        // 标签旋转角度，避免重叠
+        // 标签格式化函数
         labelFormatter: (text: string) => {
           // 只显示时分，去掉秒数让标签更简洁
           return text.substring(0, 5); // HH:mm 格式
         },
-        // 标签样式
-        label: {
-          rotate: -45, // 旋转45度避免重叠
-          offset: 10,
-          style: {
-            fontSize: 10,
+        // label: false,
+        // 简化 transform 配置
+        transform: [
+          {
+            type: 'hide',
+            keepHeader: true, // 保留第一个刻度值
+            keepTail: true, // 保留最后一个刻度值
           },
-        },
-        // 网格线配置
-        grid: {
-          line: {
-            style: {
-              stroke: '#434343',
-              lineWidth: 1,
-              lineDash: [2, 2],
-            },
-          },
-        },
+        ],
       },
       y: {
         title: '数值',
@@ -196,6 +186,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       machineId: baseData.machineId,
       control: JSON.stringify(values.params),
     });
+    onCancel?.();
   };
 
   // 处理编辑按钮点击
