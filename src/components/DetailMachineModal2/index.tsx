@@ -535,7 +535,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
             <div
               style={{
                 width: '100%',
-                height: '350px', // 调整为适配100px容器
+                height: '310px', // 调整为适配100px容器
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

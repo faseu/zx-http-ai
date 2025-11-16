@@ -253,6 +253,32 @@ const Page = () => {
           </div>
         </div>
       </LoginFormPage>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          textAlign: 'center',
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontSize: '12px',
+          lineHeight: '1.5',
+          whiteSpace: 'nowrap',
+          zIndex: 1000,
+        }}
+      >
+        <div>宁波语智界联人工智能科技有限公司</div>
+        <a
+          href="https://beian.miit.gov.cn/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: 'rgba(255, 255, 255, 0.6)',
+          }}
+        >
+          浙ICP备2025208714号-1
+        </a>
+      </div>
     </div>
   );
 };
