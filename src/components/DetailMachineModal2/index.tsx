@@ -1,8 +1,10 @@
 import ConfigParamsModal from '@/components/ConfigParamsModal'; // 导入配置参数组件
+import { sendControl } from '@/pages/machine/service';
 import { Line } from '@ant-design/plots';
 import {
   Button,
   Flex,
+  message,
   Modal,
   Popconfirm,
   Space,
@@ -10,6 +12,7 @@ import {
   TableColumnsType,
   Tag,
 } from 'antd';
+import TextArea from 'antd/es/input/TextArea';
 import dayjs from 'dayjs';
 import React from 'react';
 import styles from './index.less';
@@ -25,9 +28,27 @@ interface DetailMachineModalProps {
   onSetParams?: (machineData: any) => void;
 }
 
+/**
+ * 发送指令
+ * @param fields
+ */
+const handleSendControl = async (e: any) => {
+  const hide = message.loading('正在发送');
+  try {
+    await sendControl({ ...e });
+    hide();
+    message.success('发送成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('发送失败，请重试');
+    return false;
+  }
+};
+
 const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   open,
-  data: { baseData, alarmList, chartData },
+  data: { baseData, alarmList, lastData, chartData },
   onCancel,
   onEdit,
   onDelete,
@@ -36,7 +57,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
 }) => {
   const [configModalOpen, setConfigModalOpen] = React.useState(false);
   const [paramConfigs, setParamConfigs] = React.useState([]);
-
+  const [controlValue, setControlValue] = React.useState('');
   const columns: TableColumnsType<any> = [
     {
       title: '报警时间',
@@ -77,38 +98,46 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       return [];
     }
   };
-
+  // 定义一组淡色渐变
+  const lightGradients = [
+    'linear-gradient(-90deg, rgba(255,255,255,0.1) 0%, rgba(108,117,125,0.3) 30%)', // 淡灰色
+  ];
   const config = {
-    data: chartData
-      ?.flatMap((item: any) => {
-        const content = JSON.parse(item?.content);
-        const time = item?.time.split(' ')[1];
-        const configs = getParamConfigs();
+    data: (() => {
+      const configs = getParamConfigs();
 
-        // 如果没有配置参数，使用默认的 Temperature
-        if (configs.length === 0) {
-          return {
-            time,
-            value: parseDataByConfig(content, 'Temperature'),
-            category: '数值',
-            unit: '',
-          };
-        }
+      // 根据配置的参数生成数据
+      const validConfigs = configs.filter(
+        (config) => config.fieldName && config.parsePath,
+      );
+      const result: any[] = [];
 
-        // 根据配置的参数生成数据
-        return configs
-          .filter((config) => config.fieldName && config.parsePath) // 过滤有效配置
-          .map((config) => ({
-            time,
-            value: parseDataByConfig(content, config.parsePath),
-            category: config.fieldName,
-            unit: config.unit || '',
-          }))
-          .filter((item) => item.value !== null); // 过滤解析失败的数据
-      })
-      .filter(Boolean) // 过滤掉空值
-      .slice(0, 45), // 选择前60条数据
+      // 为每个参数单独处理，确保每个参数都有24条数据
+      validConfigs.forEach((config) => {
+        const paramData =
+          chartData
+            ?.map((item: any) => {
+              const content = JSON.parse(item?.content);
+              const time = item?.time.split(' ')[1];
+              const value = parseDataByConfig(content, config.parsePath);
+              return value !== null
+                ? {
+                    time,
+                    value,
+                    category: config.fieldName,
+                    unit: config.unit || '',
+                  }
+                : null;
+            })
+            .filter(Boolean) // 过滤掉空值
+            .slice(0, 24) || []; // 每个参数取前24条有效数据
 
+        result.push(...paramData);
+      });
+
+      return result;
+    })(),
+    shapeField: 'smooth',
     xField: 'time',
     yField: 'value',
     colorField: 'category', // 根据参数名称显示不同颜色
@@ -173,6 +202,13 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
             },
           },
         },
+      },
+    },
+
+    // 使用随机或按索引选择
+    area: {
+      style: {
+        fill: lightGradients[Math.floor(Math.random() * lightGradients.length)],
       },
     },
   };
@@ -298,11 +334,58 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
           </div>
         </div>
         <div className={styles.row3}>
+          <div className={styles.dataBox}>
+            <Flex style={{ marginBottom: '8px' }}>
+              <div className={styles.title}>设备上报数据</div>
+            </Flex>
+            <div className={styles.preBox}>
+              <pre
+                style={{
+                  all: 'unset', // 一键清除默认样式
+                  whiteSpace: 'pre', // 保留换行和缩进
+                  fontFamily: 'monospace', // 可选：设定等宽字体
+                }}
+              >
+                <code>
+                  {lastData
+                    ?.map((item) => `${item.time} ${item.content}`)
+                    .join('\n')}
+                </code>
+              </pre>
+            </div>
+          </div>
+          <div className={styles.consoleBox}>
+            <Flex style={{ marginBottom: '8px' }}>
+              <div className={styles.title}>调试控制台</div>
+            </Flex>
+            <Flex vertical justify="space-between" style={{ height: '194px' }}>
+              <TextArea
+                rows={7}
+                value={controlValue}
+                onChange={(e) => setControlValue(e.target.value)}
+              />
+              <Button
+                type="primary"
+                size="small"
+                block
+                onClick={() =>
+                  handleSendControl({
+                    machineId: baseData.machineId,
+                    control: controlValue,
+                  })
+                }
+              >
+                发送
+              </Button>
+            </Flex>
+          </div>
+        </div>
+        <div className={styles.row4}>
           <Space>
             <Button type="primary" onClick={() => setConfigModalOpen(true)}>
               配置参数
             </Button>
-            <Button onClick={() => onCancel()}>取消</Button>
+            <Button onClick={() => onCancel?.()}>取消</Button>
           </Space>
         </div>
       </div>

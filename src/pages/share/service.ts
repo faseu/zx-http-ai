@@ -49,3 +49,15 @@ export async function changeProjectStatus(params?: { [key: string]: any }) {
     },
   });
 }
+
+/**
+ * 删除协议
+ */
+export async function delShare(params?: { [key: string]: any }) {
+  return request('/admin/project/del', {
+    method: 'POST',
+    data: {
+      ...params,
+    },
+  });
+}

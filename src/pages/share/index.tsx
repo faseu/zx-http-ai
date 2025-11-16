@@ -3,12 +3,13 @@ import PublishShare from '@/components/PublishShare';
 import {
   addDialogue,
   changeProjectStatus,
+  delShare,
   getDialogueDetail,
   getDialogueList,
 } from '@/pages/share/service';
 import { tabs } from '@/utils/config';
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Input, List, message, Spin, Tabs } from 'antd';
+import { Button, Input, List, message, Popconfirm, Spin, Tabs } from 'antd';
 import { debounce } from 'lodash'; // 新增lodash的debounce
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
@@ -29,6 +30,24 @@ const handleAddDialogue = async (fields: any) => {
   } catch (error) {
     hide();
     message.error('新增失败请重试！');
+    return false;
+  }
+};
+
+/**
+ *  删除协议
+ * @param fields
+ */
+const handleDelShare = async (fields: any) => {
+  const hide = message.loading('正在删除');
+  try {
+    await delShare({ id: fields.id });
+    hide();
+    message.success('删除成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('删除失败，请重试');
     return false;
   }
 };
@@ -327,6 +346,25 @@ export default () => {
                     ));
                   })()}
                 </div>
+
+                {!!userInfo.isAdmin && (
+                  <Popconfirm
+                    title="删除"
+                    description="删除后无法恢复，确定删除?"
+                    okText="确定"
+                    cancelText="取消"
+                    onConfirm={async () => {
+                      const success = await handleDelShare(item);
+                      if (success) {
+                        fetchDialogueList(1, false);
+                      }
+                    }}
+                  >
+                    <Button className={styles.btn2} type="link" danger>
+                      删除
+                    </Button>
+                  </Popconfirm>
+                )}
                 <Button
                   className={styles.btn}
                   type="link"

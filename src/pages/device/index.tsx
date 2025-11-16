@@ -80,29 +80,26 @@ const handleDetailDevice = async (fields: any) => {
 };
 
 /**
- * 设备详情2
+ * 设备详情2 - 优化为并行请求
  * @param fields
  */
 const handleDetailDevice2 = async (fields: any) => {
   const hide = message.loading('正在获取详情');
   try {
-    const baseData = await detailDevice({
-      machineId: fields.machineId,
-    });
-    const { data: alarmList } = await detailDeviceData({
-      machineId: fields.machineId,
-      type: 'error',
-    });
-    const infoData = await detailDeviceData({
-      machineId: fields.machineId,
-      type: 'info',
-    });
-    const chartData = await detailDeviceLastData({
-      machineId: fields.machineId,
-    });
+    // 将多个请求改为并行执行，提高效率
+    const [baseData, alarmResponse, infoData, lastData] = await Promise.all([
+      detailDevice({ machineId: fields.machineId }),
+      detailDeviceData({ machineId: fields.machineId, type: 'error' }),
+      detailDeviceData({ machineId: fields.machineId, type: 'info' }),
+      detailDeviceLastData({ machineId: fields.machineId }),
+    ]);
+
+    // 从 alarmResponse 中提取 data
+    const alarmList = alarmResponse.data;
+
     hide();
     message.success('获取详情成功');
-    return { baseData, alarmList, infoData, chartData };
+    return { baseData, alarmList, infoData, lastData, chartData: lastData };
   } catch (error) {
     hide();
     message.error('获取详情失败请重试！');

@@ -4,6 +4,7 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
 import MarkdownIt from 'markdown-it';
 import React from 'react';
+import './index.less';
 import type { ChatMessage } from './types';
 
 const md = new MarkdownIt({

@@ -26,7 +26,7 @@ interface DetailMachineModalProps {
 }
 
 /**
- * 删除单条指令
+ * 发送指令
  * @param fields
  */
 const handleSendControl = async (e: any) => {
@@ -223,9 +223,11 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                   fontFamily: 'monospace', // 可选：设定等宽字体
                 }}
               >
-                <code>{lastData?.map((item) =>
-                    `${item.time} ${item.content}`).join('\n')
-                  }</code>
+                <code>
+                  {lastData
+                    ?.map((item) => `${item.time} ${item.content}`)
+                    .join('\n')}
+                </code>
               </pre>
             </div>
           </div>

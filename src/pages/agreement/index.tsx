@@ -217,7 +217,6 @@ export default () => {
     {
       title: '协议名称',
       dataIndex: 'otaName',
-      width: 150,
       render: (text) => {
         return (
           <Popover content={text}>
@@ -260,7 +259,6 @@ export default () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
       render: (_, record) => (
         <Space size="middle">
           <a

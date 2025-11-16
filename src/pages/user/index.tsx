@@ -1,7 +1,7 @@
 import AddCodeModal from '@/components/AddCodeModal';
 import CustomTitle from '@/components/CustomTitle';
 import UploadImage from '@/components/UploadImage';
-import { getOtaList } from '@/pages/machine/service';
+import { delOta, getOtaList } from '@/pages/machine/service';
 import { DownloadOutlined } from '@ant-design/icons';
 import { request } from '@umijs/max';
 import {
@@ -9,6 +9,7 @@ import {
   Input,
   message,
   Modal,
+  Popconfirm,
   Popover,
   Space,
   Table,
@@ -120,6 +121,24 @@ const handleEditOta = async (fields: any) => {
   }
 };
 
+/**
+ *  删除协议
+ * @param fields
+ */
+const handleDelOta = async (fields: any) => {
+  const hide = message.loading('正在删除');
+  try {
+    await delOta({ id: fields.id });
+    hide();
+    message.success('删除成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('删除失败，请重试');
+    return false;
+  }
+};
+
 export default () => {
   const { id } = JSON.parse(localStorage.getItem('userInfo') || '{}') || {};
   const [user, setUser] = useState<ApiUser | null>(null);
@@ -153,7 +172,7 @@ export default () => {
   ) => {
     const res = await getUserList({
       page: nextPage,
-      psize: 100,
+      psize: nextPageSize,
     });
     setUserList(res?.data || []);
   };
@@ -182,7 +201,7 @@ export default () => {
   useEffect(() => {
     if (!id) return;
     fetchUserList(1, 1000);
-    fetchOtaList(1, pageSize);
+    fetchOtaList(1, 1000);
 
     getUserInfo({ id })
       .then((res) => {
@@ -215,7 +234,6 @@ export default () => {
     {
       title: '源码名称',
       dataIndex: 'otaName',
-      width: 150,
       render: (text) => {
         return (
           <Popover content={text}>
@@ -245,13 +263,29 @@ export default () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
       render: (_, record) => (
         <Space size="middle">
           <a href={record.fileUrl} target="_blank" rel="noopener noreferrer">
             <DownloadOutlined />
             <span>下载</span>
           </a>
+          {!!user?.isAdmin && (
+            <Popconfirm
+              title="删除协议"
+              description="删除后无法恢复，确定删除协议?"
+              okText="确定"
+              cancelText="取消"
+              onConfirm={async () => {
+                const success = await handleDelOta(record);
+                if (success) {
+                  // 若当前页删到空且不是第1页，则回退一页
+                  await fetchOtaList(1, 1000);
+                }
+              }}
+            >
+              <a style={{ color: 'red' }}>删除</a>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -278,7 +312,6 @@ export default () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
       render: (_, record) => (
         <Space size="middle">
           <a onClick={async () => {}}>编辑</a>

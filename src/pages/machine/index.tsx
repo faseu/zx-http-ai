@@ -106,39 +106,25 @@ const handleDetailMachine = async (fields: any) => {
 };
 
 /**
- * 设备详情2
+ * 设备详情2 - 优化为并行请求
  * @param fields
  */
 const handleDetailMachine2 = async (fields: any) => {
   const hide = message.loading('正在获取详情');
   try {
-    const baseData = await detailMachine({
-      machineId: fields.machineId,
-    });
-    const { data: alarmList } = await detailMachineData({
-      machineId: fields.machineId,
-      type: 'error',
-    });
-    const infoData = await detailMachineData({
-      machineId: fields.machineId,
-      type: 'info',
-    });
-    const lastData = await detailMachineLastData({
-      machineId: fields.machineId,
-    });
-    const now = new Date();
+    // 将多个请求改为并行执行，提高效率
+    const [baseData, alarmResponse, infoData, lastData, chartData] =
+      await Promise.all([
+        detailMachine({ machineId: fields.machineId }),
+        detailMachineData({ machineId: fields.machineId, type: 'error' }),
+        detailMachineData({ machineId: fields.machineId, type: 'info' }),
+        detailMachineLastData({ machineId: fields.machineId }),
+        detailMachineChartData({ machineId: fields.machineId }),
+      ]);
 
-    // 获取昨天 0 点
-    const endTime = new Date(now);
-    endTime.setHours(0, 0, 0, 0);
+    // 从 alarmResponse 中提取 data
+    const alarmList = alarmResponse.data;
 
-    // 获取前天 0 点
-    const startTime = new Date(endTime);
-    startTime.setDate(startTime.getDate() - 1);
-
-    const chartData = await detailMachineChartData({
-      machineId: fields.machineId,
-    });
     hide();
     message.success('获取详情成功');
     return { baseData, alarmList, infoData, lastData, chartData };
@@ -540,7 +526,6 @@ export default () => {
     {
       title: '协议名称',
       dataIndex: 'otaName',
-      width: 150,
       render: (text) => {
         return (
           <Popover content={text}>
@@ -583,7 +568,6 @@ export default () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
       render: (_, record) => (
         <Space size="middle">
           <a

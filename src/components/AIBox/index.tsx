@@ -30,7 +30,12 @@ import type {
   ChatMessage,
   FileWithStatus,
 } from './types';
-import { buildMessagesWithFiles, validateFile } from './utils';
+import {
+  buildMessagesWithFiles,
+  getStatusMessage,
+  pollFileStatus,
+  validateFile,
+} from './utils';
 
 const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
   const [value, setValue] = useState('');

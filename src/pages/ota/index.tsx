@@ -61,7 +61,6 @@ export default () => {
     {
       title: 'OTA名称',
       dataIndex: 'otaName',
-      width: 150,
     },
     {
       title: '版本',
@@ -107,7 +106,6 @@ export default () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
       render: (_, record) => (
         <Space size="middle">
           <Button
