@@ -3,6 +3,7 @@ import { sendControl } from '@/pages/machine/service';
 import { Line } from '@ant-design/plots';
 import {
   Button,
+  Card,
   Flex,
   message,
   Modal,
@@ -105,7 +106,6 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   const config = {
     data: (() => {
       const configs = getParamConfigs();
-
       // 根据配置的参数生成数据
       const validConfigs = configs.filter(
         (config) => config.fieldName && config.parsePath,
@@ -135,7 +135,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
         result.push(...paramData);
       });
 
-      return result;
+      return result.reverse();
     })(),
     shapeField: 'smooth',
     xField: 'time',
@@ -172,7 +172,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
     // 坐标轴配置
     axis: {
       x: {
-        title: '时间',
+        title: '',
         // 设置标签显示数量，避免拥挤
         tickCount: 6, // 最多显示6个时间标签
         // 标签格式化函数
@@ -191,7 +191,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
         ],
       },
       y: {
-        title: '数值',
+        title: '',
         // y轴网格线
         grid: {
           line: {
@@ -212,6 +212,55 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
       },
     },
   };
+
+  // 生成卡片数据
+  const generateCardData = () => {
+    const configs = getParamConfigs();
+    const validConfigs = configs.filter(
+      (config) => config.fieldName && config.parsePath,
+    );
+
+    if (!chartData || chartData.length === 0) return [];
+
+    // 按时间分组数据
+    const timeGroupedData = chartData.reduce((acc: any, item: any) => {
+      const time = item?.time.split(' ')[1]; // 获取时间部分
+      const content = JSON.parse(item?.content);
+
+      if (!acc[time]) {
+        acc[time] = {
+          time,
+          params: {},
+        };
+      }
+
+      // 为每个配置的参数解析数据
+      validConfigs.forEach((config) => {
+        const value = parseDataByConfig(content, config.parsePath);
+        // 过滤掉空值：null、undefined、空字符串、NaN
+        if (
+          value !== null &&
+          value !== undefined &&
+          value !== '' &&
+          !Number.isNaN(value)
+        ) {
+          acc[time].params[config.fieldName] = {
+            value,
+            unit: config.unit || '',
+          };
+        }
+      });
+
+      return acc;
+    }, {});
+
+    // 转换为数组并排序，过滤掉没有任何参数数据的时间点
+    return Object.values(timeGroupedData)
+      .filter((item: any) => Object.keys(item.params).length > 0) // 过滤掉没有参数数据的时间点
+      .sort((a: any, b: any) => a.time.localeCompare(b.time));
+  };
+
+  const cardData = generateCardData();
 
   // 处理配置参数提交
   const handleConfigSubmit = (values: any) => {
@@ -326,12 +375,147 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
           </div>
         </div>
         <div className={styles.chartsBox}>
-          <Flex style={{ marginBottom: '8px' }}>
+          <Flex style={{ marginBottom: '6px' }}>
             <div className={styles.title}>参数监控</div>
           </Flex>
-          <div style={{ width: '100%', height: '250px' }}>
-            <Line {...config} />
-          </div>
+          {cardData.length > 0 && (
+            <div
+              style={{
+                width: '100%',
+                height: '90px',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+              }}
+              className={styles.cardContainer}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  width: 'fit-content',
+                  height: '100%',
+                }}
+              >
+                {cardData.map((item: any, index: number) => (
+                  <Card
+                    key={`${item.time}-${index}`}
+                    size="small"
+                    style={{
+                      minWidth: '100px',
+                      maxWidth: '200px',
+                      height: '76px', // 改为90px，适配100px容器
+                      backgroundColor: '#1f1f1f',
+                      borderColor: '#434343',
+                      flexShrink: 0,
+                    }}
+                    bodyStyle={{
+                      padding: '8px', // 减少内边距
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: '#fff',
+                        fontSize: '12px', // 减小字体
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {item.time} {/* 显示 HH:mm 格式 */}
+                    </div>
+                    <div
+                      style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        display: 'flex',
+                        gap: '4px', // 减少间距
+                      }}
+                      className={styles.cardContainer}
+                    >
+                      {Object.entries(item.params).map(
+                        ([paramName, paramData]: [string, any]) => (
+                          <div
+                            key={paramName}
+                            style={{
+                              padding: '2px', // 减少内边距
+                              borderRadius: '3px', // 减小圆角
+                            }}
+                          >
+                            <div
+                              style={{
+                                color: '#87d068',
+                                fontSize: '10px', // 减小字体
+                                marginBottom: '2px', // 减少下边距
+                                fontWeight: '500',
+                              }}
+                            >
+                              {paramName}
+                            </div>
+                            <div
+                              style={{
+                                color: '#fff',
+                                fontSize: '12px', // 减小字体
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {paramData.value}
+                              {paramData.unit && (
+                                <span
+                                  style={{
+                                    color: '#8c8c8c',
+                                    fontSize: '10px', // 减小字体
+                                    marginLeft: '2px', // 减少左边距
+                                  }}
+                                >
+                                  {paramData.unit}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ),
+                      )}
+                      {Object.keys(item.params).length === 0 && (
+                        <div
+                          style={{
+                            color: '#8c8c8c',
+                            fontSize: '10px', // 减小字体
+                            textAlign: 'center',
+                            padding: '10px', // 减少内边距
+                          }}
+                        >
+                          暂无数据
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+          {cardData.length > 0 && (
+            <div style={{ width: '100%', height: '250px' }}>
+              <Line {...config} />
+            </div>
+          )}
+          {cardData.length === 0 && (
+            <div
+              style={{
+                width: '100%',
+                height: '350px', // 调整为适配100px容器
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#8c8c8c',
+                backgroundColor: '#1f1f1f',
+                borderRadius: '6px',
+                border: '1px dashed #434343',
+              }}
+            >
+              暂无监控数据，请先配置参数
+            </div>
+          )}
         </div>
         <div className={styles.row3}>
           <div className={styles.dataBox}>
