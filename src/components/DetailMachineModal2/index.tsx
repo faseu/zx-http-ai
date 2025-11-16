@@ -59,6 +59,37 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
   const [configModalOpen, setConfigModalOpen] = React.useState(false);
   const [paramConfigs, setParamConfigs] = React.useState([]);
   const [controlValue, setControlValue] = React.useState('');
+
+  // 添加横向滚动容器的引用
+  const horizontalScrollRef = React.useRef<HTMLDivElement>(null);
+
+  // 处理横向滚动的鼠标滚轮事件
+  const handleHorizontalScroll = React.useCallback((e: WheelEvent) => {
+    if (horizontalScrollRef.current) {
+      e.preventDefault();
+      // 增加滚动速度，乘以倍数（比如3倍）
+      const scrollSpeed = 2.4;
+      horizontalScrollRef.current.scrollBy({
+        left: e.deltaY * scrollSpeed,
+        behavior: 'smooth',
+      });
+    }
+  }, []);
+
+  // 添加和移除滚轮事件监听
+  React.useEffect(() => {
+    const scrollContainer = horizontalScrollRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('wheel', handleHorizontalScroll, {
+        passive: false,
+      });
+
+      return () => {
+        scrollContainer.removeEventListener('wheel', handleHorizontalScroll);
+      };
+    }
+  }, [handleHorizontalScroll]);
+
   const columns: TableColumnsType<any> = [
     {
       title: '报警时间',
@@ -380,6 +411,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
           </Flex>
           {cardData.length > 0 && (
             <div
+              ref={horizontalScrollRef}
               style={{
                 width: '100%',
                 height: '90px',
