@@ -82,7 +82,7 @@ const ConfigParamsModal: React.FC<ConfigParamsModalProps> = ({
                       label="解析路径"
                       rules={[{ required: true, message: '请输入解析路径' }]}
                     >
-                      <Input placeholder="例如: data.temperature" />
+                      <Input placeholder="例如: msg.data.temperature" />
                     </Form.Item>
                     <Form.Item
                       {...restField}

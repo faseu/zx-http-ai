@@ -19,7 +19,7 @@ export default defineConfig({
     },
   },
   layout: {
-    title: '即插智联',
+    title: '语智界联',
   },
   routes,
   npmClient: 'yarn',

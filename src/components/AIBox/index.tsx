@@ -426,7 +426,7 @@ const AIBox = forwardRef<AIBoxRef, AIBoxProps>(({ onCompileSuccess }, ref) => {
         >
           <img style={{ width: '305px' }} src="/admin/ai-prompt.png" alt="" />
           <div style={{ fontSize: '18px', marginTop: '32px' }}>
-            你好，我是即插智联，一款AIOT解决方案智能体！
+            你好，我是语智界联，一款AIOT解决方案智能体！
           </div>
         </div>
       )}

@@ -23,10 +23,10 @@ const PublishShareModal: React.FC<PublishShareModalProps> = ({
 
   // 预设的封面图片
   const defaultCovers = [
-    'http://121.40.161.20:8080/uploads/images/20250907/0fc418e0341b0406f07de823e0934eeb.jpg',
-    'http://121.40.161.20:8080/uploads/images/20250826/07eb499d4a1a0d8a70b5e7f523242bbe.png',
-    'http://121.40.161.20:8080/uploads/images/20250824/071f9f3894dae564898e12fe5ae52905.jpg',
-    'http://121.40.161.20:8080/uploads/images/20250824/c5bdd6ed4283ca768ebdc933910dbf62.png',
+    'https://yuzhijielian.com/uploads/images/20251126/b24c02b9cfadd1f013877267127c0d5e.jpg',
+    'https://yuzhijielian.com/uploads/images/20251126/6321fd7eea8bc5a6a592b45f5e11ad36.jpg',
+    'https://yuzhijielian.com/uploads/images/20251126/d33879b5d14c13b6b8fcc1c287e3778c.jpg',
+    'https://yuzhijielian.com/uploads/images/20251126/4bf3fb21e3831f1b3e16cfbabe15e365.jpg',
   ];
 
   // 选中预设封面

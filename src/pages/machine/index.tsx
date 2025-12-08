@@ -545,6 +545,7 @@ export default () => {
     },
     {
       title: '硬件厂家',
+      minWidth: 100,
       dataIndex: 'reason',
     },
     {
@@ -553,6 +554,7 @@ export default () => {
     },
     {
       title: '协议文件',
+      width: 86,
       dataIndex: 'fileUrl',
       render: (fileUrl: string) => {
         if (fileUrl) {

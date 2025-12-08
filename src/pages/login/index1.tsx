@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
       <div className={styles.rightBox}>
         <img className={styles.rightBox_img} src="/admin/logo.png" alt="" />
         <div>
-          <div className={styles.rightBox_title1}>即插智联</div>
+          <div className={styles.rightBox_title1}>语智界联</div>
           <div className={styles.rightBox_title2}>AIOT解决方案智能体</div>
         </div>
       </div>

@@ -15,7 +15,7 @@ const Settings: ProLayoutProps & {
   fixedHeader: false,
   fixSiderbar: true,
   colorWeak: false,
-  title: '即插智联',
+  title: '语智界联',
   pwa: true,
   logo: '/admin/logo.png',
   iconfontUrl: '',

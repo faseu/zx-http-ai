@@ -84,7 +84,7 @@ const Page = () => {
       <div className={styles.rightBox}>
         <img className={styles.rightBox_img} src="/admin/logo.png" alt="" />
         <div className={styles.titleBox}>
-          <div className={styles.rightBox_title1}>即插智联开放平台</div>
+          <div className={styles.rightBox_title1}>语智界联开放平台</div>
           <div className={styles.rightBox_title2}>
             {'AIOT解决方案智能体'.split('').map((item) => (
               <span key={item}>{item}</span>
