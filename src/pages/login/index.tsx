@@ -107,8 +107,8 @@ const Page = () => {
           paddingRight: '75px',
         }}
         initialValues={{
-          phone: '15713977886',
-          password: 'zxc123',
+          phone: '',
+          password: '',
         }}
         onFinish={async (values) => {
           await handleSubmit(values as API.LoginParams);
@@ -277,6 +277,17 @@ const Page = () => {
           }}
         >
           浙ICP备2025208714号-1
+        </a>
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <a
+          href="https://beian.mps.gov.cn/#/query/webSearch"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: 'rgba(255, 255, 255, 0.6)',
+          }}
+        >
+          浙公网安备33020302002013号
         </a>
       </div>
     </div>
