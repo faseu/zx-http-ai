@@ -29,6 +29,63 @@ interface DetailMachineModalProps {
   onSetParams?: (machineData: any) => void;
 }
 
+const parseControlConfigs = (control: any) => {
+  let value = control;
+
+  for (let i = 0; i < 2; i += 1) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value !== 'string') {
+      return [];
+    }
+
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return [];
+    }
+
+    try {
+      value = JSON.parse(trimmedValue);
+    } catch {
+      return [];
+    }
+  }
+
+  return Array.isArray(value) ? value : [];
+};
+
+const formatParamValue = (value: any) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  return String(value);
+};
+
+const toChartValue = (value: any) => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : null;
+  }
+
+  return null;
+};
+
 /**
  * 发送指令
  * @param fields
@@ -123,12 +180,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
 
   // 获取参数配置
   const getParamConfigs = () => {
-    try {
-      const controlData = JSON.parse(baseData?.control || '[]');
-      return Array.isArray(controlData) ? controlData : [];
-    } catch {
-      return [];
-    }
+    return parseControlConfigs(baseData?.control);
   };
   // 定义一组淡色渐变
   const lightGradients = [
@@ -151,10 +203,12 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
               const content = JSON.parse(item?.content);
               const time = item?.time.split(' ')[1];
               const value = parseDataByConfig(content, config.parsePath);
-              return value !== null
+              const chartValue = toChartValue(value);
+
+              return chartValue !== null
                 ? {
                     time,
-                    value,
+                    value: chartValue,
                     category: config.fieldName,
                     unit: config.unit || '',
                   }
@@ -492,7 +546,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
                                 fontWeight: 'bold',
                               }}
                             >
-                              {paramData.value}
+                              {formatParamValue(paramData.value)}
                               {paramData.unit && (
                                 <span
                                   style={{
@@ -564,7 +618,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
               >
                 <code>
                   {lastData
-                    ?.map((item) => `${item.time} ${item.content}`)
+                    ?.map((item: any) => `${item.time} ${item.content}`)
                     .join('\n')}
                 </code>
               </pre>
@@ -611,7 +665,7 @@ const DetailMachineModal: React.FC<DetailMachineModalProps> = ({
         open={configModalOpen}
         onCancel={() => setConfigModalOpen(false)}
         onSubmit={handleConfigSubmit}
-        initialValues={{ params: JSON.parse(baseData?.control || '[]') }}
+        initialValues={{ params: parseControlConfigs(baseData?.control) }}
       />
     </Modal>
   );
