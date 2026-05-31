@@ -444,7 +444,7 @@ export default () => {
             const detail = await handleDetailDevice(deviceData);
             if (detail) {
               setEditDeviceDetail(detail);
-              setEditDeviceId(deviceData.deviceId);
+              setEditDeviceId(deviceData.machineId);
               setModalDeviceOpen(true);
             }
           }}
